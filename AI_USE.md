@@ -24,7 +24,7 @@ a chat box bolted on.
 |---|---|---|
 | Claude Code (Anthropic CLI agent), Claude Opus 5.5 | Concept brainstorming and evaluation; scope planning; fitting the design to the movement-only restriction; project scaffolding; documentation. Further use (implementation, debugging, tests, UI) will be logged below. | Whole project: design decisions, Godot project structure, `README.md`, `AI_USE.md` |
 | Art / 2D tool | TBD (not chosen yet) | TBD |
-| 3D asset tool | TBD (not chosen yet) | TBD |
+| 3D assets (not AI-generated) | Human-made CC0 packs (Kenney, Quaternius, KayKit), selected and license-vetted by AI (`jadzia`). No generative 3D tool is used. | `assets/`; attribution and licenses in `CREDITS.md` |
 | Audio / SFX tool | TBD (not chosen yet) | TBD |
 | Music tool | TBD (not chosen yet) | TBD |
 
@@ -39,11 +39,13 @@ Agents actually used so far. Rows are added as more are used.
 |---|---|---|
 | Captain Janeway (orchestrator) | Routes work to the squad and reports to the human | Concept brainstorming and evaluation, scope cut, restriction fit; dispatching all work below |
 | `data` | Implementation and builds | Project scaffolding, web export pipeline and browser test |
+| `jadzia` | Research | Asset sourcing and license vetting |
+| `davinci` | Visual design and polish | Lighting, toon shader, VFX (moonbeams, drips, puddles, nanotech veins); in progress |
 | `doctor` | Documentation | `README.md`, `AI_USE.md` |
 | `miranda` | Git and GitHub | Repository creation and commits |
 
-Planned (not yet used): `riker` (architecture), `jadzia` (research), `belanna`
-(debugging), `tuvok` (testing), `icheb` then `davinci` (UI iteration, then polish).
+Planned (not yet used): `riker` (architecture), `belanna` (debugging), `tuvok`
+(testing), `icheb` (UI iteration).
 
 ## What the human did
 
@@ -70,3 +72,22 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
 - Scaffolding: Godot 4.7 project (3D, Compatibility renderer, single-threaded
   web export) set up by the `data` agent.
 - Docs: `README.md` and this file drafted by the `doctor` agent.
+- Restriction revealed: the jam's rule is MOVEMENT INPUT ONLY. Janeway and Chris
+  adapted the design to fit: enhancements come from stepping on floor pads,
+  attacks are movement (dash-through, ground pound), menus are walkable rooms,
+  and the follow camera takes no camera input.
+- Story rework: the AI pointed out how close the first concept was to *Stray*
+  (2022), and the story was reworked. Final concept: a lost house cat in an
+  automated warehouse, where robots register the nanotech-augmented cat as
+  "supervisor" and mirror its movement.
+- Asset research: `jadzia` ran two parallel asset searches. Candidates were
+  downloaded and inspected in headless Godot (triangle counts, animation clips)
+  and licenses were vetted for redistribution in a public repo. Rejected: Fab and
+  Unity Store licenses, Sonniss bundles, and game-ripped models mislabelled
+  CC-BY on Sketchfab. No free, permissively licensed cat with sleep animations
+  exists, so the sleep scenes are posed by hand.
+- Human decision, informed by the AI: Chris chose a chunky stylized look (Kenney,
+  Quaternius and KayKit, all CC0), preferring a consistent style over a
+  realistic cat.
+- Implementation: `data` imported the curated assets and began the cat
+  controller. `davinci` began the atmosphere pass (in progress).

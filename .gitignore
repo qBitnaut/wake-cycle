@@ -1,0 +1,15 @@
+# Godot 4+
+.godot/
+*.translation
+
+# Export output
+build/
+
+# Mono
+.mono/
+data_*/
+mono_crash.*.json
+
+# OS / editor
+.DS_Store
+.vscode/

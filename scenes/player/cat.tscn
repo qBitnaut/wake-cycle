@@ -6,21 +6,21 @@
 [ext_resource type="Script" path="res://scripts/fx/nanotech_infusion.gd" id="4_infusion"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cat"]
-radius = 0.12
-height = 0.3
+radius = 0.156
+height = 0.39
 
 [node name="Cat" type="CharacterBody3D"]
-floor_snap_length = 0.15
+floor_snap_length = 0.2
 script = ExtResource("1_ctrl")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.195, 0)
 shape = SubResource("CapsuleShape3D_cat")
 
 [node name="Model" type="Node3D" parent="."]
 
 [node name="Cat" parent="Model" instance=ExtResource("2_cat")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.165, 0)
+transform = Transform3D(0.13, 0, 0, 0, 0.13, 0, 0, 0, 0.13, 0, 0.2145, 0)
 
 [node name="CatSkin" type="Node" parent="Model/Cat"]
 script = ExtResource("3_skin")

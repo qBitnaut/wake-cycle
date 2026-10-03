@@ -3,15 +3,15 @@
 [ext_resource type="Script" path="res://scripts/player/follow_camera.gd" id="1_cam"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_arm"]
-radius = 0.12
+radius = 0.15
 
 [node name="FollowCamera" type="Node3D"]
 script = ExtResource("1_cam")
 
 [node name="SpringArm3D" type="SpringArm3D" parent="."]
 shape = SubResource("SphereShape3D_arm")
-spring_length = 1.2
-margin = 0.05
+spring_length = 1.55
+margin = 0.06
 
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
 fov = 70.0

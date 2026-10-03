@@ -2,13 +2,22 @@
 
 Wake Cycle uses the following third-party assets. Every pack below is released
 under CC0 (public domain), so attribution is not required, but credit is given
-as a courtesy. No CC-BY assets are currently included.
+as a courtesy, with one exception: the player cat model is CC BY 4.0 and its
+attribution is required (see Cat model below).
+
+## Cat model
+
+Cat model: 'cat toon shader' by ssombrinha570 (https://skfb.ly/pLLWT), CC BY 4.0
+(http://creativecommons.org/licenses/by/4.0/). Modified: recoloured as a brown
+tabby with procedural stripes, re-lit with a toon shader, outline mesh removed.
+
+Location: `assets/models/cat_tabby/` (attribution also in
+`assets/models/cat_tabby/LICENSE.txt`).
 
 ## Models
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| Cube World Cat (player cat) | Quaternius | https://poly.pizza/m/qKICY6xla2 | CC0 1.0 | `assets/models/cat/` |
 | Robot enemy models (Flying, Standard, Legs, Legs Gun, Large) from the Cyberpunk Game Kit | Quaternius | https://poly.pizza/m/lF3jeRJwiH, https://poly.pizza/m/UDTM6X1y9a, https://poly.pizza/m/1gNo5ezvmr, https://poly.pizza/m/lFZfDh2hzP, https://poly.pizza/m/mPDR0L5uKx (pack: https://quaternius.com) | CC0 1.0 | `assets/models/robots/` |
 | Factory Kit 3.0 | Kenney | https://kenney.nl/assets/factory-kit | CC0 1.0 | `assets/models/env/kenney-factory/` |
 | Building Kit | Kenney | https://kenney.nl/assets/building-kit | CC0 1.0 | `assets/models/env/kenney-building/` |

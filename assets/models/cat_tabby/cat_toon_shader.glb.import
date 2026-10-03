@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c4qiq4x0d72f2"
-path="res://.godot/imported/cat.glb-bb6593f28635228a32dc9cbb19f05439.scn"
+uid="uid://bl30f5jak678q"
+path="res://.godot/imported/cat_toon_shader.glb-80d79b7e2f65646a5cb519b7dfc905ee.scn"
 
 [deps]
 
-source_file="res://assets/models/cat/cat.glb"
-dest_files=["res://.godot/imported/cat.glb-bb6593f28635228a32dc9cbb19f05439.scn"]
+source_file="res://assets/models/cat_tabby/cat_toon_shader.glb"
+dest_files=["res://.godot/imported/cat_toon_shader.glb-80d79b7e2f65646a5cb519b7dfc905ee.scn"]
 
 [params]
 
@@ -19,7 +19,7 @@ nodes/root_script=null
 mesh_library/use_node_names_as_mesh_names=false
 array_mesh/deduplicate_surfaces=true
 nodes/apply_root_scale=true
-nodes/root_scale=0.3
+nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
 nodes/use_name_suffixes=true
 nodes/use_node_type_suffixes=true

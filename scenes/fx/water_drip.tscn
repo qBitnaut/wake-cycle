@@ -1,0 +1,93 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fx/water_drip.gd" id="1_drip"]
+[ext_resource type="Shader" path="res://shaders/glow_particle.gdshader" id="2_glow"]
+[ext_resource type="Shader" path="res://shaders/ripple_ring.gdshader" id="3_ring"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_drop"]
+render_priority = 0
+shader = ExtResource("2_glow")
+shader_parameter/glow_color = Color(0.68, 0.8, 1, 1)
+shader_parameter/energy = 1.8
+shader_parameter/billboard = false
+shader_parameter/shape = 0
+
+[sub_resource type="SphereMesh" id="SphereMesh_drop"]
+radius = 0.02
+height = 0.04
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_droplet"]
+radius = 0.008
+height = 0.028
+radial_segments = 6
+rings = 3
+
+[sub_resource type="Gradient" id="Gradient_splash"]
+offsets = PackedFloat32Array(0, 0.6, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.8, 1, 1, 1, 0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ring"]
+render_priority = 0
+shader = ExtResource("3_ring")
+
+[sub_resource type="QuadMesh" id="QuadMesh_ring"]
+size = Vector2(0.8, 0.8)
+orientation = 1
+
+[sub_resource type="Curve" id="Curve_ring"]
+_data = [Vector2(0, 0.06), 0.0, 2.6, 0, 0, Vector2(1, 1), 0.2, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_ring"]
+offsets = PackedFloat32Array(0, 0.15, 1)
+colors = PackedColorArray(1, 1, 1, 0.6, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[node name="WaterDrip" type="Node3D"]
+script = ExtResource("1_drip")
+
+[node name="Drop" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+mesh = SubResource("SphereMesh_drop")
+material_override = SubResource("ShaderMaterial_drop")
+
+[node name="Impact" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6, 0)
+
+[node name="Splash" type="CPUParticles3D" parent="Impact"]
+cast_shadow = 0
+material_override = SubResource("ShaderMaterial_drop")
+emitting = false
+amount = 12
+lifetime = 0.55
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SphereMesh_droplet")
+particle_flag_align_y = true
+direction = Vector3(0, 1, 0)
+spread = 32.0
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 0.9
+initial_velocity_max = 1.9
+scale_amount_min = 0.5
+scale_amount_max = 1.1
+color_ramp = SubResource("Gradient_splash")
+
+[node name="Rings" type="CPUParticles3D" parent="Impact"]
+cast_shadow = 0
+material_override = SubResource("ShaderMaterial_ring")
+emitting = false
+amount = 2
+lifetime = 1.6
+one_shot = true
+explosiveness = 0.82
+mesh = SubResource("QuadMesh_ring")
+direction = Vector3(0, 1, 0)
+spread = 0.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 0.0
+initial_velocity_max = 0.0
+scale_amount_curve = SubResource("Curve_ring")
+color_ramp = SubResource("Gradient_ring")

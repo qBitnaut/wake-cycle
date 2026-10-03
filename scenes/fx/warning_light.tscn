@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fx/flicker_light.gd" id="1_flicker"]
+[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="2_toon"]
+[ext_resource type="Shader" path="res://shaders/glow_particle.gdshader" id="3_glow"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_housing"]
+size = Vector3(0.34, 0.2, 0.16)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_housing"]
+render_priority = 0
+shader = ExtResource("2_toon")
+shader_parameter/albedo_color = Color(0.2, 0.2, 0.22, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_lens"]
+radius = 0.1
+height = 0.14
+radial_segments = 10
+rings = 5
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lens"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("3_glow")
+shader_parameter/glow_color = Color(1, 0.55, 0.18, 1)
+shader_parameter/energy = 3.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_halo"]
+size = Vector2(0.8, 0.8)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_halo"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("3_glow")
+shader_parameter/glow_color = Color(1, 0.5, 0.16, 1)
+shader_parameter/energy = 0.12
+shader_parameter/billboard = true
+shader_parameter/shape = 1
+
+[node name="WarningLight" type="Node3D" node_paths=PackedStringArray("light", "glow_meshes")]
+script = ExtResource("1_flicker")
+light = NodePath("Light")
+glow_meshes = [NodePath("Lens"), NodePath("Halo")]
+
+[node name="Housing" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_housing")
+material_override = SubResource("ShaderMaterial_housing")
+
+[node name="Lens" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.09)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_lens")
+material_override = SubResource("ShaderMaterial_lens")
+
+[node name="Halo" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.35)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_halo")
+material_override = SubResource("ShaderMaterial_halo")
+
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
+light_color = Color(1, 0.55, 0.22, 1)
+light_energy = 1.6
+light_specular = 0.4
+omni_range = 7.0
+omni_attenuation = 1.2

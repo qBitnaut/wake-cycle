@@ -1,0 +1,47 @@
+[gd_resource type="Environment" format=3]
+
+[ext_resource type="Shader" path="res://shaders/night_sky.gdshader" id="1_sky"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("1_sky")
+
+[sub_resource type="Sky" id="Sky_night"]
+sky_material = SubResource("ShaderMaterial_sky")
+radiance_size = 0
+
+[resource]
+background_mode = 2
+sky = SubResource("Sky_night")
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.48, 0.64, 1)
+ambient_light_energy = 0.32
+reflected_light_source = 1
+tonemap_mode = 3
+tonemap_exposure = 1.35
+tonemap_white = 6.0
+glow_enabled = true
+glow_levels/1 = 0.0
+glow_levels/2 = 0.6
+glow_levels/3 = 1.0
+glow_levels/4 = 0.7
+glow_levels/5 = 0.45
+glow_levels/6 = 0.2
+glow_levels/7 = 0.0
+glow_intensity = 0.9
+glow_strength = 1.0
+glow_bloom = 0.0
+glow_blend_mode = 1
+glow_hdr_threshold = 0.9
+glow_hdr_scale = 2.0
+fog_enabled = true
+fog_mode = 0
+fog_light_color = Color(0.13, 0.17, 0.26, 1)
+fog_light_energy = 1.0
+fog_sun_scatter = 0.0
+fog_density = 0.03
+fog_sky_affect = 0.2
+fog_height = 0.6
+fog_height_density = 0.12
+adjustment_enabled = true
+adjustment_contrast = 1.06
+adjustment_saturation = 1.05

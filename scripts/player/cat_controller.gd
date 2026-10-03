@@ -14,8 +14,20 @@ signal dash_requested(direction: Vector3)
 ## HOOK: emitted when crouch is pressed in mid-air.
 signal ground_pound_requested
 signal fell_out_of_world
+## Emitted by show_augments() once the robotic parts are revealed.
+signal augments_shown
+## Emitted by hide_augments().
+signal augments_hidden
+## Emitted when the cat has been still long enough and starts to sit.
+signal sat_down
+## Emitted when a sitting cat gets up again.
+signal stood_up
 
 enum State { GROUND, RISING, FALLING }
+
+## Raw model units from the origin down to the paws (the GLB is not centred
+## on its feet); multiplied by cat_scale to stand the cat on the ground.
+const FEET_OFFSET := 1.65
 
 @export_group("Speed")
 @export var walk_speed := 3.0
@@ -37,9 +49,21 @@ enum State { GROUND, RISING, FALLING }
 @export var jump_buffer_time := 0.12
 
 @export_group("Crouch")
-@export var stand_height := 0.56
-@export var crouch_height := 0.36
+## Collider heights for the 0.1 scale tabby; the capsule radius is 0.12, so
+## crouch_height cannot go below 0.24. Retune with cat_scale.
+@export var stand_height := 0.3
+@export var crouch_height := 0.24
 @export var crouch_model_scale := 0.78
+
+@export_group("Model")
+## Uniform scale of the cat model. The GLB is ~4.6 units nose to rump, so 0.1
+## makes a 0.46 m cat. Raise it for readability, then retune stand_height,
+## crouch_height and the capsule radius to match (roughly 1.2 / 3.0 / 2.4 x scale).
+@export var cat_scale := 0.1
+## Idle: seconds of stillness before the cat sits down.
+@export var sit_delay := 1.5
+@export var breathing_amount := 0.015
+@export var breathing_period := 3.2
 
 @export_group("Squash and Stretch")
 @export var jump_stretch := Vector3(0.86, 1.25, 0.86)
@@ -52,8 +76,13 @@ enum State { GROUND, RISING, FALLING }
 @export var respawn_below_y := -25.0
 ## The cat mesh faces +Z; rotate the model so its nose points along travel.
 @export var model_yaw_offset := 0.0
-@export var anim_walk_ref_speed := 2.6
-@export var anim_run_ref_speed := 6.0
+## Ground speed (m/s) at which Walk / Run play at 1x. The clips have short
+## strides (about 0.2 m/s of foot travel at 1x for a 0.1 scale cat), so true
+## foot-lock at walk_speed would need ~14x playback. These values land at about
+## 1.8x at walk_speed and run_speed, a brisk trot that still reads as a cat.
+@export var anim_walk_ref_speed := 1.7
+@export var anim_run_ref_speed := 3.4
+@export var anim_speed_range := Vector2(0.5, 2.2)
 
 ## HOOK: future abilities scale these. Both are consumed by the movement code.
 var speed_multiplier := 1.0
@@ -79,11 +108,28 @@ var _squash := Vector3.ONE
 var _spawn_transform: Transform3D
 var _current_anim := &""
 var _air_anim_started := false
+var _idle_time := 0.0
+var _land_hold := 0.0
+var _landing := false
+var _just_landed := false
+var _breath_time := 0.0
+var _breath_weight := 0.0
+var _augments := {} ## Socket_* name -> hidden "Augment" Node3D.
 
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 @onready var _model: Node3D = $Model
+@onready var _cat: Node3D = $Model/Cat
 @onready var _anim: AnimationPlayer = $Model/Cat/AnimationPlayer
 @onready var _capsule: CapsuleShape3D = _collision.shape
+
+
+## Applies cat_scale before the children (CatSkin, NanotechInfusion) run their
+## _ready, so their bind-pose maths sees the final transform.
+func _enter_tree() -> void:
+	var cat := get_node_or_null("Model/Cat") as Node3D
+	if cat:
+		cat.scale = Vector3.ONE * cat_scale
+		cat.position.y = FEET_OFFSET * cat_scale
 
 
 func _ready() -> void:
@@ -93,7 +139,8 @@ func _ready() -> void:
 	_collision.shape = _capsule
 	_apply_height(stand_height)
 	_anim.animation_finished.connect(_on_anim_finished)
-	_play(&"Idle")
+	_collect_augments()
+	_play(&"Stand")
 
 
 func _physics_process(delta: float) -> void:
@@ -112,7 +159,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_facing(wish_dir, delta)
 	_update_squash(delta)
-	_update_animation()
+	_update_animation(delta, input.length())
 
 	if global_position.y < respawn_below_y:
 		respawn()
@@ -150,6 +197,26 @@ func perform_dash(direction: Vector3) -> void:
 ## HOOK: ground pound. Triggered by crouch input in mid-air.
 func perform_ground_pound() -> void:
 	ground_pound_requested.emit()
+
+
+## Reveals the robotic augments on the sockets (all of them, or just the named
+## ones, e.g. [&"Socket_Head"]). The sockets are BoneAttachment3D nodes on the
+## skeleton, named Socket_Head, Socket_Spine, Socket_Tail, Socket_ForelegL/R and
+## Socket_HindlegL/R (see scripts/import/cat_post_import.gd for the bones). Each
+## has an empty, hidden "Augment" Node3D child: parent the robot parts there.
+## Stub: it only toggles visibility and emits augments_shown; the parts and any
+## reveal effect are future work.
+func show_augments(sockets: Array[StringName] = []) -> void:
+	for socket_name in _augments:
+		if sockets.is_empty() or socket_name in sockets:
+			(_augments[socket_name] as Node3D).visible = true
+	augments_shown.emit()
+
+
+func hide_augments() -> void:
+	for socket_name in _augments:
+		(_augments[socket_name] as Node3D).visible = false
+	augments_hidden.emit()
 
 
 func unlock_ability(ability: StringName) -> void:
@@ -272,6 +339,7 @@ func _post_move() -> void:
 			var t := clampf(impact / 14.0, 0.0, 1.0)
 			_squash = Vector3.ONE.lerp(land_squash_max, t)
 		state = State.GROUND
+		_just_landed = true
 		landed.emit(impact)
 	if on_floor:
 		state = State.GROUND
@@ -300,39 +368,86 @@ func _update_squash(delta: float) -> void:
 	_squash = _squash.lerp(Vector3.ONE, 1.0 - exp(-squash_recovery * delta))
 	var crouch_scale := crouch_model_scale if is_crouching else 1.0
 	var target := Vector3(1.0, crouch_scale, 1.0)
+	# Subtle breathing while standing still, before the cat sits.
+	_breath_weight = move_toward(_breath_weight, 1.0 if _current_anim == &"Stand" else 0.0, delta * 3.0)
+	_breath_time += delta
+	var breath := sin(_breath_time * TAU / breathing_period) * breathing_amount * _breath_weight
+	target *= Vector3(1.0 - breath * 0.4, 1.0 + breath, 1.0 - breath * 0.4)
 	_model.scale = _model.scale.lerp(target * _squash, 1.0 - exp(-20.0 * delta))
 
 
-func _update_animation() -> void:
+func _update_animation(delta: float, input_strength: float) -> void:
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var moving := input_strength > 0.05 or horizontal_speed > 0.25
 	if state != State.GROUND:
+		_idle_time = 0.0
+		_landing = false
+		_land_hold = 0.0
 		if not _air_anim_started:
 			_air_anim_started = true
-			_play(&"Jump_Start", 0.05)
-		elif _current_anim != &"Jump_Start" and _current_anim != &"Jump":
-			_play(&"Jump", 0.15)
+			# Walking off a ledge skips the push-off.
+			if state == State.RISING:
+				_play(&"Jump_Start", 0.05, 2.0)
+			else:
+				_play(&"Jump_Air", 0.15)
+		elif _current_anim != &"Jump_Start" and _current_anim != &"Jump_Air":
+			_play(&"Jump_Air", 0.15)
 		return
+	var was_airborne := _air_anim_started
 	_air_anim_started = false
-	if horizontal_speed < 0.25:
-		_play(&"Idle", 0.2)
-		_anim.speed_scale = 1.0
-	elif horizontal_speed > (walk_speed + run_speed) * 0.5 and not is_crouching:
-		_play(&"Run", 0.15)
-		_anim.speed_scale = clampf(horizontal_speed / anim_run_ref_speed, 0.6, 1.6)
+	if _just_landed:
+		_just_landed = false
+		# Only a real airborne spell lands; stepping off a kerb does not.
+		_landing = was_airborne
+		if _landing:
+			_land_hold = 0.12 if moving else 0.45
+			_play(&"Land", 0.05, 1.6)
+	if _landing:
+		_land_hold -= delta
+		if _land_hold > 0.0:
+			return
+		_landing = false
+	if moving:
+		_idle_time = 0.0
+		if _current_anim == &"Sit_Down" or _current_anim == &"Idle_Sit":
+			stood_up.emit()
+		# Quick blend out of a sit so control stays responsive.
+		var blend := 0.1 if _current_anim == &"Sit_Down" or _current_anim == &"Idle_Sit" else 0.15
+		if horizontal_speed > (walk_speed + run_speed) * 0.5 and not is_crouching:
+			_play(&"Run", blend)
+			_anim.speed_scale = clampf(horizontal_speed / anim_run_ref_speed, anim_speed_range.x, anim_speed_range.y)
+		else:
+			_play(&"Walk", blend)
+			_anim.speed_scale = clampf(horizontal_speed / anim_walk_ref_speed, anim_speed_range.x, anim_speed_range.y)
+		return
+	_idle_time += delta
+	if _idle_time >= sit_delay and not is_crouching:
+		if _current_anim != &"Sit_Down" and _current_anim != &"Idle_Sit":
+			_play(&"Sit_Down", 0.25)
+			sat_down.emit()
 	else:
-		_play(&"Walk", 0.15)
-		_anim.speed_scale = clampf(horizontal_speed / anim_walk_ref_speed, 0.5, 1.6)
+		_play(&"Stand", 0.2)
 
 
-func _play(anim_name: StringName, blend := 0.15) -> void:
+## Plays a clip with a crossfade. speed is the playback rate for the new clip.
+func _play(anim_name: StringName, blend := 0.15, speed := 1.0) -> void:
 	if _current_anim == anim_name:
 		return
 	_current_anim = anim_name
 	_anim.speed_scale = 1.0
-	_anim.play(anim_name, blend)
+	_anim.play(anim_name, blend, speed)
 
 
 func _on_anim_finished(anim_name: StringName) -> void:
 	if anim_name == &"Jump_Start" and state != State.GROUND:
 		_current_anim = &""
-		_play(&"Jump", 0.05)
+		_play(&"Jump_Air", 0.05)
+	elif anim_name == &"Sit_Down" and _current_anim == &"Sit_Down":
+		_play(&"Idle_Sit", 0.3)
+
+
+func _collect_augments() -> void:
+	for node in _cat.find_children("Socket_*", "BoneAttachment3D", true, false):
+		var augment := node.get_node_or_null("Augment") as Node3D
+		if augment:
+			_augments[node.name] = augment

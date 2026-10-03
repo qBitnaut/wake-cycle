@@ -6,9 +6,9 @@ extends Node3D
 ## A SpringArm3D pulls the camera in so it never clips through walls.
 
 @export var target_path: NodePath
-@export var arm_length := 3.2
+@export var arm_length := 1.2 ## Tuned for the 0.1 scale tabby; scale with cat_scale.
 @export var pitch_degrees := -22.0
-@export var pivot_height := 0.45
+@export var pivot_height := 0.16
 @export var position_smoothing := 9.0
 ## How fast the camera yaw chases the heading (rad/s at full strength).
 @export var yaw_follow_speed := 1.5

@@ -6,6 +6,10 @@
 // Heights and noise live in body space: scripts/fx/nanotech_infusion.gd sets
 // body_inv (world -> body root) every frame plus the body's height range, so
 // a body made of several meshes, skinned or not, reads as one surface.
+// Skinned bodies whose meshes carry a bind-pose position in CUSTOM0 (see
+// scripts/fx/cat_skin.gd) set use_bind_pose: body_pos then comes from that
+// attribute through the static bind_to_body matrix, so the pattern stays on
+// the fur while the skeleton animates instead of sliding through the limbs.
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_back, specular_schlick_ggx;
 
@@ -20,6 +24,10 @@ uniform mat4 body_inv = mat4(1.0);
 // Body-space Y range: feet and top of the head.
 uniform float height_min = 0.0;
 uniform float height_max = 1.0;
+// Bind-pose path: body_pos = bind_to_body * CUSTOM0.xyz. Static (body_inv x
+// the mesh's global transform at setup); CUSTOM0 is in raw mesh units.
+uniform bool use_bind_pose = false;
+uniform mat4 bind_to_body = mat4(1.0);
 
 group_uniforms veins;
 // Noise frequency per metre (scale with body size).
@@ -41,8 +49,12 @@ uniform float goo_lead : hint_range(0.0, 0.5) = 0.15;
 varying vec3 body_pos;
 
 void vertex() {
-	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	body_pos = (body_inv * vec4(world, 1.0)).xyz;
+	if (use_bind_pose) {
+		body_pos = (bind_to_body * vec4(CUSTOM0.xyz, 1.0)).xyz;
+	} else {
+		vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		body_pos = (body_inv * vec4(world, 1.0)).xyz;
+	}
 }
 
 void fragment() {

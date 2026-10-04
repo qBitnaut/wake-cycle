@@ -1,13 +1,21 @@
 @tool
 class_name GooPool
 extends Node2D
-## Nanotech goo pool: a dark oily strip with circuit traces pulsing blue and
-## green, a glow light that breathes between the two, and slow bubbles.
-## The origin is the pool's top-left (the surface line).
+## Nanotech goo pool. From a distance it is just darker water: a dim mirror
+## with a cool meniscus line. Its circuit traces wake (packets of blue and
+## green light, a glow light, rising nanite bubbles) only up close, when
+## disturbed (surge(), or the cat wading through) or while it grips.
+## `dormancy` 0 brings back the always-awake look.
+##
+## grip(x) is the transformation's hold on the cat: the surface swells into
+## a mound, the goo boils, nanites rise and tendrils climb the legs.
+## release() lets go. The origin is the pool's top-left (the surface line).
 
 const SHADER := preload("res://shaders/goo_pool.gdshader")
 const NOISE := preload("res://assets/fx/noise_small.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
+## Headroom above the surface for the grip mound, px.
+const TOP_MARGIN := 8.0
 
 @export var width := 72.0:
 	set(v):
@@ -32,6 +40,21 @@ const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 		_apply()
 @export_range(0.0, 6.0, 0.05) var light_energy := 2.0
 @export var bubbles := true
+## 1 = reads as darker water from a distance (traces wake near the cat or
+## when disturbed); 0 = always awake.
+@export_range(0.0, 1.0, 0.01) var dormancy := 1.0:
+	set(v):
+		dormancy = v
+		_apply()
+## How near (px) the cat must be before the traces start to show.
+@export var reveal_radius := 72.0
+## Wading through it disturbs it (a surge on entry, a trickle while moving).
+@export var auto_disturb := true
+## Strength of the dim screen mirror (a puddle is about 0.9).
+@export_range(0.0, 1.0, 0.01) var reflectivity := 0.22:
+	set(v):
+		reflectivity = v
+		_apply()
 ## Trace mask (white traces, tiles horizontally) and its pixel scale.
 ## 0 = auto (FXScale.whole, right for the baked mask); 1 with an HD mask.
 @export var circuit_texture: Texture2D = preload("res://assets/fx/goo_circuit.png")
@@ -40,41 +63,61 @@ const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 var _rect: ColorRect
 var _light: PointLight2D
 var _bubbles: CPUParticles2D
+var _boil: CPUParticles2D
+var _nanites: CPUParticles2D
+var _back: GooTendrils
+var _front: GooTendrils
 var _t := 0.0
 var _surge := 0.0
+var _reveal := 0.0
+var _grip := 0.0
+var _grip_target := 0.0
+var _grip_x := 0.0
+var _wading := false
 
 
 func _ready() -> void:
+	add_to_group("goo_pool")
+	# Fresh copy of the screen above the pool for the mirror.
+	var bbc := BackBufferCopy.new()
+	bbc.name = "Mirror"
+	bbc.copy_mode = BackBufferCopy.COPY_MODE_RECT
+	add_child(bbc)
 	_rect = ColorRect.new()
 	_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER
 	mat.set_shader_parameter("noise", NOISE)
 	mat.set_shader_parameter("circuit", circuit_texture)
+	mat.set_shader_parameter("top_margin", TOP_MARGIN)
 	_rect.material = mat
 	add_child(_rect)
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
 	add_child(_light)
-	_bubbles = CPUParticles2D.new()
-	_bubbles.amount = 6
-	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_bubbles = _particles(6, true)
 	_bubbles.direction = Vector2(0, -1)
 	_bubbles.spread = 5.0
 	_bubbles.gravity = Vector2.ZERO
-	_bubbles.initial_velocity_min = 3.0
-	_bubbles.initial_velocity_max = 6.0
+	add_child(_bubbles)
+	_apply()
+
+
+func _particles(n: int, unshaded: bool) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.amount = n
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(1, 1, 1, 0))
 	ramp.add_point(0.3, Color(1, 1, 1, 1))
 	ramp.set_color(ramp.get_point_count() - 1, Color(1, 1, 1, 0.0))
-	_bubbles.color_ramp = ramp
-	var bm := CanvasItemMaterial.new()
-	bm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	_bubbles.material = bm
-	add_child(_bubbles)
-	_apply()
+	p.color_ramp = ramp
+	if unshaded:
+		var bm := CanvasItemMaterial.new()
+		bm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		p.material = bm
+	return p
 
 
 ## Flare the pool (0..1), e.g. when the cat steps in. Decays on its own.
@@ -82,28 +125,132 @@ func surge(amount := 1.0) -> void:
 	_surge = clampf(maxf(_surge, amount), 0.0, 1.0)
 
 
+## The goo takes hold at global x: the surface swells, boils and sends
+## tendrils up the legs. `actor_z` is the held actor's z_index; tendrils are
+## drawn just behind and just in front of it.
+func grip(global_x: float, amount := 1.0, actor_z := 5) -> void:
+	_grip_x = global_x - global_position.x
+	var tighter := amount > _grip_target
+	_grip_target = clampf(amount, 0.0, 1.0)
+	if _front == null:
+		_back = _make_tendrils(3, 9.0, 14.0, 3.0)
+		_front = _make_tendrils(3, 11.0, 18.0, 11.0)
+		_boil = _particles(10, false)
+		_boil.direction = Vector2(0, -1)
+		_boil.spread = 35.0
+		_boil.gravity = Vector2(0, 260)
+		_boil.initial_velocity_min = 30.0
+		_boil.initial_velocity_max = 60.0
+		_boil.lifetime = 0.45
+		_boil.scale_amount_min = 2.0
+		_boil.scale_amount_max = 2.0
+		_boil.color = Color(0.06, 0.07, 0.11)
+		add_child(_boil)
+		_nanites = _particles(14, true)
+		_nanites.direction = Vector2(0, -1)
+		_nanites.spread = 12.0
+		_nanites.gravity = Vector2(0, -6)
+		_nanites.initial_velocity_min = 12.0
+		_nanites.initial_velocity_max = 26.0
+		_nanites.lifetime = 1.3
+		add_child(_nanites)
+	for t in [_back, _front]:
+		t.position = Vector2(_grip_x, 0)
+		t.z_as_relative = false
+	_back.z_index = actor_z - 1
+	_front.z_index = actor_z + 2
+	_boil.position = Vector2(_grip_x, 0)
+	_boil.emission_rect_extents = Vector2(12, 1)
+	_nanites.position = Vector2(_grip_x, 0)
+	_nanites.emission_rect_extents = Vector2(14, 1)
+	if tighter:
+		surge(0.8)
+
+
+## Let go: the mound settles and the tendrils sink back.
+func release() -> void:
+	_grip_target = 0.0
+
+
+func _make_tendrils(n: int, spread: float, h: float, seed: float) -> GooTendrils:
+	var t := GooTendrils.new()
+	t.count = n
+	t.spread = spread
+	t.max_height = h
+	t.seed_offset = seed
+	t.tip_a = color_a
+	t.tip_b = color_b
+	add_child(t)
+	return t
+
+
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() or _light == null:
 		return
 	_t += delta
 	_surge = maxf(_surge - delta * 0.8, 0.0)
+	_grip = move_toward(_grip, _grip_target, delta * (0.8 if _grip_target > _grip else 1.0))
+	_track_cat(delta)
+	var awake := clampf(maxf(maxf(1.0 - dormancy, _surge), maxf(_reveal * 0.4, _grip)), 0.0, 1.0)
+	# The light wakes less than the traces: a held cat stands right on it.
+	var lit := clampf(maxf(maxf(1.0 - dormancy, _surge), maxf(_reveal * 0.3, _grip * 0.6)), 0.0, 1.0)
 	var k := 0.5 + 0.5 * sin(_t * 0.9)
-	_light.color = color_a.lerp(color_b, k)
-	_light.energy = light_energy * (0.8 + 0.2 * sin(_t * 2.3)) * (1.0 + _surge * 1.5)
-	(_rect.material as ShaderMaterial).set_shader_parameter("surge", _surge)
-	_bubbles.color = Color(color_a.lerp(color_b, 1.0 - k) * 1.8, 1.0)
+	# Leans blue: green light on warm fur turns it lime.
+	_light.color = color_a.lerp(color_b, k * 0.55)
+	_light.energy = light_energy * (0.8 + 0.2 * sin(_t * 2.3)) * lerpf(0.1, 1.0, lit)
+	var mat := _rect.material as ShaderMaterial
+	mat.set_shader_parameter("surge", _surge)
+	mat.set_shader_parameter("reveal", _reveal)
+	mat.set_shader_parameter("grip", _grip)
+	mat.set_shader_parameter("grip_x", _grip_x)
+	_bubbles.color = Color(color_a.lerp(color_b, 1.0 - k) * 1.8, awake)
+	if _front:
+		_back.amount = _grip
+		_front.amount = _grip
+		_boil.emitting = _grip > 0.15
+		_nanites.emitting = _grip > 0.1
+		_nanites.color = Color(color_a.lerp(color_b, k) * 1.6, 1.0)
+
+
+## The nearest player sets the proximity reveal; wading disturbs the goo.
+func _track_cat(delta: float) -> void:
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	if cat == null:
+		_reveal = move_toward(_reveal, 0.0, delta)
+		return
+	var lp := cat.global_position - global_position
+	var dx := maxf(maxf(-lp.x, lp.x - width), 0.0)
+	var dy := absf(lp.y)
+	var want := 1.0 - smoothstep(reveal_radius * 0.5, reveal_radius, maxf(dx, dy * 0.5))
+	_reveal = move_toward(_reveal, want, delta * 1.5)
+	(_rect.material as ShaderMaterial).set_shader_parameter("reveal_x", clampf(lp.x, 0.0, width))
+	if not auto_disturb:
+		return
+	var inside := dx <= 0.0 and lp.y > -6.0 and lp.y < depth
+	if inside and not _wading:
+		surge(0.7)
+	elif inside and cat.get("velocity") is Vector2 and absf((cat.get("velocity") as Vector2).x) > 10.0:
+		surge(0.3)
+	_wading = inside
 
 
 func _apply() -> void:
 	if _rect == null:
 		return
-	_rect.size = Vector2(width, depth)
+	_rect.position = Vector2(0, -TOP_MARGIN)
+	_rect.size = Vector2(width, depth + TOP_MARGIN)
+	var bbc := get_node_or_null("Mirror") as BackBufferCopy
+	if bbc:
+		bbc.rect = Rect2(-4, -depth * 2.0 - TOP_MARGIN - 4.0, width + 8, depth * 3.0 + TOP_MARGIN + 8.0)
 	var mat := _rect.material as ShaderMaterial
 	mat.set_shader_parameter("color_a", color_a)
 	mat.set_shader_parameter("color_b", color_b)
 	mat.set_shader_parameter("glow_energy", trace_energy)
 	mat.set_shader_parameter("rect_width", width)
 	mat.set_shader_parameter("rect_height", depth)
+	mat.set_shader_parameter("dormancy", dormancy)
+	mat.set_shader_parameter("reveal_radius", reveal_radius)
+	mat.set_shader_parameter("reflectivity", reflectivity)
 	mat.set_shader_parameter("px_scale", float(art_scale if art_scale > 0 else FXScale.whole(self)))
 	_light.position = Vector2(width * 0.5, -2)
 	_light.texture_scale = maxf(width / 128.0 * 2.2, 0.6)

@@ -16,6 +16,17 @@ Suggested masks: player = 1, 3, 4, 5 (plus Areas on 6); enemies = 1; breakables
 sit on layer 5 and the player also collides with them. Pickups and pads are
 Area2Ds on layer 6 with mask 2.
 
+## Groups
+
+| Group | Meaning |
+|---|---|
+| `player` | The cat |
+| `shock_receiver` | Implements `on_shockwave(origin, radius, source)`; `source` is `"shock"` (double jump) or `"pound"` (ground pound). Also exposes `shock_offset` and `shock_half` for range checks. |
+| `breakable` | Crates and cracked floors |
+| `pushable` | RigidBody2D crates; also counted by floor plates |
+| `enemy` | Patrol bots |
+| `checkpoint` | Checkpoint pads |
+
 ## TileSet (`assets/tiles/warehouse_tileset.tres`)
 
 - Physics layer 0: collision layer 1 (world), mask 0.

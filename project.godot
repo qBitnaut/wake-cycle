@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="Wake Cycle"
-run/main_scene="res://scenes/boot.tscn"
+run/main_scene="res://scenes/levels/test_room.tscn"
 config/features=PackedStringArray("4.7", "Compatibility")
+
+[autoload]
+
+GameState="*res://scripts/systems/game_state.gd"
+SaveSystem="*res://scripts/systems/save_system.gd"
 
 [display]
 

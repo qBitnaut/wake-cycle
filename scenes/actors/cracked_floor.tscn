@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/breakable.gd" id="1_br"]
+[ext_resource type="Texture2D" path="res://assets/tiles/kenney-metal-expansion/tilemap_packed.png" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="s"]
+size = Vector2(18, 18)
+
+[node name="CrackedFloor" type="StaticBody2D"]
+script = ExtResource("1_br")
+breaks_on = "pound"
+debris_color = Color(0.55, 0.55, 0.62, 1)
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, -9)
+shape = SubResource("s")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(0, -9)
+modulate = Color(0.8, 0.75, 0.75, 1)
+texture = ExtResource("2_tex")
+region_enabled = true
+region_rect = Rect2(234, 90, 18, 18)

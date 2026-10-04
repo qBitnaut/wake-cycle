@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/cat.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/player/power_aura.gd" id="2_aura"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cat"]
+size = Vector2(11, 13)
+
+[node name="Cat" type="CharacterBody2D"]
+z_index = 5
+collision_layer = 2
+collision_mask = 17
+floor_snap_length = 4.0
+script = ExtResource("1_cat")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6.5)
+shape = SubResource("RectangleShape2D_cat")
+
+[node name="Aura" type="Node2D" parent="."]
+position = Vector2(0, -7)
+z_index = -1
+script = ExtResource("2_aura")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -7)
+
+[node name="Camera" type="Camera2D" parent="."]
+offset = Vector2(0, -14)
+limit_smoothed = false
+position_smoothing_enabled = false

@@ -40,8 +40,19 @@ Enhancement pads (after the nanotech pools):
 |---|---|---|
 | Surge | Blue | Speed |
 | Spring | Green | High jump |
-| Phase | Cyan | Dash through drones |
-| Impact | Violet | Ground-pound shockwave |
+| Phase | Cyan | Shift dashes through enemies and laser fences |
+| Impact | Violet | Down in mid-air ground-pounds; breaks cracked floors |
+
+Pads give a timed charge (10 s) and recharge after a few seconds. The
+double jump is always available; once the shockwave is unlocked, the second
+jump also releases a short radial burst (breaks weak crates, kicks crates,
+stuns small bots, flips shock switches). Checkpoints save to the browser's
+storage; step on the glowing CONTINUE pad near the start to load it.
+
+## Debug keys (test room only)
+
+F1 toggles the shockwave, F2-F5 grant Surge / Spring / Phase / Impact, F6 clears
+the power. These are not in the input map and are not part of the game.
 
 ## Jam restriction compliance
 

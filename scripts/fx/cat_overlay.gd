@@ -52,6 +52,28 @@ static func frames_from(pattern: String, rows := 1) -> SpriteFrames:
 	return sf
 
 
+## [sheet name, frame index in that sheet] for what `spr` shows now, or []
+## if the animation is not one of CatFrames'.
+static func sheet_frame(spr: AnimatedSprite2D) -> Array:
+	if not CatFrames.ANIMS.has(spr.animation):
+		return []
+	var def: Array = CatFrames.ANIMS[spr.animation]
+	var idx: Array = def[3]
+	return [def[0], idx[spr.frame] if spr.frame < idx.size() else spr.frame]
+
+
+## A point in frame pixels (100x100, top-left origin) to `spr`'s local
+## space, honouring offset and flip.
+static func frame_to_local(spr: AnimatedSprite2D, p: Vector2) -> Vector2:
+	var half := CatFrames.FRAME * 0.5
+	var l := p - Vector2(half, half)
+	if spr.flip_h:
+		l.x = -l.x
+	if spr.flip_v:
+		l.y = -l.y
+	return l + spr.offset
+
+
 static func make(src: AnimatedSprite2D, frames: SpriteFrames, mat: Material, node_name: String) -> CatOverlay:
 	var o := CatOverlay.new()
 	o.name = node_name

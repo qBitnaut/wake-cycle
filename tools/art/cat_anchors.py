@@ -22,6 +22,9 @@ holds still while the cat breathes.
 
 Outputs
   assets/sprites/cat/augments/anchors.json   per sheet, per frame anchors
+  assets/fx/cat_nano/veins.json              per frame: the vein tree as
+      chains ({"p" points, "a" arrival, "t" trunk}), the silhouette's row
+      spans, bbox, eye and ear, for the HD layer (scripts/fx/nano_hd.gd)
   assets/fx/cat_nano/nano_<sheet>.png        same layout as the cat sheet:
       R  height inside the frame's opaque bounds (0 = feet, 255 = top)
       G  vein arrival 1..255 (0 = no vein): when a vein pixel lights as the
@@ -44,6 +47,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CAT_DIR = ROOT / "assets" / "sprites" / "cat"
 NANO_DIR = ROOT / "assets" / "fx" / "cat_nano"
 ANCHORS = CAT_DIR / "augments" / "anchors.json"
+VEINS = NANO_DIR / "veins.json"
 FRAME = 100
 SPACING = 5          # max fur distance from a vein, px
 MAX_LEAVES = 14
@@ -362,7 +366,7 @@ def grow_veins(inner, body, eye_px, feet, prev_veins):
             arrival[p] = 1.0
         else:
             arrival[p] = 0.02 + 0.93 * min(df.get(p, dmax) / dmax, 1.0)
-    return tree, arrival, trunk
+    return tree, arrival, trunk, edges
 
 
 # ---- per frame ---------------------------------------------------------------
@@ -381,7 +385,7 @@ def analyse(rgba, prev):
         # No eye (back view, asleep): the veins converge on the ear base.
         root = [ear] if ear else [feet[-1]]
     prev_veins = prev["_veins"] if prev else None
-    veins, arrival, trunk = grow_veins(inner, a, [tuple(map(int, p)) for p in root], feet, prev_veins)
+    veins, arrival, trunk, edges = grow_veins(inner, a, [tuple(map(int, p)) for p in root], feet, prev_veins)
     info = {
         "bbox": list(bbox),
         "view": view,
@@ -397,11 +401,60 @@ def analyse(rgba, prev):
         "_veins": veins,
         "_arrival": arrival,
         "_trunk": trunk,
+        "_edges": edges,
         "_masks": (a, ink, eye, inner),
     }
     if blink:
         info["eye_px_virtual"] = [list(map(int, p)) for p in eye_px]
     return info
+
+
+def vein_chains(info):
+    """The vein tree as chains between junctions and ends, each ordered so
+    arrival rises along it: [{"p": [[x, y]...], "a": [...], "t": trunk}]."""
+    edges, arrival, trunk = info["_edges"], info["_arrival"], info["_trunk"]
+    deg = {p: len(n) for p, n in edges.items()}
+    seen = set()
+    chains = []
+    for start in edges:
+        if deg[start] == 2:
+            continue
+        for nxt in edges[start]:
+            if (start, nxt) in seen:
+                continue
+            line = [start, nxt]
+            seen.update({(start, nxt), (nxt, start)})
+            prev, cur = start, nxt
+            while deg.get(cur, 0) == 2:
+                step = [q for q in edges[cur] if q != prev][0]
+                if (cur, step) in seen:
+                    break
+                seen.update({(cur, step), (step, cur)})
+                line.append(step)
+                prev, cur = cur, step
+            chains.append(line)
+    out = []
+    for line in chains:
+        if arrival.get(line[0], 0) > arrival.get(line[-1], 0):
+            line.reverse()
+        inner = line[1:-1] or line
+        out.append({
+            "p": [[int(x), int(y)] for x, y in line],
+            "a": [round(arrival.get(q, 0.0), 3) for q in line],
+            "t": int(all(q in trunk for q in inner)),
+        })
+    return out
+
+
+def row_spans(info):
+    """Outer silhouette extent per row of the frame's bounds: [x0, x1]."""
+    a = info["_masks"][0]
+    x0, y0, x1, y1 = info["bbox"]
+    rows = []
+    for y in range(y0, y1 + 1):
+        xs = np.nonzero(a[y])[0]
+        rows.append([int(xs.min()), int(xs.max())] if len(xs) else [])
+    return rows
 
 
 def nano_frame(info):
@@ -436,6 +489,7 @@ def run(debug=None):
     NANO_DIR.mkdir(parents=True, exist_ok=True)
     ANCHORS.parent.mkdir(parents=True, exist_ok=True)
     data = {"frame": FRAME, "sheets": {}}
+    veins = {"frame": FRAME, "sheets": {}}
     debug_rows = []
     for name, img in sheets():
         n = img.shape[1] // FRAME
@@ -454,10 +508,15 @@ def run(debug=None):
             nano[:, i * FRAME:(i + 1) * FRAME] = nano_frame(info)
         Image.fromarray(nano).save(NANO_DIR / f"nano_{name}.png")
         data["sheets"][name] = [{k: v for k, v in info.items() if not k.startswith("_")} for info in infos]
+        veins["sheets"][name] = [{
+            "c": vein_chains(info), "bbox": info["bbox"], "rows": row_spans(info),
+            "eye": info["eye"], "ear": info["ear"],
+        } for info in infos]
         debug_rows.append((name, frames, infos))
         print(f"{name}: {n} frames, views {[i['view'][0] for i in infos]}, "
               f"tail {sum(1 for i in infos if i['tail_base'])}/{n}, back {sum(1 for i in infos if i['back'])}/{n}")
     ANCHORS.write_text(json.dumps(data, separators=(",", ":")) + "\n")
+    VEINS.write_text(json.dumps(veins, separators=(",", ":")) + "\n")
     if debug:
         write_debug(debug_rows, debug)
 

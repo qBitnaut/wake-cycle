@@ -1,7 +1,8 @@
 // The nanotech goo transformation, emissive pass: circuit veins racing from
-// the feet up through the body to the eyes, the eyes igniting, sparks of
-// nanotech at the rising goo front, and the flash. Unshaded and additive,
-// with HDR values above 1 so the 2D glow blooms them.
+// the feet up through the body to the eyes, the eyes igniting, silver wet
+// glints at the rising goo front, and the flash. Unshaded and additive,
+// with HDR values above 1 so the 2D glow blooms them. No colour shows
+// until the veins arrive: the rising goo itself only catches silver light.
 //
 // Same nano map and pixel grid as cat_nanotech.gdshader (see the include).
 // Veins are baked one-pixel traces, so they are crisp at any zoom.
@@ -68,21 +69,20 @@ void fragment() {
 		if (near) {
 			col = mix(vein_color.rgb, vein_color_alt.rgb, 0.5) * 0.14 * (dim + flash);
 		}
-		// Nanites glinting at the front while the goo climbs.
+		// Silver glints twinkling along the front while the goo climbs.
 		vec4 up = texture(TEXTURE, UV - vec2(0.0, tx.y));
 		bool front = !nano_covered(up, fp.x, goo_level, TIME);
 		float rising = step(0.02, goo_level) * (1.0 - step(0.98, goo_level));
 		float tw = nano_hash(fp + floor(TIME * 7.0) * 1.37);
-		if (front && tw > 0.84) {
-			vec3 nc = mix(vein_color.rgb, vein_color_alt.rgb, nano_hash(fp * 3.1));
-			col += nc * 0.9 * rising;
+		if (front && up.a > 0.25 && tw > 0.88) {
+			col += rim_color.rgb * 0.5 * rising;
 		}
 		// Wet rim: the advancing front catches a little cool light even in
 		// the dark; the silhouette top only a hint, on its highlight segments.
 		if (front) {
 			float seg = step(fract((fp.x + TIME * 3.0) / 9.0), 0.45);
 			float k = up.a > 0.25 ? 0.12 : 0.04 * seg;
-			col += mix(rim_color.rgb, vein_color.rgb, 0.35) * k * (1.0 - absorb);
+			col += rim_color.rgb * k * (1.0 - absorb);
 		}
 		// The pulse lights the whole skin for a moment.
 		col += mix(vein_color.rgb, vein_color_alt.rgb, 0.5) * flash * 0.12 * dim;

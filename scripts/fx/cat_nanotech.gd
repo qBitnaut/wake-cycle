@@ -55,6 +55,13 @@ const GLOW_SHADER := preload("res://shaders/cat_nanotech_glow.gdshader")
 	set(v):
 		eye_color = v
 		_push()
+## Brightness of the pixel veins. Keep near 1 on their own; lower it when
+## NanoHD draws the smooth HD veins on top, so these read as the traces
+## embedded in the goo under the glow.
+@export_range(0.0, 2.0, 0.01) var vein_energy := 1.15:
+	set(v):
+		vein_energy = v
+		_push()
 
 var coat: CatOverlay
 var glow: CatOverlay
@@ -128,3 +135,4 @@ func _push() -> void:
 	gm.set_shader_parameter("vein_color", vein_color)
 	gm.set_shader_parameter("vein_color_alt", vein_color_alt)
 	gm.set_shader_parameter("eye_color", eye_color)
+	gm.set_shader_parameter("energy", vein_energy)

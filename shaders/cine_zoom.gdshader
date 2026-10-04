@@ -4,7 +4,8 @@
 // while the zoom glides through fractional values: texel interiors are
 // flat and only the one output pixel on each texel edge is blended, so
 // there is none of the shimmer of a fractional Camera2D zoom at 640x360.
-// Letterbox bars and a soft edge vignette are drawn here too, at native res.
+// A soft edge vignette is drawn here too, at native res (CineZoom draws
+// the letterbox as its own item, over any HD effects).
 shader_type canvas_item;
 render_mode unshaded;
 
@@ -13,8 +14,6 @@ uniform vec2 src_size = vec2(640.0, 360.0);
 uniform vec2 out_size = vec2(1280.0, 720.0);   // destination rect, window px
 uniform vec2 focus = vec2(320.0, 180.0);        // view centre, game px
 uniform float zoom = 1.0;
-uniform float bars = 0.0;                       // letterbox, 0..1
-uniform float bar_height = 0.1;                 // of the frame height, at bars = 1
 uniform float vignette = 0.0;
 
 void fragment() {
@@ -29,9 +28,5 @@ void fragment() {
 	vec3 col = texture(src, (base + f) / src_size).rgb;
 	vec2 v = (UV - 0.5) * vec2(1.0, 0.8);
 	col *= 1.0 - vignette * smoothstep(0.3, 0.75, length(v));
-	float b = bars * bar_height;
-	if (UV.y < b || UV.y > 1.0 - b) {
-		col = vec3(0.0);
-	}
 	COLOR = vec4(col, 1.0);
 }

@@ -1,44 +1,42 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scenes/lab/fx_lab.gd" id="1_nrenb"]
-[ext_resource type="PackedScene" path="res://scenes/fx/night_backdrop.tscn" id="2_iv0de"]
-[ext_resource type="Script" path="res://scripts/fx/night_backdrop.gd" id="3_tginq"]
-[ext_resource type="Shader" path="res://shaders/window_rain.gdshader" id="4_34ttw"]
-[ext_resource type="TileSet" path="res://assets/tiles/warehouse_tileset.tres" id="5_td7b4"]
-[ext_resource type="Texture2D" path="res://assets/fx/window_broken.png" id="6_7ybm6"]
-[ext_resource type="PackedScene" path="res://scenes/fx/fog_layer.tscn" id="7_2r43x"]
-[ext_resource type="Script" path="res://scripts/fx/fog_layer.gd" id="8_y2sjr"]
-[ext_resource type="PackedScene" path="res://scenes/fx/lighting_rig.tscn" id="9_6rhts"]
-[ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="10_hlvbm"]
-[ext_resource type="PackedScene" path="res://scenes/fx/moon_shaft.tscn" id="11_4g52s"]
-[ext_resource type="Script" path="res://scripts/fx/moon_shaft.gd" id="12_k0u23"]
-[ext_resource type="Texture2D" path="res://assets/fx/light_soft.png" id="13_f3h3t"]
-[ext_resource type="PackedScene" path="res://scenes/fx/rain.tscn" id="14_mx6u0"]
-[ext_resource type="Script" path="res://scripts/fx/rain_fx.gd" id="15_cm5ll"]
-[ext_resource type="PackedScene" path="res://scenes/fx/puddle.tscn" id="16_0xbnw"]
-[ext_resource type="Script" path="res://scripts/fx/puddle.gd" id="17_ejike"]
-[ext_resource type="PackedScene" path="res://scenes/fx/drip.tscn" id="18_vqibp"]
-[ext_resource type="Script" path="res://scripts/fx/drip_fx.gd" id="19_jfjuj"]
-[ext_resource type="Texture2D" path="res://assets/sprites/cat/cat_idle.png" id="20_v316j"]
-[ext_resource type="PackedScene" path="res://scenes/fx/warning_light.tscn" id="21_tp2mf"]
-[ext_resource type="Script" path="res://scripts/fx/warning_light.gd" id="22_lmtfh"]
-[ext_resource type="PackedScene" path="res://scenes/fx/steam_vent.tscn" id="23_wacos"]
-[ext_resource type="Script" path="res://scripts/fx/steam_vent.gd" id="24_mp0la"]
-[ext_resource type="PackedScene" path="res://scenes/fx/sparks.tscn" id="25_mbkax"]
-[ext_resource type="Script" path="res://scripts/fx/sparks_fx.gd" id="26_chnev"]
-[ext_resource type="PackedScene" path="res://scenes/fx/goo_pool.tscn" id="27_bsdc4"]
-[ext_resource type="Script" path="res://scripts/fx/goo_pool.gd" id="28_d1edx"]
-[ext_resource type="PackedScene" path="res://scenes/fx/pad_fx.tscn" id="29_k2rs1"]
-[ext_resource type="Script" path="res://scripts/fx/pad_fx.gd" id="30_hufs3"]
-[ext_resource type="PackedScene" path="res://scenes/fx/lightning.tscn" id="31_2ssi7"]
-[ext_resource type="Script" path="res://scripts/fx/lightning_fx.gd" id="32_ocs2w"]
-[ext_resource type="PackedScene" path="res://scenes/fx/title_overlay.tscn" id="33_5r0t1"]
-[ext_resource type="Script" path="res://scripts/fx/title_overlay.gd" id="34_0lwfu"]
-[ext_resource type="PackedScene" path="res://scenes/fx/post_fx.tscn" id="35_8rnyg"]
-[ext_resource type="Script" path="res://scripts/fx/post_fx.gd" id="36_jjf1i"]
+[ext_resource type="Script" path="res://scenes/lab/fx_lab.gd" id="1_4curf"]
+[ext_resource type="PackedScene" path="res://scenes/fx/night_backdrop.tscn" id="2_d26v7"]
+[ext_resource type="Script" path="res://scripts/fx/night_backdrop.gd" id="3_nrenb"]
+[ext_resource type="Shader" path="res://shaders/window_rain.gdshader" id="4_iv0de"]
+[ext_resource type="TileSet" path="res://assets/tiles/warehouse_tileset.tres" id="5_tginq"]
+[ext_resource type="Texture2D" path="res://assets/fx/window_broken.png" id="6_34ttw"]
+[ext_resource type="PackedScene" path="res://scenes/fx/fog_layer.tscn" id="7_td7b4"]
+[ext_resource type="Script" path="res://scripts/fx/fog_layer.gd" id="8_7ybm6"]
+[ext_resource type="PackedScene" path="res://scenes/fx/lighting_rig.tscn" id="9_2r43x"]
+[ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="10_y2sjr"]
+[ext_resource type="PackedScene" path="res://scenes/fx/moon_shaft.tscn" id="11_6rhts"]
+[ext_resource type="Script" path="res://scripts/fx/moon_shaft.gd" id="12_hlvbm"]
+[ext_resource type="Texture2D" path="res://assets/fx/light_soft.png" id="13_4g52s"]
+[ext_resource type="PackedScene" path="res://scenes/fx/rain.tscn" id="14_k0u23"]
+[ext_resource type="Script" path="res://scripts/fx/rain_fx.gd" id="15_f3h3t"]
+[ext_resource type="PackedScene" path="res://scenes/fx/puddle.tscn" id="16_mx6u0"]
+[ext_resource type="Script" path="res://scripts/fx/puddle.gd" id="17_cm5ll"]
+[ext_resource type="PackedScene" path="res://scenes/fx/drip.tscn" id="18_0xbnw"]
+[ext_resource type="Script" path="res://scripts/fx/drip_fx.gd" id="19_ejike"]
+[ext_resource type="Texture2D" path="res://assets/sprites/cat/cat_idle.png" id="20_vqibp"]
+[ext_resource type="PackedScene" path="res://scenes/fx/warning_light.tscn" id="21_jfjuj"]
+[ext_resource type="Script" path="res://scripts/fx/warning_light.gd" id="22_v316j"]
+[ext_resource type="PackedScene" path="res://scenes/fx/steam_vent.tscn" id="23_tp2mf"]
+[ext_resource type="Script" path="res://scripts/fx/steam_vent.gd" id="24_lmtfh"]
+[ext_resource type="PackedScene" path="res://scenes/fx/sparks.tscn" id="25_wacos"]
+[ext_resource type="Script" path="res://scripts/fx/sparks_fx.gd" id="26_mp0la"]
+[ext_resource type="PackedScene" path="res://scenes/fx/goo_pool.tscn" id="27_mbkax"]
+[ext_resource type="Script" path="res://scripts/fx/goo_pool.gd" id="28_chnev"]
+[ext_resource type="PackedScene" path="res://scenes/fx/pad_fx.tscn" id="29_bsdc4"]
+[ext_resource type="Script" path="res://scripts/fx/pad_fx.gd" id="30_d1edx"]
+[ext_resource type="PackedScene" path="res://scenes/fx/lightning.tscn" id="31_k2rs1"]
+[ext_resource type="Script" path="res://scripts/fx/lightning_fx.gd" id="32_hufs3"]
+[ext_resource type="PackedScene" path="res://scenes/fx/title_overlay.tscn" id="33_2ssi7"]
+[ext_resource type="Script" path="res://scripts/fx/title_overlay.gd" id="34_ocs2w"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_81nk3"]
-shader = ExtResource("4_34ttw")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5r0t1"]
+shader = ExtResource("4_iv0de")
 shader_parameter/rain_color = null
 shader_parameter/intensity = 0.4
 shader_parameter/wind = 0.22
@@ -46,8 +44,8 @@ shader_parameter/speed = null
 shader_parameter/density = null
 shader_parameter/flash = null
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vfl72"]
-shader = ExtResource("4_34ttw")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0lwfu"]
+shader = ExtResource("4_iv0de")
 shader_parameter/rain_color = null
 shader_parameter/intensity = 0.4
 shader_parameter/wind = 0.22
@@ -55,8 +53,8 @@ shader_parameter/speed = null
 shader_parameter/density = null
 shader_parameter/flash = null
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wnvl1"]
-shader = ExtResource("4_34ttw")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8rnyg"]
+shader = ExtResource("4_iv0de")
 shader_parameter/rain_color = null
 shader_parameter/intensity = 0.4
 shader_parameter/wind = 0.22
@@ -64,71 +62,71 @@ shader_parameter/speed = null
 shader_parameter/density = null
 shader_parameter/flash = null
 
-[node name="FxLab" type="Node2D" unique_id=1243277251]
-script = ExtResource("1_nrenb")
+[node name="FxLab" type="Node2D" unique_id=137769873]
+script = ExtResource("1_4curf")
 
-[node name="Outside" type="Node2D" parent="." unique_id=2079551559]
+[node name="Outside" type="Node2D" parent="." unique_id=1340502926]
 z_index = -100
 
-[node name="NightBackdrop" type="Node2D" parent="Outside" unique_id=538706538 instance=ExtResource("2_iv0de")]
+[node name="NightBackdrop" type="Node2D" parent="Outside" unique_id=2071093305 instance=ExtResource("2_d26v7")]
 position = Vector2(0, 150)
-script = ExtResource("3_tginq")
+script = ExtResource("3_nrenb")
 brightness = 1.5
 
-[node name="WindowRain0" type="ColorRect" parent="Outside" unique_id=69082077]
-material = SubResource("ShaderMaterial_81nk3")
+[node name="WindowRain0" type="ColorRect" parent="Outside" unique_id=593058180]
+material = SubResource("ShaderMaterial_5r0t1")
 offset_left = 18.0
 offset_top = 36.0
 offset_right = 72.0
 offset_bottom = 72.0
 mouse_filter = 2
 
-[node name="WindowRain1" type="ColorRect" parent="Outside" unique_id=1318623865]
-material = SubResource("ShaderMaterial_vfl72")
+[node name="WindowRain1" type="ColorRect" parent="Outside" unique_id=1773337253]
+material = SubResource("ShaderMaterial_0lwfu")
 offset_left = 72.0
 offset_top = 36.0
 offset_right = 126.0
 offset_bottom = 72.0
 mouse_filter = 2
 
-[node name="WindowRain2" type="ColorRect" parent="Outside" unique_id=993469712]
-material = SubResource("ShaderMaterial_wnvl1")
+[node name="WindowRain2" type="ColorRect" parent="Outside" unique_id=1238698616]
+material = SubResource("ShaderMaterial_8rnyg")
 offset_left = 486.0
 offset_top = 36.0
 offset_right = 540.0
 offset_bottom = 72.0
 mouse_filter = 2
 
-[node name="BackWall" type="TileMapLayer" parent="." unique_id=1342400762]
+[node name="BackWall" type="TileMapLayer" parent="." unique_id=1089509261]
 self_modulate = Color(0.44, 0.46, 0.54, 1)
 z_index = -50
 tile_map_data = PackedByteArray("AAAAAAEAAgAMAAIAAAAAAAIAAgAMAAEAAAAAAAMAAgAMAAIAAAAAAAQAAgAMAAEAAAAAAAUAAgAMAAIAAAAAAAYAAgAMAAEAAAAAAAcAAgAMAAIAAAAAAAgAAgAMAAEAAAABAAEAAgANAAIAAAABAAQAAgANAAEAAAABAAUAAgANAAIAAAABAAYAAgANAAEAAAABAAcAAgANAAIAAAABAAgAAgANAAEAAAACAAEAAgAOAAIAAAACAAQAAgAOAAEAAAACAAUAAgAOAAIAAAACAAYAAgAOAAEAAAACAAcAAgAOAAIAAAACAAgAAgAOAAEAAAADAAEAAgAMAAEAAAADAAQAAgAMAAIAAAADAAUAAgAMAAEAAAADAAYAAgAMAAIAAAADAAcAAgAMAAEAAAADAAgAAgAMAAIAAAAEAAEAAgANAAEAAAAEAAQAAgANAAIAAAAEAAUAAgANAAEAAAAEAAYAAgANAAIAAAAEAAcAAgANAAEAAAAEAAgAAgANAAIAAAAFAAEAAgAOAAEAAAAFAAQAAgAOAAIAAAAFAAUAAgAOAAEAAAAFAAYAAgAOAAIAAAAFAAcAAgAOAAEAAAAFAAgAAgAOAAIAAAAGAAEAAgAMAAIAAAAGAAQAAgAMAAEAAAAGAAUAAgAMAAIAAAAGAAYAAgAMAAEAAAAGAAcAAgAMAAIAAAAGAAgAAgAMAAEAAAAHAAEAAgANAAIAAAAHAAIAAgANAAEAAAAHAAMAAgANAAIAAAAHAAQAAgANAAEAAAAHAAUAAgANAAIAAAAHAAYAAgANAAEAAAAHAAcAAgANAAIAAAAHAAgAAgANAAEAAAAIAAEAAgAOAAIAAAAIAAIAAgAOAAEAAAAIAAMAAgAOAAIAAAAIAAQAAgAOAAEAAAAIAAUAAgAOAAIAAAAIAAYAAgAOAAEAAAAIAAcAAgAOAAIAAAAIAAgAAgAOAAEAAAAJAAEAAgAMAAEAAAAJAAIAAgAMAAIAAAAJAAMAAgAMAAEAAAAJAAQAAgAMAAIAAAAJAAUAAgAMAAEAAAAJAAYAAgAMAAIAAAAJAAcAAgAMAAEAAAAJAAgAAgAMAAIAAAAKAAEAAgANAAEAAAAKAAIAAgANAAIAAAAKAAMAAgANAAEAAAAKAAQAAgANAAIAAAAKAAUAAgANAAEAAAAKAAYAAgANAAIAAAAKAAcAAgANAAEAAAAKAAgAAgANAAIAAAALAAEAAgAOAAEAAAALAAIAAgAOAAIAAAALAAMAAgAOAAEAAAALAAQAAgAOAAIAAAALAAUAAgAOAAEAAAALAAYAAgAOAAIAAAALAAcAAgAOAAEAAAALAAgAAgAOAAIAAAAMAAEAAgAMAAIAAAAMAAIAAgAMAAEAAAAMAAMAAgAMAAIAAAAMAAQAAgAMAAEAAAAMAAUAAgAMAAIAAAAMAAYAAgAMAAEAAAAMAAcAAgAMAAIAAAAMAAgAAgAMAAEAAAANAAEAAgANAAIAAAANAAIAAgANAAEAAAANAAMAAgANAAIAAAANAAQAAgANAAEAAAANAAUAAgANAAIAAAANAAYAAgANAAEAAAANAAcAAgANAAIAAAANAAgAAgANAAEAAAAOAAEAAgAOAAIAAAAOAAIAAgAOAAEAAAAOAAMAAgAOAAIAAAAOAAQAAgAOAAEAAAAOAAUAAgAOAAIAAAAOAAYAAgAOAAEAAAAOAAcAAgAOAAIAAAAOAAgAAgAOAAEAAAAPAAEAAgAMAAEAAAAPAAIAAgAMAAIAAAAPAAMAAgAMAAEAAAAPAAQAAgAMAAIAAAAPAAUAAgAMAAEAAAAPAAYAAgAMAAIAAAAPAAcAAgAMAAEAAAAPAAgAAgAMAAIAAAAQAAEAAgANAAEAAAAQAAIAAgANAAIAAAAQAAMAAgANAAEAAAAQAAQAAgANAAIAAAAQAAUAAgANAAEAAAAQAAYAAgANAAIAAAAQAAcAAgANAAEAAAAQAAgAAgANAAIAAAARAAEAAgAOAAEAAAARAAIAAgAOAAIAAAARAAMAAgAOAAEAAAARAAQAAgAOAAIAAAARAAUAAgAOAAEAAAARAAYAAgAOAAIAAAARAAcAAgAOAAEAAAARAAgAAgAOAAIAAAASAAEAAgAMAAIAAAASAAIAAgAMAAEAAAASAAMAAgAMAAIAAAASAAQAAgAMAAEAAAASAAUAAgAMAAIAAAASAAYAAgAMAAEAAAASAAcAAgAMAAIAAAASAAgAAgAMAAEAAAATAAEAAgANAAIAAAATAAIAAgANAAEAAAATAAMAAgANAAIAAAATAAQAAgANAAEAAAATAAUAAgANAAIAAAATAAYAAgANAAEAAAATAAcAAgANAAIAAAATAAgAAgANAAEAAAAUAAEAAgAOAAIAAAAUAAIAAgAOAAEAAAAUAAMAAgAOAAIAAAAUAAQAAgAOAAEAAAAUAAUAAgAOAAIAAAAUAAYAAgAOAAEAAAAUAAcAAgAOAAIAAAAUAAgAAgAOAAEAAAAVAAEAAgAMAAEAAAAVAAIAAgAMAAIAAAAVAAMAAgAMAAEAAAAVAAQAAgAMAAIAAAAVAAUAAgAMAAEAAAAVAAYAAgAMAAIAAAAVAAcAAgAMAAEAAAAVAAgAAgAMAAIAAAAWAAEAAgANAAEAAAAWAAIAAgANAAIAAAAWAAMAAgANAAEAAAAWAAQAAgANAAIAAAAWAAUAAgANAAEAAAAWAAYAAgANAAIAAAAWAAcAAgANAAEAAAAWAAgAAgANAAIAAAAXAAEAAgAOAAEAAAAXAAIAAgAOAAIAAAAXAAMAAgAOAAEAAAAXAAQAAgAOAAIAAAAXAAUAAgAOAAEAAAAXAAYAAgAOAAIAAAAXAAcAAgAOAAEAAAAXAAgAAgAOAAIAAAAYAAEAAgAMAAIAAAAYAAIAAgAMAAEAAAAYAAMAAgAMAAIAAAAYAAQAAgAMAAEAAAAYAAUAAgAMAAIAAAAYAAYAAgAMAAEAAAAYAAcAAgAMAAIAAAAYAAgAAgAMAAEAAAAZAAEAAgANAAIAAAAZAAIAAgANAAEAAAAZAAMAAgANAAIAAAAZAAQAAgANAAEAAAAZAAUAAgANAAIAAAAZAAYAAgANAAEAAAAZAAcAAgANAAIAAAAZAAgAAgANAAEAAAAaAAEAAgAOAAIAAAAaAAIAAgAOAAEAAAAaAAMAAgAOAAIAAAAaAAQAAgAOAAEAAAAaAAUAAgAOAAIAAAAaAAYAAgAOAAEAAAAaAAcAAgAOAAIAAAAaAAgAAgAOAAEAAAAbAAEAAgAMAAEAAAAbAAQAAgAMAAIAAAAbAAUAAgAMAAEAAAAbAAYAAgAMAAIAAAAbAAcAAgAMAAEAAAAbAAgAAgAMAAIAAAAcAAEAAgANAAEAAAAcAAQAAgANAAIAAAAcAAUAAgANAAEAAAAcAAYAAgANAAIAAAAcAAcAAgANAAEAAAAcAAgAAgANAAIAAAAdAAEAAgAOAAEAAAAdAAQAAgAOAAIAAAAdAAUAAgAOAAEAAAAdAAYAAgAOAAIAAAAdAAcAAgAOAAEAAAAdAAgAAgAOAAIAAAAeAAEAAgAMAAIAAAAeAAIAAgAMAAEAAAAeAAMAAgAMAAIAAAAeAAQAAgAMAAEAAAAeAAUAAgAMAAIAAAAeAAYAAgAMAAEAAAAeAAcAAgAMAAIAAAAeAAgAAgAMAAEAAAAfAAEAAgANAAIAAAAfAAIAAgANAAEAAAAfAAMAAgANAAIAAAAfAAQAAgANAAEAAAAfAAUAAgANAAIAAAAfAAYAAgANAAEAAAAfAAcAAgANAAIAAAAfAAgAAgANAAEAAAAgAAEAAgAOAAIAAAAgAAIAAgAOAAEAAAAgAAMAAgAOAAIAAAAgAAQAAgAOAAEAAAAgAAUAAgAOAAIAAAAgAAYAAgAOAAEAAAAgAAcAAgAOAAIAAAAgAAgAAgAOAAEAAAAhAAEAAgAMAAEAAAAhAAIAAgAMAAIAAAAhAAMAAgAMAAEAAAAhAAQAAgAMAAIAAAAhAAUAAgAMAAEAAAAhAAYAAgAMAAIAAAAhAAcAAgAMAAEAAAAhAAgAAgAMAAIAAAAiAAEAAgANAAEAAAAiAAIAAgANAAIAAAAiAAMAAgANAAEAAAAiAAQAAgANAAIAAAAiAAUAAgANAAEAAAAiAAYAAgANAAIAAAAiAAcAAgANAAEAAAAiAAgAAgANAAIAAAAjAAEAAgAOAAEAAAAjAAIAAgAOAAIAAAAjAAMAAgAOAAEAAAAjAAQAAgAOAAIAAAAjAAUAAgAOAAEAAAAjAAYAAgAOAAIAAAAjAAcAAgAOAAEAAAAjAAgAAgAOAAIAAAA=")
-tile_set = ExtResource("5_td7b4")
+tile_set = ExtResource("5_tginq")
 occlusion_enabled = false
 
-[node name="WindowFrame0" type="Sprite2D" parent="." unique_id=1285094211]
+[node name="WindowFrame0" type="Sprite2D" parent="." unique_id=437236857]
 z_index = -45
 position = Vector2(18, 36)
-texture = ExtResource("6_7ybm6")
+texture = ExtResource("6_34ttw")
 centered = false
 
-[node name="WindowFrame1" type="Sprite2D" parent="." unique_id=1574139214]
+[node name="WindowFrame1" type="Sprite2D" parent="." unique_id=642026264]
 z_index = -45
 position = Vector2(72, 36)
-texture = ExtResource("6_7ybm6")
+texture = ExtResource("6_34ttw")
 centered = false
 flip_h = true
 
-[node name="WindowFrame2" type="Sprite2D" parent="." unique_id=546760471]
+[node name="WindowFrame2" type="Sprite2D" parent="." unique_id=458501060]
 z_index = -45
 position = Vector2(486, 36)
-texture = ExtResource("6_7ybm6")
+texture = ExtResource("6_34ttw")
 centered = false
 
-[node name="FogBack" type="Parallax2D" parent="." unique_id=312303422 instance=ExtResource("7_2r43x")]
+[node name="FogBack" type="Parallax2D" parent="." unique_id=1628197345 instance=ExtResource("7_td7b4")]
 z_index = -40
 scroll_scale = Vector2(0.9, 1)
-script = ExtResource("8_y2sjr")
+script = ExtResource("8_7ybm6")
 band_width = 768.0
 band_height = 84.0
 density = 0.42
@@ -136,10 +134,10 @@ drift = Vector2(4, 0)
 fade_top = 0.7
 fade_bottom = 0.05
 
-[node name="HighHaze" type="Parallax2D" parent="." unique_id=754658427 instance=ExtResource("7_2r43x")]
+[node name="HighHaze" type="Parallax2D" parent="." unique_id=1480422449 instance=ExtResource("7_td7b4")]
 z_index = -40
 scroll_scale = Vector2(0.85, 1)
-script = ExtResource("8_y2sjr")
+script = ExtResource("8_7ybm6")
 band_width = 768.0
 band_height = 90.0
 density = 0.16
@@ -148,27 +146,27 @@ noise_scale = 0.6
 fade_top = 0.3
 fade_bottom = 0.5
 
-[node name="Decor" type="TileMapLayer" parent="." unique_id=429417637]
+[node name="Decor" type="TileMapLayer" parent="." unique_id=545052079]
 self_modulate = Color(0.8, 0.82, 0.9, 1)
 z_index = -20
 tile_map_data = PackedByteArray("AAABAAEAAgAJAAkAAAACAAEAAgAJAAkAAAADAAEAAgAJAAkAAAAEAAEAAgAJAAkAAAAFAAEAAgAJAAkAAAAGAAEAAgAJAAkAAAAHAAEAAgAJAAkAAAAIAAEAAgAJAAkAAAAJAAEAAgAJAAkAAAAKAAEAAgAJAAkAAAALAAEAAgAJAAkAAAAMAAEAAgAJAAkAAAANAAEAAgAJAAkAAAAOAAEAAgAJAAkAAAAPAAEAAgAJAAkAAAAQAAEAAgAJAAkAAAARAAEAAgAJAAkAAAASAAEAAgAJAAkAAAATAAEAAgAJAAkAAAAUAAEAAgAJAAkAAAAVAAEAAgAJAAkAAAAWAAEAAgAJAAkAAAAXAAEAAgAJAAkAAAAYAAEAAgAJAAkAAAAZAAEAAgAJAAkAAAAaAAEAAgAJAAkAAAAbAAEAAgAJAAkAAAAcAAEAAgAJAAkAAAAdAAEAAgAMAAkAAAAeAAEAAgAJAAkAAAAfAAEAAgAJAAkAAAAgAAEAAgAJAAkAAAAhAAEAAgAJAAkAAAAiAAEAAgAJAAkAAAAHAAIAAgAGAAkAAAAHAAMAAgAGAAkAAAAHAAQAAgAGAAkAAAAHAAUAAgAGAAkAAAAHAAYAAgAGAAkAAAAHAAcAAgAGAAkAAAAHAAgAAgAGAAkAAAANAAIAAgAMAAkAAAANAAMAAgAMAAkAAAANAAQAAgAMAAkAAAASAAIAAgAMAAkAAAASAAMAAgAMAAkAAAASAAQAAgAMAAkAAAAdAAIAAgAMAAkAAAAdAAMAAgAMAAkAAAAdAAQAAgAMAA4AAAAUAAcAAgATAAIAAAAUAAgAAgATAAMAAAABAAgAAgASAAwAAAA=")
-tile_set = ExtResource("5_td7b4")
+tile_set = ExtResource("5_tginq")
 occlusion_enabled = false
 
-[node name="Solid" type="TileMapLayer" parent="." unique_id=514726814]
+[node name="Solid" type="TileMapLayer" parent="." unique_id=353607452]
 tile_map_data = PackedByteArray("AAD//wAAAgANAAIAAAD/////AgANAAEAAAD//wkAAgANAAEAAAAAAAAAAgANAAIAAAAAAP//AgANAAEAAAAAAAkAAgANAAEAAAABAAAAAgAUAAkAAAABAP//AgAUAAkAAAABAAkAAgATAAgAAAACAAAAAgAUAAkAAAACAP//AgAUAAkAAAACAAkAAgATAAgAAAADAAAAAgAUAAkAAAADAP//AgAUAAkAAAADAAkAAgATAAgAAAAEAAAAAgAUAAkAAAAEAP//AgAUAAkAAAAEAAkAAgATAAgAAAAFAAAAAgAUAAkAAAAFAP//AgAUAAkAAAAFAAkAAgATAAgAAAAGAAAAAgAUAAkAAAAGAP//AgAUAAkAAAAGAAkAAgATAAgAAAAHAAAAAgAUAAkAAAAHAP//AgAUAAkAAAAHAAkAAgATAAgAAAAIAAkAAgATAAgAAAAJAAkAAgATAAgAAAAKAAAAAgAUAAkAAAAKAP//AgAUAAkAAAAKAAkAAgATAAgAAAALAAAAAgAUAAkAAAALAP//AgAUAAkAAAALAAkAAgATAAgAAAAMAAAAAgAUAAkAAAAMAP//AgAUAAkAAAAMAAkAAgATAAgAAAANAAAAAgAUAAkAAAANAP//AgAUAAkAAAANAAkAAgATAAgAAAAOAAAAAgAUAAkAAAAOAP//AgAUAAkAAAAOAAkAAgATAAgAAAAPAAAAAgAUAAkAAAAPAP//AgAUAAkAAAAPAAkAAgATAAgAAAAQAAAAAgAUAAkAAAAQAP//AgAUAAkAAAAQAAkAAgATAAgAAAARAAAAAgAUAAkAAAARAP//AgAUAAkAAAARAAkAAgATAAgAAAASAAAAAgAUAAkAAAASAP//AgAUAAkAAAASAAkAAgATAAgAAAATAAAAAgAUAAkAAAATAP//AgAUAAkAAAATAAkAAgATAAgAAAAUAAAAAgAUAAkAAAAUAP//AgAUAAkAAAAUAAkAAgATAAgAAAAVAAkAAgATAAgAAAAWAAAAAgAUAAkAAAAWAP//AgAUAAkAAAAXAAAAAgAUAAkAAAAXAP//AgAUAAkAAAAYAAAAAgAUAAkAAAAYAP//AgAUAAkAAAAZAAAAAgAUAAkAAAAZAP//AgAUAAkAAAAaAAAAAgAUAAkAAAAaAP//AgAUAAkAAAAaAAkAAgATAAgAAAAbAAAAAgAUAAkAAAAbAP//AgAUAAkAAAAbAAkAAgATAAgAAAAcAAAAAgAUAAkAAAAcAP//AgAUAAkAAAAcAAkAAgATAAgAAAAdAAAAAgAUAAkAAAAdAP//AgAUAAkAAAAdAAkAAgATAAgAAAAeAAAAAgAUAAkAAAAeAP//AgAUAAkAAAAeAAkAAgATAAgAAAAfAAAAAgAUAAkAAAAfAP//AgAUAAkAAAAfAAkAAgATAAgAAAAgAAAAAgAUAAkAAAAgAP//AgAUAAkAAAAgAAkAAgATAAgAAAAhAAAAAgAUAAkAAAAhAP//AgAUAAkAAAAhAAkAAgATAAgAAAAiAAAAAgAUAAkAAAAiAP//AgAUAAkAAAAiAAkAAgATAAgAAAAjAAAAAgANAAIAAAAjAP//AgANAAEAAAAjAAkAAgANAAEAAAAkAAAAAgANAAIAAAAkAP//AgANAAEAAAAkAAkAAgANAAEAAAD//wEAAgANAAEAAAAAAAEAAgANAAEAAAAjAAEAAgANAAEAAAAkAAEAAgANAAEAAAD//wIAAgANAAIAAAAAAAIAAgANAAIAAAAjAAIAAgANAAIAAAAkAAIAAgANAAIAAAD//wMAAgANAAEAAAAAAAMAAgANAAEAAAAjAAMAAgANAAEAAAAkAAMAAgANAAEAAAD//wQAAgANAAIAAAAAAAQAAgANAAIAAAAjAAQAAgANAAIAAAAkAAQAAgANAAIAAAD//wUAAgANAAEAAAAAAAUAAgANAAEAAAAjAAUAAgANAAEAAAAkAAUAAgANAAEAAAD//wYAAgANAAIAAAAAAAYAAgANAAIAAAAjAAYAAgANAAIAAAAkAAYAAgANAAIAAAD//wcAAgANAAEAAAAAAAcAAgANAAEAAAAjAAcAAgANAAEAAAAkAAcAAgANAAEAAAD//wgAAgANAAIAAAAAAAgAAgANAAIAAAAjAAgAAgANAAIAAAAkAAgAAgANAAIAAAD//woAAgATAAkAAAAAAAoAAgATAAkAAAAjAAoAAgATAAkAAAAkAAoAAgATAAkAAAABAAoAAgATAAkAAAACAAoAAgATAAkAAAADAAoAAgATAAkAAAAEAAoAAgATAAkAAAAFAAoAAgATAAkAAAAGAAoAAgATAAkAAAAHAAoAAgATAAkAAAAIAAoAAgATAAkAAAAJAAoAAgATAAkAAAAKAAoAAgATAAkAAAALAAoAAgATAAkAAAAMAAoAAgATAAkAAAANAAoAAgATAAkAAAAOAAoAAgATAAkAAAAPAAoAAgATAAkAAAAQAAoAAgATAAkAAAARAAoAAgATAAkAAAASAAoAAgATAAkAAAATAAoAAgATAAkAAAAUAAoAAgATAAkAAAAVAAoAAgATAAkAAAAaAAoAAgATAAkAAAAbAAoAAgATAAkAAAAcAAoAAgATAAkAAAAdAAoAAgATAAkAAAAeAAoAAgATAAkAAAAfAAoAAgATAAkAAAAgAAoAAgATAAkAAAAhAAoAAgATAAkAAAAiAAoAAgATAAkAAAACAAgAAgABAAoAAAADAAgAAgAAAAoAAAACAAcAAgADAAoAAAAMAAUAAgAIAAkAAAANAAUAAgAJAAkAAAAOAAUAAgAJAAkAAAAPAAUAAgAJAAkAAAAQAAUAAgAJAAkAAAARAAUAAgAJAAkAAAASAAUAAgAJAAkAAAATAAUAAgAKAAkAAAA=")
-tile_set = ExtResource("5_td7b4")
+tile_set = ExtResource("5_tginq")
 
-[node name="LightingRig" type="Node2D" parent="." unique_id=808952783 node_paths=PackedStringArray("solid_layers") instance=ExtResource("9_6rhts")]
-script = ExtResource("10_hlvbm")
+[node name="LightingRig" type="Node2D" parent="." unique_id=129337402 node_paths=PackedStringArray("solid_layers") instance=ExtResource("9_2r43x")]
+script = ExtResource("10_y2sjr")
 moon_energy = 0.7
 moon_angle = 18.0
 solid_layers = [NodePath("../Solid")]
 
-[node name="MoonShaft" type="Node2D" parent="." unique_id=1470059450 instance=ExtResource("11_4g52s")]
+[node name="MoonShaft" type="Node2D" parent="." unique_id=1622051637 instance=ExtResource("11_6rhts")]
 z_index = -10
 position = Vector2(162, 18)
-script = ExtResource("12_k0u23")
+script = ExtResource("12_hlvbm")
 length = 144.0
 top_width = 36.0
 bottom_width = 58.0
@@ -176,10 +174,10 @@ ray_intensity = 0.34
 light_energy = 1.1
 dust_amount = 46
 
-[node name="MoonShaft2" type="Node2D" parent="." unique_id=362547438 instance=ExtResource("11_4g52s")]
+[node name="MoonShaft2" type="Node2D" parent="." unique_id=907936306 instance=ExtResource("11_6rhts")]
 z_index = -10
 position = Vector2(387, 18)
-script = ExtResource("12_k0u23")
+script = ExtResource("12_hlvbm")
 length = 144.0
 top_width = 18.0
 bottom_width = 36.0
@@ -188,30 +186,30 @@ floor_glow = 0.0
 light_energy = 0.7
 dust_amount = 16
 
-[node name="WindowGlow0" type="PointLight2D" parent="." unique_id=1667042141]
+[node name="WindowGlow0" type="PointLight2D" parent="." unique_id=1792812710]
 position = Vector2(45, 76)
 color = Color(0.7, 0.8, 1, 1)
 energy = 0.55
-texture = ExtResource("13_f3h3t")
+texture = ExtResource("13_4g52s")
 texture_scale = 1.3
 
-[node name="WindowGlow1" type="PointLight2D" parent="." unique_id=2078028355]
+[node name="WindowGlow1" type="PointLight2D" parent="." unique_id=1986887887]
 position = Vector2(99, 76)
 color = Color(0.7, 0.8, 1, 1)
 energy = 0.55
-texture = ExtResource("13_f3h3t")
+texture = ExtResource("13_4g52s")
 texture_scale = 1.3
 
-[node name="WindowGlow2" type="PointLight2D" parent="." unique_id=1712922841]
+[node name="WindowGlow2" type="PointLight2D" parent="." unique_id=1464682527]
 position = Vector2(513, 76)
 color = Color(0.7, 0.8, 1, 1)
 energy = 0.55
-texture = ExtResource("13_f3h3t")
+texture = ExtResource("13_4g52s")
 texture_scale = 1.3
 
-[node name="HoleRain" type="Node2D" parent="." unique_id=87601882 instance=ExtResource("14_mx6u0")]
+[node name="HoleRain" type="Node2D" parent="." unique_id=1822410812 instance=ExtResource("14_k0u23")]
 position = Vector2(162, 4)
-script = ExtResource("15_cm5ll")
+script = ExtResource("15_f3h3t")
 width = 36.0
 floor_y = 158.0
 density = 70.0
@@ -219,89 +217,89 @@ speed = 240.0
 wind = 46.0
 lighting = 1
 
-[node name="Puddle" type="ColorRect" parent="." unique_id=1610168069 instance=ExtResource("16_0xbnw")]
+[node name="Puddle" type="ColorRect" parent="." unique_id=2013262577 instance=ExtResource("16_mx6u0")]
 z_index = 20
 offset_left = 186.0
 offset_top = 162.0
 offset_right = 282.0
 offset_bottom = 170.0
-script = ExtResource("17_ejike")
+script = ExtResource("17_cm5ll")
 
-[node name="Drip" type="Node2D" parent="." unique_id=399987127 node_paths=PackedStringArray("puddle") instance=ExtResource("18_vqibp")]
+[node name="Drip" type="Node2D" parent="." unique_id=251144739 node_paths=PackedStringArray("puddle") instance=ExtResource("18_0xbnw")]
 position = Vector2(255, 18)
-script = ExtResource("19_jfjuj")
+script = ExtResource("19_ejike")
 fall_height = 144.0
 puddle = NodePath("../Puddle")
 
-[node name="Drip2" type="Node2D" parent="." unique_id=1094248940 node_paths=PackedStringArray("puddle") instance=ExtResource("18_vqibp")]
+[node name="Drip2" type="Node2D" parent="." unique_id=1649055173 node_paths=PackedStringArray("puddle") instance=ExtResource("18_0xbnw")]
 position = Vector2(229, 94)
-script = ExtResource("19_jfjuj")
+script = ExtResource("19_ejike")
 fall_height = 68.0
 interval_min = 2.0
 interval_max = 4.5
 puddle = NodePath("../Puddle")
 
-[node name="Cat" type="Sprite2D" parent="." unique_id=973841395]
+[node name="Cat" type="Sprite2D" parent="." unique_id=812711384]
 z_index = 2
 position = Vector2(206, 155)
-texture = ExtResource("20_v316j")
+texture = ExtResource("20_vqibp")
 hframes = 10
 
-[node name="WarningLight" type="Node2D" parent="." unique_id=615209580 instance=ExtResource("21_tp2mf")]
+[node name="WarningLight" type="Node2D" parent="." unique_id=226873033 instance=ExtResource("21_jfjuj")]
 position = Vector2(306, 81)
-script = ExtResource("22_lmtfh")
+script = ExtResource("22_v316j")
 light_radius_scale = 1.9
 
-[node name="SteamVent" type="Node2D" parent="." unique_id=2013120490 instance=ExtResource("23_wacos")]
+[node name="SteamVent" type="Node2D" parent="." unique_id=694371210 instance=ExtResource("23_tp2mf")]
 position = Vector2(369, 128)
-script = ExtResource("24_mp0la")
+script = ExtResource("24_lmtfh")
 cycle_on = 3.0
 cycle_off = 2.0
 
-[node name="Sparks" type="Node2D" parent="." unique_id=934436930 instance=ExtResource("25_mbkax")]
+[node name="Sparks" type="Node2D" parent="." unique_id=590094300 instance=ExtResource("25_wacos")]
 position = Vector2(430, 18)
-script = ExtResource("26_chnev")
+script = ExtResource("26_mp0la")
 cable_length = 34.0
 
-[node name="GooPool" type="Node2D" parent="." unique_id=1233974571 instance=ExtResource("27_bsdc4")]
+[node name="GooPool" type="Node2D" parent="." unique_id=751048779 instance=ExtResource("27_mbkax")]
 position = Vector2(396, 166)
-script = ExtResource("28_d1edx")
+script = ExtResource("28_chnev")
 
-[node name="Pads" type="Node2D" parent="." unique_id=293776878]
+[node name="Pads" type="Node2D" parent="." unique_id=1133780913]
 
-[node name="Pad0" type="Node2D" parent="Pads" unique_id=46676910 instance=ExtResource("29_k2rs1")]
+[node name="Pad0" type="Node2D" parent="Pads" unique_id=1129448210 instance=ExtResource("29_bsdc4")]
 position = Vector2(495, 162)
-script = ExtResource("30_hufs3")
+script = ExtResource("30_d1edx")
 light_energy = 0.7
 
-[node name="Pad1" type="Node2D" parent="Pads" unique_id=678450114 instance=ExtResource("29_k2rs1")]
+[node name="Pad1" type="Node2D" parent="Pads" unique_id=1359631421 instance=ExtResource("29_bsdc4")]
 position = Vector2(525, 162)
-script = ExtResource("30_hufs3")
+script = ExtResource("30_d1edx")
 kind = 1
 light_energy = 0.7
 
-[node name="Pad2" type="Node2D" parent="Pads" unique_id=1775714545 instance=ExtResource("29_k2rs1")]
+[node name="Pad2" type="Node2D" parent="Pads" unique_id=1024533699 instance=ExtResource("29_bsdc4")]
 position = Vector2(555, 162)
-script = ExtResource("30_hufs3")
+script = ExtResource("30_d1edx")
 kind = 2
 light_energy = 0.7
 
-[node name="Pad3" type="Node2D" parent="Pads" unique_id=1681187618 instance=ExtResource("29_k2rs1")]
+[node name="Pad3" type="Node2D" parent="Pads" unique_id=476509734 instance=ExtResource("29_bsdc4")]
 position = Vector2(585, 162)
-script = ExtResource("30_hufs3")
+script = ExtResource("30_d1edx")
 kind = 3
 light_energy = 0.7
 
-[node name="Pad4" type="Node2D" parent="Pads" unique_id=244329071 instance=ExtResource("29_k2rs1")]
+[node name="Pad4" type="Node2D" parent="Pads" unique_id=2123087524 instance=ExtResource("29_bsdc4")]
 position = Vector2(615, 162)
-script = ExtResource("30_hufs3")
+script = ExtResource("30_d1edx")
 kind = 4
 light_energy = 0.7
 
-[node name="FogFront" type="Parallax2D" parent="." unique_id=1712892926 instance=ExtResource("7_2r43x")]
+[node name="FogFront" type="Parallax2D" parent="." unique_id=627531441 instance=ExtResource("7_td7b4")]
 z_index = 30
 scroll_scale = Vector2(1.15, 1)
-script = ExtResource("8_y2sjr")
+script = ExtResource("8_7ybm6")
 band_width = 768.0
 band_height = 52.0
 fog_color = Color(0.36, 0.42, 0.6, 1)
@@ -310,17 +308,14 @@ drift = Vector2(7, 0)
 fade_top = 0.8
 fade_bottom = 0.0
 
-[node name="Lightning" type="Node" parent="." unique_id=1301012744 node_paths=PackedStringArray("rig", "backdrop", "flash_targets") instance=ExtResource("31_2ssi7")]
-script = ExtResource("32_ocs2w")
+[node name="Lightning" type="Node" parent="." unique_id=125102928 node_paths=PackedStringArray("rig", "backdrop", "flash_targets") instance=ExtResource("31_k2rs1")]
+script = ExtResource("32_hufs3")
 rig = NodePath("../LightingRig")
 backdrop = NodePath("../Outside/NightBackdrop")
 flash_targets = [NodePath("../Outside/WindowRain0"), NodePath("../Outside/WindowRain1"), NodePath("../Outside/WindowRain2")]
 
-[node name="Camera" type="Camera2D" parent="." unique_id=1219121043]
+[node name="Camera" type="Camera2D" parent="." unique_id=717447785]
 position = Vector2(160, 90)
 
-[node name="TitleOverlay" type="CanvasLayer" parent="." unique_id=1878214170 instance=ExtResource("33_5r0t1")]
-script = ExtResource("34_0lwfu")
-
-[node name="PostFX" type="CanvasLayer" parent="." unique_id=165323116 instance=ExtResource("35_8rnyg")]
-script = ExtResource("36_jjf1i")
+[node name="TitleOverlay" type="CanvasLayer" parent="." unique_id=1999505083 instance=ExtResource("33_2ssi7")]
+script = ExtResource("34_ocs2w")

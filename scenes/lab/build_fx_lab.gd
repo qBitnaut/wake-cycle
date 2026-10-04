@@ -257,7 +257,6 @@ func _initialize() -> void:
 	cam.position = Vector2(160, 90)
 	_node(cam, "Camera", lab)
 	_fx("res://scenes/fx/title_overlay.tscn", "TitleOverlay", lab, Vector2.ZERO)
-	_fx("res://scenes/fx/post_fx.tscn", "PostFX", lab, Vector2.ZERO)
 
 	var packed := PackedScene.new()
 	var err := packed.pack(lab)

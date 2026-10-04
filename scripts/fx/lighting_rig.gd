@@ -76,7 +76,7 @@ const MASK_BACKDROP := 4
 
 @export_group("Vignette")
 ## Darkens the frame edges to pull the eye to the light pools (0 = off). Drawn
-## on its own CanvasLayer under the title and post filters.
+## on its own CanvasLayer under the title.
 @export_range(0.0, 1.0, 0.01) var vignette := 0.35:
 	set(v):
 		vignette = v

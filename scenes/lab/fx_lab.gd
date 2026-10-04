@@ -2,10 +2,10 @@
 ##   1 / 2      camera to the hero corner / the machinery corner
 ##   Left/Right pan the camera (watch the parallax through the windows)
 ##   L          lightning now          K  shockwave now      P  pulse the pads
-##   E          EGA dither on/off      C  CRT on/off         G  2D glow on/off
+##   G          2D glow on/off
 ##   T          replay the title card
 ## On the web, URL parameters set the start state for screenshots:
-##   ?station=2&ega=1&crt=1&notitle=1&strike=1
+##   ?station=2&notitle=1&strike=1
 extends Node2D
 
 const STATIONS := [Vector2(160, 90), Vector2(488, 90)]
@@ -17,7 +17,6 @@ const PAN_SPEED := 90.0
 
 @onready var _cam: Camera2D = $Camera
 @onready var _cat: Sprite2D = $Cat
-@onready var _post: PostFX = $PostFX
 @onready var _rig: LightingRig = $LightingRig
 @onready var _title: TitleOverlay = $TitleOverlay
 @onready var _pads: Node2D = $Pads
@@ -40,10 +39,6 @@ func _ready() -> void:
 		go_station(int(params["station"]) - 1)
 	if params.get("notitle", "") == "1":
 		_title.skip()
-	if params.get("ega", "") == "1":
-		_post.set_ega(true)
-	if params.get("crt", "") == "1":
-		_post.set_crt(true)
 	if params.get("strike", "") == "1":
 		get_tree().create_timer(1.0).timeout.connect(func(): $Lightning.strike())
 	$Lightning.thunder.connect(func(s: float): print("LAB thunder %.2f" % s))
@@ -119,12 +114,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_P:
 			_pad_i = 0
 			_pulse_next_pad()
-		KEY_E:
-			_post.toggle_ega()
-			print("LAB ega=%s" % _post.is_ega_on())
-		KEY_C:
-			_post.toggle_crt()
-			print("LAB crt=%s" % _post.is_crt_on())
 		KEY_G:
 			_rig.glow_enabled = not _rig.glow_enabled
 			print("LAB glow=%s" % _rig.glow_enabled)

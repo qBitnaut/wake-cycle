@@ -23,8 +23,7 @@ a chat box bolted on.
 | Tool | What it did | Where in the project |
 |---|---|---|
 | Claude Code (Anthropic CLI agent), Claude Opus 5.5 | Concept brainstorming and evaluation; scope planning; fitting the design to the movement-only restriction; project scaffolding; documentation. Further use (implementation, debugging, tests, UI) will be logged below. | Whole project: design decisions, Godot project structure, `README.md`, `AI_USE.md` |
-| Art / 2D tool | TBD (not chosen yet) | TBD |
-| 3D assets (not AI-generated) | Human-made CC0 packs (Kenney, Quaternius, KayKit), selected and license-vetted by AI (`jadzia`). No generative 3D tool is used. | `assets/`; attribution and licenses in `CREDITS.md` |
+| Art / 2D tool | No generative art. CC0 pixel packs, selected and licence-vetted by AI (`jadzia`); the cat recolour is a small Pillow gradient-map script written by AI (`data`). | `assets/`, `tools/recolor_cat.py`, `tools/build_tileset.gd` |
 | Audio / SFX tool | TBD (not chosen yet) | TBD |
 | Music tool | TBD (not chosen yet) | TBD |
 

@@ -2,32 +2,31 @@
 
 Wake Cycle uses the following third-party assets. Every pack below is released
 under CC0 (public domain), so attribution is not required, but credit is given
-as a courtesy, with one exception: the player cat model is CC BY 4.0 and its
-attribution is required (see Cat model below).
+as a courtesy.
 
-## Cat model
-
-Cat model: 'cat toon shader' by ssombrinha570 (https://skfb.ly/pLLWT), CC BY 4.0
-(http://creativecommons.org/licenses/by/4.0/). Modified: recoloured as a brown
-tabby with procedural stripes, re-lit with a toon shader, outline mesh removed.
-
-Location: `assets/models/cat_tabby/` (attribution also in
-`assets/models/cat_tabby/LICENSE.txt`).
-
-## Models
+## Sprites, tiles and backgrounds
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| Robot enemy models (Flying, Standard, Legs, Legs Gun, Large) from the Cyberpunk Game Kit | Quaternius | https://poly.pizza/m/lF3jeRJwiH, https://poly.pizza/m/UDTM6X1y9a, https://poly.pizza/m/1gNo5ezvmr, https://poly.pizza/m/lFZfDh2hzP, https://poly.pizza/m/mPDR0L5uKx (pack: https://quaternius.com) | CC0 1.0 | `assets/models/robots/` |
-| Factory Kit 3.0 | Kenney | https://kenney.nl/assets/factory-kit | CC0 1.0 | `assets/models/env/kenney-factory/` |
-| Building Kit | Kenney | https://kenney.nl/assets/building-kit | CC0 1.0 | `assets/models/env/kenney-building/` |
-| Space Station Kit | Kenney | https://kenney.nl/assets/space-station-kit | CC0 1.0 | `assets/models/env/kenney-space-station/` |
-| Survival Kit | Kenney | https://kenney.nl/assets/survival-kit | CC0 1.0 | `assets/models/env/kenney-survival/` |
+| Pet Cats Pack (Cat-6, recoloured to a brown tabby by `tools/recolor_cat.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
+| Pixel Platformer | Kenney | https://kenney.nl/assets/pixel-platformer (also https://opengameart.org/content/pixel-platformer) | CC0 1.0 | `assets/tiles/kenney-pixel-platformer/` |
+| Pixel Platformer: Industrial Expansion | Kenney | https://kenney.nl/assets/pixel-platformer-industrial-expansion | CC0 1.0 | `assets/tiles/kenney-industrial-expansion/` |
+| Pixel Platformer: Metal Expansion | Pien Krings (Pien's Factory) | https://opengameart.org/content/pixel-platformer-metal-expansion | CC0 1.0 | `assets/tiles/kenney-metal-expansion/` |
+| Gum Bot sprites | GrafxKid | https://opengameart.org/content/gum-bot-sprites | CC0 1.0 | `assets/sprites/robots/` |
+| Industrial Parallax Background | Luis Zuno (ansimuz) | https://opengameart.org/content/industrial-parallax-background | CC0 1.0 | `assets/backgrounds/` |
+
+## Font
+
+| Pack | Author | Source | License | Location |
+|---|---|---|---|---|
+| m5x7 | Daniel Linssen (managore) | https://managore.itch.io/m5x7 | CC0 1.0 | `assets/fonts/m5x7.ttf` |
 
 ## Audio
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
+| 512 Sound Effects (8-bit style), curated subset, converted to OGG | SubspaceAudio / Juhani Junkala | https://opengameart.org/content/512-sound-effects-8-bit-style | CC0 1.0 | `assets/audio/sfx8bit/` |
+| 4 Chiptunes (Adventure), 2 tracks | Juhani Junkala | https://opengameart.org/content/4-chiptunes-adventure | CC0 1.0 | `assets/audio/music/` |
 | 30 CC0 SFX Loops (machine, pump, rolling, rain, water and ambient loops) | rubberduck | https://opengameart.org/content/30-cc0-sfx-loops | CC0 1.0 | `assets/audio/ambient/` |
 | Dripping water loop (converted from FLAC to OGG) | qubodup | https://opengameart.org/content/dripping-water-loop | CC0 1.0 | `assets/audio/ambient/drip_loop.ogg` |
 | Impact Sounds 1.0 (footsteps and metal impacts) | Kenney | https://kenney.nl/assets/impact-sounds | CC0 1.0 | `assets/audio/sfx/` |

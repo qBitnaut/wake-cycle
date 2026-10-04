@@ -22,14 +22,17 @@ Playable in the browser. Walk into things; that is the whole interface.
 
 | Action | Keyboard | Gamepad |
 |---|---|---|
-| Move | WASD / arrow keys | Left stick |
-| Jump | Space | A (south) |
-| Dash | Shift | B or X |
-| Crouch / slide | Ctrl or C | Left shoulder |
-| Ground pound | Crouch while in mid-air | Same |
+| Move | A / D or Left / Right | D-pad or left stick |
+| Up (doors, ladders) | W or Up | D-pad or stick up |
+| Crouch (ground pound in mid-air) | S or Down | D-pad or stick down |
+| Jump | Space or Ctrl | A (south) |
+| Dash | Shift | X or B |
 
 Menus are rooms: walk onto the big START plate to begin. The camera follows the
 cat automatically.
+
+> Status: pivoting from 3D to a 2D Apogee-style platformer (320x180, integer-scaled).
+> The 3D prototype lives on branch `alt/3d` and tag `3d-prototype`.
 
 Enhancement pads (after the nanotech pools):
 

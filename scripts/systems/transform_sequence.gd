@@ -176,7 +176,7 @@ func start() -> void:
 		zoom_in.tween_property(_cine, "zoom", zoom_max, t_creep).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	if letterbox:
 		cin.tween_property(_cine, "bars", 1.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	cin.tween_property(_cine, "vignette", 0.38, 2.5)
+	cin.tween_property(_cine, "vignette", 0.22, 2.5)  # a light frame; the close-up must read
 	_struggling = true
 	_struggle = 1.0
 	if pool:

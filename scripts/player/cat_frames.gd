@@ -13,6 +13,12 @@ const ANIMS := {
 	"jump": ["run", 1.0, false, [3]],
 	"fall": ["run", 1.0, false, [5]],
 	"crouch": ["laying", 6.0, true, [6, 7]],
+	# Derived poses (tools/art/cat_poses.py). Planted paws travel 2 px a
+	# frame in all three: speed_scale = |vx| / (2 * fps) keeps them from
+	# sliding.
+	"crawl": ["crawl", 16.0, true, []],
+	"crouch_idle": ["crouch_idle", 6.0, true, []],
+	"push": ["push", 9.0, true, []],
 	"sit": ["sitting", 1.0, true, []],
 	"sleep1": ["sleeping1", 1.0, true, []],
 	"sleep2": ["sleeping2", 1.0, true, []],

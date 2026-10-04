@@ -21,8 +21,8 @@ SaveSystem="*res://scripts/systems/save_system.gd"
 
 [display]
 
-window/size/viewport_width=320
-window/size/viewport_height=180
+window/size/viewport_width=640
+window/size/viewport_height=360
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="viewport"
@@ -86,10 +86,12 @@ dash={
 2d_physics/layer_4="hazards"
 2d_physics/layer_5="breakables"
 2d_physics/layer_6="pickups_pads"
+2d_physics/layer_7="bot_bounds"
 
 [physics]
 
 common/physics_interpolation=false
+2d/default_gravity=1742.0
 
 [rendering]
 

@@ -16,3 +16,6 @@ mono_crash.*.json
 
 # Local-only 3D archive (preserved on branch alt/3d and tag 3d-prototype)
 archive/
+
+# Python bytecode
+__pycache__/

@@ -1,0 +1,39 @@
+{
+  "source": "extension-for-sci-fi-platformer-tiles-32x32-sci-fi-platformer-tiles-32x32-extension.png",
+  "tile_size": 32,
+  "block_size": [
+    512,
+    320
+  ],
+  "materials": {
+    "steel": {
+      "block": 0,
+      "y_offset": 0
+    },
+    "bulkhead": {
+      "block": 1,
+      "y_offset": 320
+    },
+    "rust": {
+      "block": 2,
+      "y_offset": 640
+    },
+    "maroon": {
+      "block": 3,
+      "y_offset": 960
+    },
+    "teal": {
+      "block": 4,
+      "y_offset": 1280
+    },
+    "violet": {
+      "block": 5,
+      "y_offset": 1600
+    },
+    "hazard": {
+      "block": 6,
+      "y_offset": 1920
+    }
+  },
+  "note": "Same 16x10 tile layout in every block: atlas (col, row + block*10)."
+}

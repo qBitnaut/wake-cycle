@@ -77,7 +77,7 @@ func _ready() -> void:
 		_puff.anim_speed_max = 1.0
 		_puff.one_shot = true
 		_puff.explosiveness = 0.95
-		_puff.amount = 12
+		_puff.amount = 9
 		_puff.lifetime = 0.7
 		_puff.direction = Vector2(0, -1)
 		_puff.spread = 80.0
@@ -86,7 +86,7 @@ func _ready() -> void:
 		_puff.initial_velocity_max = radius * 1.4
 		_puff.damping_min = radius * 1.4
 		_puff.damping_max = radius * 2.0
-		_puff.color = Color(0.72, 0.76, 0.86, 0.7)
+		_puff.color = Color(0.72, 0.76, 0.86, 0.45)
 		var ramp := Gradient.new()
 		ramp.set_color(0, Color(1, 1, 1, 1))
 		ramp.set_color(1, Color(1, 1, 1, 0))

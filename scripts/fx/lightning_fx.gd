@@ -21,7 +21,7 @@ signal thunder(strength: float)
 @export var flash_color: Color = FXPalette.LIGHTNING
 @export_range(0.0, 8.0, 0.1) var light_energy := 2.2
 ## Degrees from straight down, like LightingRig.moon_angle.
-@export_range(-80.0, 80.0, 0.5) var light_angle := -35.0
+@export_range(-80.0, 80.0, 0.5) var light_angle := -28.0
 @export var light_shadows := true
 
 var _light: DirectionalLight2D

@@ -12,7 +12,7 @@ const SHADER := preload("res://shaders/puddle.gdshader")
 const NOISE := preload("res://assets/fx/noise_small.png")
 const MAX_RIPPLES := 4
 
-@export var water_tint := Color(0.09, 0.12, 0.22, 1.0):
+@export var water_tint := Color(0.12, 0.16, 0.28, 1.0):
 	set(v):
 		water_tint = v
 		_sync()

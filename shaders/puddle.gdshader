@@ -48,7 +48,7 @@ void fragment() {
 	vec3 col = mix(water_tint.rgb, refl * mix(vec3(1.0), water_tint.rgb * 4.0, 0.15), reflectivity * depth);
 	col += highlight.rgb * ring * 0.8;
 	// Brighter line at the water's edge, and the odd twinkling glint.
-	col += highlight.rgb * 0.3 * (1.0 - smoothstep(0.0, 1.0, d));
+	col += highlight.rgb * 0.45 * (1.0 - smoothstep(0.0, 1.0, d));
 	float g = fract(sin(dot(floor(local_px), vec2(12.9898, 78.233)) + floor(TIME * 3.0)) * 43758.5453);
 	col += highlight.rgb * step(0.985, g) * 0.6 * (1.0 - d / max(rect_height, 1.0));
 	// Ragged ends: noise-shaped soft edge.

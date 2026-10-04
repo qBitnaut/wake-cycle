@@ -8,12 +8,13 @@ extends Node2D
 signal sparked(global_pos: Vector2)
 
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
+const STREAK := preload("res://assets/fx/rain_streak.png")
 
 @export var auto := true
 @export var interval_min := 0.8
 @export var interval_max := 3.5
 @export var color: Color = FXPalette.SPARK
-@export_range(4, 64) var amount := 16
+@export_range(4, 64) var amount := 22
 @export var cable_length := 26.0
 @export var cable_color := Color(0.16, 0.17, 0.22)
 @export_range(0.0, 6.0, 0.1) var flash_energy := 1.6
@@ -27,6 +28,11 @@ var _flash := 0.0
 
 func _ready() -> void:
 	_particles = CPUParticles2D.new()
+	# Short streaks aligned to velocity read as hot sparks, not dust.
+	_particles.texture = STREAK
+	_particles.particle_flag_align_y = true
+	_particles.scale_amount_min = 0.6
+	_particles.scale_amount_max = 1.0
 	_particles.emitting = false
 	_particles.one_shot = true
 	_particles.explosiveness = 0.9
@@ -41,9 +47,10 @@ func _ready() -> void:
 	_particles.damping_min = 10.0
 	_particles.damping_max = 30.0
 	var ramp := Gradient.new()
-	ramp.set_color(0, Color(3.0, 2.8, 2.2, 1.0))
-	ramp.add_point(0.25, Color(color.r * 2.2, color.g * 1.8, color.b * 1.2, 1.0))
-	ramp.set_color(ramp.get_point_count() - 1, Color(1.0, 0.3, 0.05, 0.0))
+	ramp.set_color(0, Color(2.2, 1.9, 1.2, 1.0))
+	ramp.add_point(0.2, Color(color.r * 1.8, color.g * 1.2, color.b * 0.6, 1.0))
+	ramp.add_point(0.7, Color(1.1, 0.35, 0.08, 0.9))
+	ramp.set_color(ramp.get_point_count() - 1, Color(0.6, 0.12, 0.04, 0.0))
 	_particles.color_ramp = ramp
 	var mat := CanvasItemMaterial.new()
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED

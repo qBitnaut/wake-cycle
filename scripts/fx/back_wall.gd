@@ -38,6 +38,9 @@ const INDICATOR_RGB := Color("41b5c0")
 @export_range(0.2, 1.0, 0.01) var back_dim := 0.7
 ## Indicator brightness (unshaded, so the night tint does not dim it).
 @export_range(0.0, 2.0, 0.05) var dot_level := 0.8
+## X ranges (x0, x1 in px) where the machinery band and its dots are left out,
+## e.g. a loading door that opens straight onto the night.
+@export var band_gaps: Array[Vector2] = []
 
 var _dots_tex: ImageTexture
 
@@ -45,20 +48,23 @@ var _dots_tex: ImageTexture
 func _ready() -> void:
 	self_modulate = Color(back_dim, back_dim, back_dim)
 	_dots_tex = _extract_dots(BAND)
-	var band := _repeated(BAND)
-	band.name = "Band"
-	band.position = Vector2(0, floor_y - BAND.get_height())
-	band.self_modulate = Color(back_dim, back_dim, back_dim)
-	add_child(band)
-	# Emissive indicator dots: unshaded, right after the wall art.
-	var dots := _repeated(_dots_tex)
-	dots.name = "IndicatorDots"
-	dots.position = band.position
 	var um := CanvasItemMaterial.new()
 	um.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	dots.material = um
-	dots.self_modulate = Color(dot_level, dot_level, dot_level)
-	add_child(dots)
+	var n := 0
+	for seg in _segments():
+		var band := _repeated(BAND, seg)
+		band.name = "Band%d" % n if n > 0 else "Band"
+		band.position = Vector2(seg.x, floor_y - BAND.get_height())
+		band.self_modulate = Color(back_dim, back_dim, back_dim)
+		add_child(band)
+		# Emissive indicator dots: unshaded, right after the wall art.
+		var dots := _repeated(_dots_tex, seg)
+		dots.name = "IndicatorDots%d" % n if n > 0 else "IndicatorDots"
+		dots.position = band.position
+		dots.material = um
+		dots.self_modulate = Color(dot_level, dot_level, dot_level)
+		add_child(dots)
+		n += 1
 	for x in columns:
 		var col := Sprite2D.new()
 		col.texture = COLUMN
@@ -68,15 +74,33 @@ func _ready() -> void:
 		add_child(col)
 
 
-## Tiles `tex` along the wall's width (a Sprite2D with a repeating region).
-func _repeated(tex: Texture2D) -> Sprite2D:
+## Tiles `tex` along x range `seg` (a Sprite2D with a repeating region; the
+## region starts at seg.x so the pattern stays continuous across gaps).
+func _repeated(tex: Texture2D, seg := Vector2(-1, -1)) -> Sprite2D:
+	if seg.x < 0.0:
+		seg = Vector2(0, size.x)
 	var s := Sprite2D.new()
 	s.texture = tex
 	s.centered = false
 	s.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	s.region_enabled = true
-	s.region_rect = Rect2(0, 0, size.x, tex.get_height())
+	s.region_rect = Rect2(seg.x, 0, seg.y - seg.x, tex.get_height())
 	return s
+
+
+## The x ranges the band covers: the wall width minus `band_gaps`.
+func _segments() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var x := 0.0
+	var gaps := band_gaps.duplicate()
+	gaps.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+	for g in gaps:
+		if g.x > x:
+			out.append(Vector2(x, g.x))
+		x = maxf(x, g.y)
+	if x < size.x:
+		out.append(Vector2(x, size.x))
+	return out
 
 
 ## A copy of `tex` holding only the indicator-coloured pixels.

@@ -8,6 +8,8 @@ signal keys_changed
 signal letters_changed
 signal power_changed(power: int, duration: float)
 signal shockwave_unlock_changed(unlocked: bool)
+## Room 1: the cat has stepped into the nanotech pool and the transformation begins.
+signal nanotech_absorbed_started
 
 const MAX_HEALTH := 3  # a hit at 0 hp is the fatal 4th hit
 const LETTER_BONUS := 5000
@@ -38,6 +40,26 @@ func _process(delta: float) -> void:
 		power_time -= delta
 		if power_time <= 0.0:
 			clear_power()
+
+
+## A fresh game: nothing unlocked, nothing held, full health.
+func new_game() -> void:
+	health = MAX_HEALTH
+	score = 0
+	keys.clear()
+	letters = 0
+	collected.clear()
+	shockwave_unlocked = false
+	clear_power()
+	health_changed.emit(health)
+	score_changed.emit(score)
+	keys_changed.emit()
+	letters_changed.emit()
+
+
+## The goo's gift (Room 1): the double jump starts releasing a shockwave.
+func unlock_shockwave() -> void:
+	shockwave_unlocked = true
 
 
 func grant_power(p: int, duration: float) -> void:

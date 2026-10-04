@@ -36,6 +36,11 @@ func _ready() -> void:
 	cat.set_camera_limits(limits)
 	_normal_bottom = limits.end.y
 	cat.shockwave.connect(_on_cat_shockwave)
+	if RoomTransition.arriving:
+		# Came in through a RoomExit: fade up, and save at the start of this room.
+		RoomTransition.arriving = false
+		SaveSystem.save_checkpoint("", scene_file_path)
+		RoomTransition.fade_in(self)
 
 
 ## The cat's double-jump burst and ground pound become the ShockwaveFX ring

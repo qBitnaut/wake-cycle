@@ -54,6 +54,13 @@ var dead := false
 var crouched := false
 var pounding := false
 var dash_left := 0.0
+## False while a cutscene owns the cat: input is ignored (it still falls and
+## settles on the floor). Use set_can_move().
+var can_move := true
+## While not empty this animation plays instead of the automatic one.
+var forced_anim := ""
+## Multiplies the sprite colour each frame: the hook for cutscene tints.
+var fx_tint := Color.WHITE
 
 var _coyote := 0.0
 var _jump_buf := 0.0
@@ -87,6 +94,26 @@ func set_camera_limits(r: Rect2i) -> void:
 	camera.limit_bottom = r.end.y
 
 
+## Hand the cat to a cutscene (false) or give control back (true).
+## Locking releases held input state so nothing carries over.
+func set_can_move(v: bool) -> void:
+	can_move = v
+	if not v:
+		_jump_buf = 0.0
+		_jumping = false
+		if crouched and _can_stand():
+			_set_crouch(false)
+
+
+## Play `anim` until cleared with an empty string (only while input is locked).
+func set_forced_anim(anim: String) -> void:
+	forced_anim = anim
+	if anim != "":
+		sprite.speed_scale = 1.0
+		if sprite.animation != anim or not sprite.is_playing():
+			sprite.play(anim)
+
+
 func is_phasing() -> bool:
 	return dash_left > 0.0
 
@@ -96,11 +123,12 @@ func _physics_process(delta: float) -> void:
 		velocity.y = minf(velocity.y + gravity * delta, max_fall)
 		position += velocity * delta
 		return
-	var dir := Input.get_axis("move_left", "move_right")
+	var dir := Input.get_axis("move_left", "move_right") if can_move else 0.0
 	var on_floor := is_on_floor()
 	_timers(delta, on_floor)
-	_crouch(on_floor)
-	_start_actions(on_floor, dir)
+	if can_move:
+		_crouch(on_floor)
+		_start_actions(on_floor, dir)
 	if dash_left > 0.0:
 		_dash_step(delta)
 	else:
@@ -125,7 +153,7 @@ func _timers(delta: float, on_floor: bool) -> void:
 	else:
 		_coyote -= delta
 	_jump_buf -= delta
-	if Input.is_action_just_pressed("jump"):
+	if can_move and Input.is_action_just_pressed("jump"):
 		_jump_buf = jump_buffer
 	_invuln = maxf(_invuln - delta, 0.0)
 	_dash_cd = maxf(_dash_cd - delta, 0.0)
@@ -345,10 +373,14 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 	# Invulnerability blink / hurt flash.
 	if _invuln > 0.0:
 		sprite.visible = int(_invuln * 16.0) % 2 == 0 or _invuln > invulnerable_time - 0.15
-		sprite.modulate = Color(2.2, 2.2, 2.2) if _invuln > invulnerable_time - 0.12 else Color.WHITE
+		sprite.modulate = Color(2.2, 2.2, 2.2) if _invuln > invulnerable_time - 0.12 else fx_tint
 	else:
 		sprite.visible = true
-		sprite.modulate = Color.WHITE
+		sprite.modulate = fx_tint
+	if forced_anim != "" and not can_move:
+		_idle_t = 0.0
+		_play(forced_anim)
+		return
 	var moving := absf(velocity.x) > 14.0
 	var active := dir != 0.0 or not on_floor or crouched or Input.is_action_pressed("jump")
 	if dash_left > 0.0:

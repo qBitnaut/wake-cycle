@@ -26,6 +26,8 @@ signal vent_stopped
 ## Seconds on / off. Leave either at 0 for a steady vent.
 @export var cycle_on := 0.0
 @export var cycle_off := 0.0
+## Where in the cycle it starts (seconds), to stagger several vents.
+@export var cycle_offset := 0.0
 @export var active := true:
 	set(v):
 		var changed := v != active
@@ -44,6 +46,9 @@ var _t := 0.0
 
 
 func _ready() -> void:
+	if cycle_on > 0.0 and cycle_off > 0.0:
+		_t = cycle_offset
+		active = fmod(_t, cycle_on + cycle_off) < cycle_on
 	_p = CPUParticles2D.new()
 	var f := FXScale.factor(self)
 	var px := float(art_scale if art_scale > 0 else FXScale.whole(self))

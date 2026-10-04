@@ -2,11 +2,11 @@ class_name Pickup
 extends Area2D
 ## Key, C-A-T letter, fish (health refill) or gem (score).
 
-const FONT := preload("res://assets/fonts/m5x7.ttf")
+const FONT := preload("res://assets/fonts/monogram.ttf")
 enum Kind { KEY, LETTER, FISH, GEM }
 
 @export var kind: Kind = Kind.GEM
-@export var key_color := "red"
+@export var key_color := "brass"
 @export_range(0, 2) var letter_index := 0
 @export var persist := true  # false for drops spawned at runtime
 
@@ -54,10 +54,10 @@ func _color() -> Color:
 		Kind.KEY:
 			return GameState.KEY_COLORS.get(key_color, Color.WHITE)
 		Kind.LETTER:
-			return Color("ffd23f")
+			return Color("ffd23f")  # gold: the cat's
 		Kind.FISH:
-			return Color("8fd0ff")
-	return Color("ff6bd6")
+			return Color("e89a7a")  # salmon
+	return Color("c3d8cf")  # gem: cool steel crystal (no power hue)
 
 
 func _process(delta: float) -> void:
@@ -68,16 +68,16 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var c := _color()
-	var bob := Vector2(0, -8.0 + roundf(sin(_t * 3.0) * 1.5))
-	draw_set_transform(bob)
+	var bob := Vector2(0, -16.0 + roundf(sin(_t * 3.0) * 3.0))
+	draw_set_transform(bob, 0.0, Vector2(2, 2))  # 2x: placeholder art stays pixel-exact
 	match kind:
 		Kind.KEY:
 			draw_circle(Vector2(-3, 0), 3.5, c)
-			draw_circle(Vector2(-3, 0), 1.2, Color("1b2430"))
+			draw_circle(Vector2(-3, 0), 1.2, Color("161630"))
 			draw_rect(Rect2(0, -1, 7, 2), c)
 			draw_rect(Rect2(4, 1, 2, 3), c)
 		Kind.LETTER:
-			var col := Color("ff5a5a") if _nope > 0.0 else c
+			var col := Color("ff4a3a") if _nope > 0.0 else c
 			draw_circle(Vector2.ZERO, 7.0, Color(col, 0.2))
 			draw_string(FONT, Vector2(-8, 5), "CAT"[letter_index], HORIZONTAL_ALIGNMENT_CENTER, 16.0, 16, col)
 		Kind.FISH:

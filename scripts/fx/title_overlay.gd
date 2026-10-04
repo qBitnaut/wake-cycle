@@ -1,7 +1,7 @@
 class_name TitleOverlay
 extends CanvasLayer
 ## Opening card: the screen fades up from black, then the title fades in and
-## out over the scene. m5x7 at an integer multiple of its 16 px design size,
+## out over the scene. monogram at an integer multiple of its 16 px design size,
 ## centred, no outline.
 ##
 ## Signals: `revealed` when the black is gone, `finished` when the title is out.
@@ -10,11 +10,11 @@ extends CanvasLayer
 signal revealed
 signal finished
 
-const FONT := preload("res://assets/fonts/m5x7.ttf")
+const FONT := preload("res://assets/fonts/monogram.ttf")
 
 @export var title := "Find Your Way Out"
 @export var autoplay := true
-## Font size; keep it a multiple of 16 so m5x7 stays pixel-exact.
+## Font size; keep it a multiple of 16 so monogram stays pixel-exact.
 ## 0 = auto: 32 at 320x180, 64 at 640x360 (16 x 2 x FXScale.whole).
 @export_range(0, 128, 16) var font_size := 0
 @export var text_color := Color(0.86, 0.91, 1.0)

@@ -1,20 +1,20 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/hazard.gd" id="1_hz"]
-[ext_resource type="Texture2D" path="res://assets/tiles/kenney-pixel-platformer/tilemap_packed.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/tiles_wake_hd.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="s"]
-size = Vector2(14, 7)
+size = Vector2(26, 14)
 
 [node name="Spikes" type="Area2D"]
 script = ExtResource("1_hz")
 
 [node name="Shape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -4)
+position = Vector2(0, -7)
 shape = SubResource("s")
 
 [node name="Sprite" type="Sprite2D" parent="."]
-position = Vector2(0, -9)
+position = Vector2(0, -16)
 texture = ExtResource("2_tex")
 region_enabled = true
-region_rect = Rect2(144, 54, 18, 18)
+region_rect = Rect2(288, 2048, 32, 32)

@@ -16,10 +16,10 @@ const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 		_level_changed()
 @export var mode := Mode.FLICKER
 ## Lamp housing, and a greyscale mask of the glass (tinted by `color`).
-@export var base_texture: Texture2D = preload("res://assets/fx/beacon_base.png")
-@export var glass_texture: Texture2D = preload("res://assets/fx/beacon_glass.png")
-## Pixel scale for the lamp art. 0 = auto (FXScale.whole), 1 for HD art.
-@export_range(0, 8) var art_scale := 0
+@export var base_texture: Texture2D = preload("res://assets/art_hd/lamp_base.png")
+@export var glass_texture: Texture2D = preload("res://assets/art_hd/lamp_glass.png")
+## Pixel scale for the lamp art. 1 = HD art (default); 0 = auto (FXScale.whole).
+@export_range(0, 8) var art_scale := 1
 @export_range(0.0, 8.0, 0.05) var energy := 1.3
 ## Light radius in world px is about 64 x this (geometry: not auto-scaled).
 @export_range(0.25, 16.0, 0.05) var light_radius_scale := 1.5:

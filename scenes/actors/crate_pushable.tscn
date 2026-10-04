@@ -1,13 +1,13 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/pushable_crate.gd" id="1_pc"]
-[ext_resource type="Texture2D" path="res://assets/tiles/kenney-industrial-expansion/tilemap_packed.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/tiles_wake_hd.png" id="2_tex"]
 
 [sub_resource type="PhysicsMaterial" id="mat"]
 friction = 0.5
 
 [sub_resource type="RectangleShape2D" id="s"]
-size = Vector2(16, 16)
+size = Vector2(30, 30)
 
 [node name="CratePushable" type="RigidBody2D"]
 mass = 2.0
@@ -17,11 +17,11 @@ linear_damp = 0.6
 script = ExtResource("1_pc")
 
 [node name="Shape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -8)
+position = Vector2(0, -15)
 shape = SubResource("s")
 
 [node name="Sprite" type="Sprite2D" parent="."]
-position = Vector2(0, -9)
+position = Vector2(0, -16)
 texture = ExtResource("2_tex")
 region_enabled = true
-region_rect = Rect2(252, 54, 18, 18)
+region_rect = Rect2(64, 1024, 32, 32)

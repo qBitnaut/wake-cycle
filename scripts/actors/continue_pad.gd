@@ -1,7 +1,8 @@
 extends Area2D
-## Only exists when a save does. Step on it to load the saved game.
+## Only exists when a save does. Step on it to load the saved game. A PadFX
+## plate tinted warm gold (nothing here is a power), with a CONTINUE label.
 
-const FONT := preload("res://assets/fonts/m5x7.ttf")
+const FONT := preload("res://assets/fonts/monogram.ttf")
 
 var _t := 0.0
 var _used := false
@@ -15,6 +16,10 @@ func _ready() -> void:
 	monitoring = has
 	if has:
 		body_entered.connect(_on_body)
+		var fx := PadFX.new()
+		fx.use_custom_color = true
+		fx.custom_color = FXPalette.SODIUM
+		add_child(fx)
 
 
 func _on_body(body: Node) -> void:
@@ -30,9 +35,7 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var c := Color("ffe27a")
-	draw_rect(Rect2(-11, -3, 22, 3), c)
-	draw_rect(Rect2(-9, -4, 18, 1), c.lightened(0.5))
-	var y := -14.0 - 2.0 * sin(_t * 4.0)
-	draw_colored_polygon(PackedVector2Array([Vector2(-4, y - 4), Vector2(4, y), Vector2(-4, y + 4)]), c)
-	draw_string(FONT, Vector2(-30, -26), "CONTINUE", HORIZONTAL_ALIGNMENT_CENTER, 60.0, 16, c)
+	var c := FXPalette.SODIUM
+	var y := -80.0 - 3.0 * sin(_t * 4.0)
+	draw_colored_polygon(PackedVector2Array([Vector2(-8, y - 8), Vector2(8, y), Vector2(-8, y + 8)]), c)
+	draw_string(FONT, Vector2(-60, -100), "CONTINUE", HORIZONTAL_ALIGNMENT_CENTER, 120.0, 16, c)

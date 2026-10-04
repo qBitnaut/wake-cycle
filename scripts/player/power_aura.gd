@@ -26,5 +26,5 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var pulse := 0.5 + 0.5 * sin(_t * 8.0)
-	draw_circle(Vector2.ZERO, 11.0, Color(_color, 0.12 + 0.08 * pulse))
-	draw_arc(Vector2.ZERO, 11.0, 0.0, TAU, 24, Color(_color, 0.5 + 0.3 * pulse), 1.0)
+	draw_circle(Vector2.ZERO, 20.0, Color(_color, 0.12 + 0.08 * pulse))
+	draw_arc(Vector2.ZERO, 20.0, 0.0, TAU, 24, Color(_color, 0.5 + 0.3 * pulse), 1.0)

@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scripts/actors/pickup.gd" id="1_pk"]
 
 [sub_resource type="RectangleShape2D" id="s"]
-size = Vector2(14, 14)
+size = Vector2(28, 28)
 
 [node name="Letter" type="Area2D"]
 script = ExtResource("1_pk")
 kind = 1
 
 [node name="Shape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -8)
+position = Vector2(0, -16)
 shape = SubResource("s")

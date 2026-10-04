@@ -4,7 +4,7 @@ extends Area2D
 
 signal state_changed(active: bool)
 
-@export var width := 36.0
+@export var width := 64.0
 @export var hold_time := 0.0
 
 var active := false
@@ -16,9 +16,9 @@ func _ready() -> void:
 	collision_mask = 3
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(width - 4.0, 6.0)
+	r.size = Vector2(width - 6.0, 10.0)
 	cs.shape = r
-	cs.position = Vector2(0, -3)
+	cs.position = Vector2(0, -5)
 	add_child(cs)
 
 
@@ -41,8 +41,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var c := Color("ffb02e") if not active else Color("7dffb0")
-	var d := 2.0 if active else 0.0
-	draw_rect(Rect2(-width / 2.0, -2 + d, width, 2), Color("667788"))
-	draw_rect(Rect2(-width / 2.0 + 2, -5 + d, width - 4, 3), c)
-	draw_rect(Rect2(-width / 2.0 + 2, -5 + d, width - 4, 1), c.lightened(0.5))
+	# Hazard-amber plate with a steel rim; the lamp turns muted aqua when held
+	# (never a power-hue green).
+	var steel := Color("5b7280")
+	var c := Color("d07a26") if not active else FXPalette.INDICATOR
+	var d := 3.0 if active else 0.0
+	draw_rect(Rect2(-width / 2.0, -4, width, 4), steel)
+	draw_rect(Rect2(-width / 2.0, -4, width, 1), Color("8aa7ab"))
+	draw_rect(Rect2(-width / 2.0 + 3, -10 + d, width - 6, 6), Color("161630"))
+	draw_rect(Rect2(-width / 2.0 + 4, -9 + d, width - 8, 4), c)
+	draw_rect(Rect2(-width / 2.0 + 4, -9 + d, width - 8, 1), c.lightened(0.4))

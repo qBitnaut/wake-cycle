@@ -3,33 +3,37 @@ extends CharacterBody2D
 ## The player: a brown tabby with Apogee-tight movement and modern forgiveness.
 ## Movement input only: move_left/right/up/down, jump, dash.
 
-signal shockwave(pos: Vector2, radius: float)
+## Emitted for every burst; the level turns it into ShockwaveFX (see Level).
+## source is "shock" (double jump) or "pound" (ground pound).
+signal shockwave(pos: Vector2, radius: float, source: String)
 signal hurt_taken(hp: int)
 signal died
 
-# --- Tuning (pixels, seconds). The view is 320x180 and tiles are 18 px. ---
+# --- Tuning (pixels, seconds). The view is 640x360 and tiles are 32 px. ---
+# Every length, speed and acceleration is the old 18 px tuning times 32/18
+# (1.78), so a jump is still about 3.1 tiles and the feel is unchanged.
 @export_group("Run")
-@export var run_speed := 100.0
-@export var accel := 1100.0
-@export var turn_accel := 1700.0
-@export var ground_friction := 1500.0
-@export var air_accel := 850.0
-@export var air_friction := 420.0
-@export var crouch_speed := 36.0
+@export var run_speed := 178.0
+@export var accel := 1956.0
+@export var turn_accel := 3022.0
+@export var ground_friction := 2667.0
+@export var air_accel := 1511.0
+@export var air_friction := 747.0
+@export var crouch_speed := 64.0
 @export_group("Jump")
-@export var gravity := 900.0
+@export var gravity := 1600.0
 @export var fall_gravity_mult := 1.45
-@export var max_fall := 270.0
-@export var jump_velocity := 318.0  # ~3.1 tiles
-@export var double_jump_velocity := 285.0
+@export var max_fall := 480.0
+@export var jump_velocity := 565.0  # ~3.1 tiles (100 px)
+@export var double_jump_velocity := 507.0
 @export var jump_cut := 0.45
 @export var coyote_time := 0.10
 @export var jump_buffer := 0.12
 @export_group("Abilities")
-@export var shockwave_radius := 36.0  # 2 tiles
-@export var pound_radius := 26.0
-@export var pound_speed := 400.0
-@export var dash_speed := 230.0
+@export var shockwave_radius := 64.0  # 2 tiles
+@export var pound_radius := 46.0
+@export var pound_speed := 711.0
+@export var dash_speed := 409.0
 @export var dash_time := 0.16
 @export var dash_cooldown := 0.45
 @export var surge_mult := 1.5
@@ -37,9 +41,9 @@ signal died
 @export_group("Health")
 @export var invulnerable_time := 1.4
 
-const STAND_H := 13.0
-const CROUCH_H := 7.0
-const WIDTH := 11.0
+const STAND_H := 26.0
+const CROUCH_H := 14.0
+const WIDTH := 22.0
 const SIT_AFTER := 3.0
 const LICK_AFTER := 6.0
 const SLEEP_AFTER := 14.0
@@ -63,7 +67,6 @@ var _idle_t := 0.0
 var _oneshot := 0.0
 var _slept := false
 var _fall_speed := 0.0
-var _shake := 0.0
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var body_shape: CollisionShape2D = $Shape
@@ -111,7 +114,7 @@ func _physics_process(delta: float) -> void:
 	if global_position.y > death_y:
 		kill()
 	_animate(dir, on_floor, delta)
-	_update_camera_shake(delta)
+	_track_fall()
 
 
 func _timers(delta: float, on_floor: bool) -> void:
@@ -148,7 +151,7 @@ func _set_crouch(on: bool) -> void:
 func _can_stand() -> bool:
 	var q := PhysicsShapeQueryParameters2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(WIDTH - 1.0, STAND_H - 2.0)
+	r.size = Vector2(WIDTH - 2.0, STAND_H - 2.0)
 	q.shape = r
 	q.transform = Transform2D(0.0, global_position + Vector2(0, -STAND_H / 2.0 - 1.0))
 	q.collision_mask = collision_mask
@@ -177,7 +180,7 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 			Sfx.play(self, "double_jump")
 			_flip()
 			if GameState.shockwave_unlocked:
-				_burst(global_position + Vector2(0, -6), shockwave_radius, "shock")
+				_burst(global_position + Vector2(0, -12), shockwave_radius, "shock")
 	if Input.is_action_just_released("jump") and _jumping and velocity.y < 0.0:
 		velocity.y *= jump_cut
 		_jumping = false
@@ -251,37 +254,29 @@ func _push_bodies(pre_vx: float) -> void:
 		var rb := c.get_collider() as RigidBody2D
 		if rb and absf(c.get_normal().x) > 0.5:
 			rb.sleeping = false
-			rb.linear_velocity.x = move_toward(rb.linear_velocity.x, pre_vx * 0.85, 600.0)
+			rb.linear_velocity.x = move_toward(rb.linear_velocity.x, pre_vx * 0.85, 1067.0)
 
 
 func _land() -> void:
 	if pounding:
 		pounding = false
 		Sfx.play(self, "shockwave_thump", -2.0)
-		_burst(global_position + Vector2(0, -4), pound_radius, "pound")
-		_shake = 0.18
-	elif _fall_speed > 140.0:
+		_burst(global_position + Vector2(0, -8), pound_radius, "pound")
+	elif _fall_speed > 249.0:
 		Sfx.play(self, "land", -10.0)
 		_stretch(Vector2(1.2, 0.8))
 	_fall_speed = 0.0
 
 
-func _update_camera_shake(delta: float) -> void:
+func _track_fall() -> void:
 	if not is_on_floor():
 		_fall_speed = maxf(_fall_speed, velocity.y)
-	if _shake > 0.0:
-		_shake -= delta
-		camera.offset = Vector2(0, -14) + Vector2(randi_range(-1, 1), randi_range(-1, 1))
-	else:
-		camera.offset = Vector2(0, -14)
 
 
 ## Radial force burst. Receivers join the "shock_receiver" group and implement
 ## on_shockwave(origin, radius, source) with source "shock" or "pound".
 func _burst(pos: Vector2, radius: float, source: String) -> void:
-	shockwave.emit(pos, radius)
-	var col := NanoPalette.SHOCKWAVE if source == "shock" else NanoPalette.IMPACT
-	ShockRing.spawn(get_parent(), pos, radius, col)
+	shockwave.emit(pos, radius, source)
 	for n in get_tree().get_nodes_in_group("shock_receiver"):
 		if not n.has_method("on_shockwave"):
 			continue
@@ -292,7 +287,7 @@ func _burst(pos: Vector2, radius: float, source: String) -> void:
 			n.on_shockwave(pos, radius, source)
 
 
-func bounce(v: float = 250.0) -> void:
+func bounce(v: float = 444.0) -> void:
 	velocity.y = -v
 	_air_jumps = 1
 	_jumping = true
@@ -308,7 +303,7 @@ func hurt(from_pos: Vector2) -> void:
 	GameState.set_health(GameState.health - 1)
 	_invuln = invulnerable_time
 	var away := signf(global_position.x - from_pos.x)
-	velocity = Vector2((away if away != 0.0 else -facing) * 120.0, -170.0)
+	velocity = Vector2((away if away != 0.0 else -facing) * 213.0, -302.0)
 	pounding = false
 	dash_left = 0.0
 	Sfx.play(self, "hurt")
@@ -321,7 +316,7 @@ func kill() -> void:
 		return
 	dead = true
 	pounding = false
-	velocity = Vector2(0, -190)
+	velocity = Vector2(0, -338)
 	body_shape.set_deferred("disabled", true)
 	Sfx.play(self, "hurt", -3.0, 0.7)
 	sprite.play("crouch")
@@ -354,7 +349,7 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 	else:
 		sprite.visible = true
 		sprite.modulate = Color.WHITE
-	var moving := absf(velocity.x) > 8.0
+	var moving := absf(velocity.x) > 14.0
 	var active := dir != 0.0 or not on_floor or crouched or Input.is_action_pressed("jump")
 	if dash_left > 0.0:
 		_play("run")
@@ -373,7 +368,7 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 	elif moving:
 		_idle_t = 0.0
 		_oneshot = 0.0
-		_play("run" if absf(velocity.x) > 66.0 else "walk")
+		_play("run" if absf(velocity.x) > 117.0 else "walk")
 	elif active:
 		_idle_t = 0.0
 		_idle_wake()

@@ -23,7 +23,7 @@ a chat box bolted on.
 | Tool | What it did | Where in the project |
 |---|---|---|
 | Claude Code (Anthropic CLI agent), Claude Opus 5.5 | Concept brainstorming and evaluation; scope planning; fitting the design to the movement-only restriction; project scaffolding; documentation. Further use (implementation, debugging, tests, UI) will be logged below. | Whole project: design decisions, Godot project structure, `README.md`, `AI_USE.md` |
-| Art / 2D tool | No generative art. CC0 pixel packs, selected and licence-vetted by AI (`jadzia`); the cat recolour is a small Pillow gradient-map script written by AI (`data`). | `assets/`, `tools/recolor_cat.py`, `tools/build_tileset.gd` |
+| Art / 2D tool | No generative art. CC0 pixel packs, selected and licence-vetted by AI (`jadzia`). The HD look is made by small deterministic Pillow/numpy scripts written by AI (`davinci`, `data`): explicit palette swaps of the tile sheet and the ansimuz layers (no quantising, no model in the loop), and a Scale2x + gradient-map + outline pipeline for the cat. | `assets/art_hd/`, `assets/sprites/cat/`, `tools/art/`, `tools/recolor_cat.py`, `tools/build_tileset_hd.gd` |
 | Audio / SFX tool | TBD (not chosen yet) | TBD |
 | Music tool | TBD (not chosen yet) | TBD |
 
@@ -90,3 +90,19 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
   realistic cat.
 - Implementation: `data` imported the curated assets and began the cat
   controller. `davinci` began the atmosphere pass (in progress).
+
+### 2026-10-04
+
+- Art direction: Chris approved the HD direction ("Mock C": 640x360 view, 32 px
+  tiles, night lighting). `davinci` made the palette, the recoloured tile sheet
+  and the harmonised background layers; every colour mapping is written out by
+  hand in `tools/art/` (no generative art).
+- Port: `data` moved the whole game to it: new TileSet, the cat's twelve
+  animations through the HD pipeline, the movement tuning scaled by 32/18, the
+  FX kit wired in (shockwave, pad, checkpoint, laser beam), the test room
+  rebuilt and a slim HUD.
+- Verification: `data` wrote two audits that drive the real cat through every
+  beat of the test room with scripted input, one in headless Godot
+  (`tools/audit/playthrough.gd`) and one in the web export with Playwright
+  (`tools/audit/web_playthrough.mjs`). A jump-reach measurement
+  (`tools/audit/reach.gd`) sized the pits and walls.

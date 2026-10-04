@@ -3,11 +3,11 @@
 [ext_resource type="Script" path="res://scripts/actors/continue_pad.gd" id="1_cp"]
 
 [sub_resource type="RectangleShape2D" id="s"]
-size = Vector2(20, 8)
+size = Vector2(44, 10)
 
 [node name="ContinuePad" type="Area2D"]
 script = ExtResource("1_cp")
 
 [node name="Shape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -4)
+position = Vector2(0, -5)
 shape = SubResource("s")

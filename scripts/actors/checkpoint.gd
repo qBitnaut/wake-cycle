@@ -1,14 +1,16 @@
 class_name Checkpoint
 extends Area2D
-## Step on it to save (user://save.json) and set the respawn point.
+## Step on it to save (user://save.json) and set the respawn point. Drawn by a
+## PadFX in its checkpoint kind (the kit's pale-teal "safe" plate): dim until
+## it is the active checkpoint, and it flares when it saves.
 
-const FONT := preload("res://assets/fonts/m5x7.ttf")
+const FONT := preload("res://assets/fonts/monogram.ttf")
 
 @export var checkpoint_id := "cp1"
 
 var _active := false
 var _pulse := 0.0
-var _t := 0.0
+var _fx: PadFX
 
 
 func _ready() -> void:
@@ -16,8 +18,12 @@ func _ready() -> void:
 	collision_layer = 32
 	collision_mask = 2
 	body_entered.connect(_on_body)
-	_active = SaveSystem.session_scene == get_tree().current_scene.scene_file_path \
-		and SaveSystem.session_checkpoint == checkpoint_id
+	# Level._enter_tree has already registered this scene with SaveSystem.
+	_active = SaveSystem.session_checkpoint == checkpoint_id
+	_fx = PadFX.new()
+	_fx.kind = FXPalette.Pad.CHECKPOINT
+	add_child(_fx)
+	_fx.set_enabled(_active)
 
 
 func spawn_position() -> Vector2:
@@ -28,28 +34,29 @@ func _on_body(body: Node) -> void:
 	if not body is Cat or _active:
 		return
 	for cp in get_tree().get_nodes_in_group("checkpoint"):
-		cp._active = false
+		cp._deactivate()
 	_active = true
 	_pulse = 1.0
-	SaveSystem.save_checkpoint(checkpoint_id, get_tree().current_scene.scene_file_path)
+	_fx.set_enabled(true)
+	_fx.pulse()
+	SaveSystem.save_checkpoint(checkpoint_id, SaveSystem.session_scene)
 	Sfx.play(self, "checkpoint")
-
-
-func _process(delta: float) -> void:
-	_t += delta
-	_pulse = maxf(_pulse - delta * 1.6, 0.0)
 	queue_redraw()
 
 
-func _draw() -> void:
-	var lit := Color("7dffb0") if _active else Color("5a6a78")
-	draw_rect(Rect2(-1, -30, 2, 30), Color("8fa0b0"))
-	draw_rect(Rect2(-5, -2, 10, 2), Color("667788"))
-	var glow := 0.6 + 0.4 * sin(_t * 4.0) if _active else 0.0
-	draw_circle(Vector2(0, -32), 4.0, lit)
-	if _active:
-		draw_circle(Vector2(0, -32), 8.0, Color(lit, 0.15 + 0.15 * glow))
+func _deactivate() -> void:
+	_active = false
+	if _fx:
+		_fx.set_enabled(false)
+
+
+func _process(delta: float) -> void:
 	if _pulse > 0.0:
-		var r := 4.0 + 28.0 * (1.0 - _pulse)
-		draw_arc(Vector2(0, -32), r, 0.0, TAU, 32, Color(lit, _pulse), 2.0)
-		draw_string(FONT, Vector2(-22, -44), "SAVED", HORIZONTAL_ALIGNMENT_CENTER, 44.0, 16, Color(lit, _pulse))
+		_pulse = maxf(_pulse - delta * 0.9, 0.0)
+		queue_redraw()
+
+
+func _draw() -> void:
+	if _pulse > 0.0:
+		var c := FXPalette.CHECKPOINT
+		draw_string(FONT, Vector2(-40, -92 - 12.0 * (1.0 - _pulse)), "SAVED", HORIZONTAL_ALIGNMENT_CENTER, 80.0, 32, Color(c, minf(_pulse * 2.0, 1.0)))

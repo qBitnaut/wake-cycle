@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Author the small pixel-art sprites the FX kit needs, into assets/fx/.
+(The HD lamp and pad plate live in assets/art_hd, see tools/art/.)
 
 Run from the project root:  python3 scripts/fx/tools/make_fx_sprites.py
 
-- beacon_base.png / beacon_glass.png: the Kenney industrial beacon (tile 0,4)
-  split into its housing and a greyscale glass mask, so the glass can be
-  tinted and pushed into HDR while the housing stays lit by the scene.
-- pad_base.png / pad_glow.png: enhancement pad plate and its emissive strip.
 - window_broken.png: a 3x2-tile warehouse window, two panes smashed.
 - goo_circuit.png: horizontally tileable PCB trace mask for the goo pool.
 """
@@ -17,65 +14,12 @@ from pathlib import Path
 from PIL import Image
 
 OUT = Path("assets/fx")
-KENNEY_IND = Path("assets/tiles/kenney-industrial-expansion/tilemap_packed.png")
 
 OUTLINE = (40, 44, 60, 255)
 STEEL_D = (67, 74, 95, 255)
 STEEL = (110, 117, 140, 255)
 STEEL_L = (149, 154, 177, 255)
 STEEL_H = (196, 201, 218, 255)
-
-
-def beacon():
-    tile = Image.open(KENNEY_IND).convert("RGBA").crop((0, 72, 18, 90))
-    base = Image.new("RGBA", tile.size, (0, 0, 0, 0))
-    glass = Image.new("RGBA", tile.size, (0, 0, 0, 0))
-    lum = {(176, 50, 32): 150, (212, 87, 52): 200, (244, 130, 67): 255, (220, 225, 231): 255}
-    for y in range(18):
-        for x in range(18):
-            r, g, b, a = tile.getpixel((x, y))
-            if a == 0:
-                continue
-            # Glass: the red dome pixels above the base band (rows 7-14).
-            if (r, g, b) in lum and y < 15:
-                v = lum[(r, g, b)]
-                glass.putpixel((x, y), (v, v, v, 255))
-            else:
-                base.putpixel((x, y), (r, g, b, a))
-    base.save(OUT / "beacon_base.png")
-    glass.save(OUT / "beacon_glass.png")
-
-
-def pad():
-    """24x7 floor plate: a recessed emitter lens on top (glow mask), a bright
-    steel lip, a body with two side status lights, dark outline."""
-    w, h = 24, 7
-    base = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    bp, gp = base.load(), glow.load()
-    for x in range(2, 22):                      # bezel top edge
-        bp[x, 0] = OUTLINE
-    for y in (1, 2):                            # bezel sides around the lens
-        bp[2, y] = OUTLINE
-        bp[21, y] = OUTLINE
-        for x in range(3, 21):
-            bp[x, y] = (18, 20, 28, 255)        # lens bed (dark when unlit)
-            v = 255 if y == 1 else 140
-            if y == 2 and x % 3 == 0:
-                v = 200
-            gp[x, y] = (v, v, v, 255)
-    for x in range(0, 24):                      # lip and body
-        bp[x, 3] = OUTLINE if x in (0, 23) else STEEL_H
-        bp[x, 4] = OUTLINE if x in (0, 23) else STEEL
-        bp[x, 5] = OUTLINE if x in (0, 23) else STEEL_D
-        bp[x, 6] = OUTLINE
-    for x in range(5, 19, 3):                   # vents
-        bp[x, 5] = OUTLINE
-    for x in (2, 21):                           # side status lights
-        bp[x, 4] = (18, 20, 28, 255)
-        gp[x, 4] = (255, 255, 255, 255)
-    base.save(OUT / "pad_base.png")
-    glow.save(OUT / "pad_glow.png")
 
 
 def window():
@@ -206,8 +150,6 @@ def moon():
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    beacon()
-    pad()
     window()
     goo_circuit()
     moon()

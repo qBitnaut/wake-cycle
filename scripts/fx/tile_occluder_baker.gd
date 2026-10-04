@@ -10,7 +10,8 @@ extends RefCounted
 ##
 ## Usage (once, after the level is built):
 ##     TileOccluderBaker.bake($Solid, 3)
-## Slopes keep their own polygon. One-way tiles have no occluder and stay open.
+## Slopes and rail-only occluders keep their own polygon. One-way tiles have no
+## cell occluder and stay open.
 
 
 ## Bakes occluders for `layer` and disables its built-in occlusion. Returns the
@@ -32,10 +33,10 @@ static func bake(layer: TileMapLayer, inset_px: int = 3, occlusion_layer: int = 
 		var poly := td.get_occluder_polygon(occlusion_layer, 0)
 		if poly == null:
 			continue
-		if poly.polygon.size() == 4:
+		if _is_full_cell(poly.polygon, cell):
 			solid[c] = true
 		else:
-			slopes.append(c)
+			slopes.append(c)  # slopes and rail-only occluders keep their own polygon
 	# Row runs of cells that share the same top/bottom exposure merge into one rect.
 	var rows := {}
 	for c: Vector2i in solid:
@@ -73,6 +74,18 @@ static func bake(layer: TileMapLayer, inset_px: int = 3, occlusion_layer: int = 
 	layer.occlusion_enabled = false
 	layer.add_child(holder)
 	return holder
+
+
+## True for a 4-point polygon that covers the whole tile cell. Rail-only
+## occluders (girder trusses) are 4 points too, but must not be merged or
+## inset like a solid cell.
+static func _is_full_cell(poly: PackedVector2Array, cell: Vector2) -> bool:
+	if poly.size() != 4:
+		return false
+	var r := Rect2(poly[0], Vector2.ZERO)
+	for p in poly:
+		r = r.expand(p)
+	return r.size.is_equal_approx(cell)
 
 
 static func _run_rect(x0: int, x1: int, y: int, key: int, solid: Dictionary, cell: Vector2, inset: int) -> Rect2:

@@ -1,14 +1,16 @@
 class_name NanoPalette
 extends RefCounted
-## Shared colours and ids for the timed nano-enhancement powers.
+## Ids and names for the timed nano-enhancement powers. The colours live in
+## FXPalette (the single source of truth); these constants point at them so
+## gameplay, HUD and FX can never drift apart.
 
 enum Power { NONE = 0, SURGE = 1, SPRING = 2, PHASE = 3, IMPACT = 4 }
 
-const SURGE := Color("3a8dff")
-const SPRING := Color("46e06b")
-const PHASE := Color("3de8e8")
-const IMPACT := Color("a35cff")
-const SHOCKWAVE := Color("ffc94a")
+const SURGE := FXPalette.SURGE
+const SPRING := FXPalette.SPRING
+const PHASE := FXPalette.PHASE
+const IMPACT := FXPalette.IMPACT
+const SHOCKWAVE := FXPalette.SHOCKWAVE
 
 
 static func color_of(power: int) -> Color:

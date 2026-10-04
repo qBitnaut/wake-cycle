@@ -31,8 +31,9 @@ Playable in the browser. Walk into things; that is the whole interface.
 Menus are rooms: walk onto the big START plate to begin. The camera follows the
 cat automatically.
 
-> Status: pivoting from 3D to a 2D Apogee-style platformer (320x180, integer-scaled).
-> The 3D prototype lives on branch `alt/3d` and tag `3d-prototype`.
+> Status: a 2D platformer in the HD art direction: 640x360 view (integer-scaled
+> to 1280x720 and up), 32 px tiles, night lighting. The 3D prototype lives on
+> branch `alt/3d` and tag `3d-prototype`.
 
 Enhancement pads (after the nanotech pools):
 
@@ -79,8 +80,20 @@ Requirements: Godot 4.7.x (standard build, not .NET).
 4. Serve the export folder over HTTP (for example `python -m http.server`) and
    open it in a browser. Opening `index.html` directly from disk will not work.
 
+Regenerating generated content (all optional; the results are committed):
+
+- Art: `tools/art/` (recoloured tiles, harmonised backgrounds and props, the HD
+  cat, the pad plate). The scripts take the downloaded CC0 packs as arguments;
+  see each script's docstring.
+- TileSet: `godot --headless --path . --script res://tools/build_tileset_hd.gd`
+- Test room: `godot --headless --path . --script res://tools/build_test_room.gd`
+
+Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
+drives the cat through every beat of the test room in headless Godot, and
+`web_playthrough.mjs` does the same in the web export with Playwright.
+
 ## Credits
 
 - Design, direction and development: Chris ([qBitnaut](https://github.com/qBitnaut))
 - AI tooling: see [AI_USE.md](AI_USE.md)
-- Asset credits (art, 3D, audio, music): _TBD_
+- Asset credits (art, font, audio): see [CREDITS.md](CREDITS.md)

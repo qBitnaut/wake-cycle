@@ -3,11 +3,11 @@
 [ext_resource type="Script" path="res://scripts/actors/locked_door.gd" id="1_dr"]
 
 [sub_resource type="RectangleShape2D" id="s"]
-size = Vector2(16, 36)
+size = Vector2(32, 64)
 
 [node name="LockedDoor" type="StaticBody2D"]
 script = ExtResource("1_dr")
 
 [node name="Shape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -18)
+position = Vector2(0, -32)
 shape = SubResource("s")

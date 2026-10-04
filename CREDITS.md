@@ -8,18 +8,22 @@ as a courtesy.
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| Pet Cats Pack (Cat-6, recoloured to a brown tabby by `tools/recolor_cat.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
-| Pixel Platformer | Kenney | https://kenney.nl/assets/pixel-platformer (also https://opengameart.org/content/pixel-platformer) | CC0 1.0 | `assets/tiles/kenney-pixel-platformer/` |
-| Pixel Platformer: Industrial Expansion | Kenney | https://kenney.nl/assets/pixel-platformer-industrial-expansion | CC0 1.0 | `assets/tiles/kenney-industrial-expansion/` |
-| Pixel Platformer: Metal Expansion | Pien Krings (Pien's Factory) | https://opengameart.org/content/pixel-platformer-metal-expansion | CC0 1.0 | `assets/tiles/kenney-metal-expansion/` |
-| Gum Bot sprites | GrafxKid | https://opengameart.org/content/gum-bot-sprites | CC0 1.0 | `assets/sprites/robots/` |
-| Industrial Parallax Background | Luis Zuno (ansimuz) | https://opengameart.org/content/industrial-parallax-background | CC0 1.0 | `assets/backgrounds/` |
+| Pet Cats Pack (Cat-6: recoloured to a brown tabby by `tools/recolor_cat.py`, doubled with Scale2x and outlined by `tools/art/cat_hd.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
+| Sci-fi platformer tiles 32x32 (recoloured to the Wake Cycle palette by `tools/art/recolor_tiles.py`) | bart | https://opengameart.org/content/sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
+| Extension for Sci-fi platformer tiles 32x32 (the 16-colour variant sheet the recolour reads) | rubberduck | https://opengameart.org/content/extension-for-sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
+| Legacy Collection (Warped sci-fi interior wall, Scifi lab support column, cyberpunk detective props, bipedal and mech units), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/ ("Legacy Collection" free download) | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/props/`, `assets/art_hd/robots/` |
+| Warped City (night skyline layers, towers, drone, turret), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/robots/` |
+
+The ansimuz packs ship a `public-license.pdf` stating CC0; copies are in
+`assets/art_hd/`. The warning lamp (`lamp_base.png`, `lamp_glass.png`) is cut from the
+bart/rubberduck hazard sheet; the pad plate is drawn by `tools/art/make_pad_hd.py`
+in the steel ramp.
 
 ## Font
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| m5x7 | Daniel Linssen (managore) | https://managore.itch.io/m5x7 | CC0 1.0 | `assets/fonts/m5x7.ttf` |
+| monogram | datagoblin | https://datagoblin.itch.io/monogram | CC0 1.0 | `assets/fonts/monogram.ttf` |
 
 ## Audio
 

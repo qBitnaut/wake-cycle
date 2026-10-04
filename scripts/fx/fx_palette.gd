@@ -18,6 +18,13 @@ const FOG := Color(0.42, 0.50, 0.70)          ## Fog body, lit by the night tint
 const RAIN := Color(0.70, 0.80, 0.95)
 const LIGHTNING := Color(0.85, 0.90, 1.0)
 
+# Hostile (red means hostile): laser beams, enemy eyes. Matches palette.md.
+const LASER := Color(1.0, 0.29, 0.23)          ## #ff4a3a beam body.
+const LASER_CORE := Color(1.0, 0.94, 0.88)     ## #fff0e0 beam centre line.
+
+# Back-wall status lights (muted aqua, never a power hue).
+const INDICATOR := Color(0.255, 0.71, 0.753)   ## #41b5c0, drawn unshaded at 0.8.
+
 # Warm accents.
 const SODIUM := Color(1.0, 0.55, 0.16)        ## Flickering warning light.
 const SPARK := Color(1.0, 0.78, 0.40)
@@ -31,6 +38,7 @@ const SURGE := Color(0.16, 0.42, 1.0)         ## Blue: speed.
 const SPRING := Color(0.2, 1.0, 0.5)          ## Green: high jump.
 const PHASE := Color(0.18, 0.92, 1.0)         ## Cyan: dash.
 const IMPACT := Color(0.62, 0.34, 1.0)        ## Violet: ground pound.
+const SHOCKWAVE := Color(1.0, 0.79, 0.29)     ## Gold: the double-jump burst (warm: it is the cat's).
 const CHECKPOINT := Color(0.55, 1.0, 0.86)    ## Pale teal: safe, not a power.
 
 

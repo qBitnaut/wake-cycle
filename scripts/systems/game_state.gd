@@ -11,10 +11,12 @@ signal shockwave_unlock_changed(unlocked: bool)
 
 const MAX_HEALTH := 3  # a hit at 0 hp is the fatal 4th hit
 const LETTER_BONUS := 5000
+## Key colours avoid the reserved hues: no glowing blue, green, cyan, violet
+## (nano powers) and no red (hostile). Brass is the default test-room key.
 const KEY_COLORS := {
-	"red": Color("ff4a4a"),
-	"blue": Color("5a9bff"),
-	"yellow": Color("ffd23f"),
+	"brass": Color("e0c840"),
+	"bone": Color("d9dede"),
+	"rose": Color("c98068"),
 }
 
 var health := MAX_HEALTH

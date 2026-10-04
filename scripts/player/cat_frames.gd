@@ -1,9 +1,9 @@
 class_name CatFrames
 extends RefCounted
-## Builds the cat's SpriteFrames from the recoloured Cat-6 sheets (50x50 frames).
+## Builds the cat's SpriteFrames from the recoloured Cat-6 sheets (100x100 frames: Scale2x plus outline, see tools/art/cat_hd.py).
 
 const DIR := "res://assets/sprites/cat/cat_%s.png"
-const FRAME := 50
+const FRAME := 100
 
 # name: [sheet, fps, loop, frame indices (empty = all)]
 const ANIMS := {

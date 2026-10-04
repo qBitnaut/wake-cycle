@@ -14,11 +14,11 @@ const BEAM := preload("res://shaders/pad_beam.gdshader")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 
 ## Plate art and its emissive mask (white where it glows, same size).
-@export var base_texture: Texture2D = preload("res://assets/fx/pad_base.png")
-@export var glow_texture: Texture2D = preload("res://assets/fx/pad_glow.png")
-## Pixel scale for the plate art. 0 = auto (FXScale.whole: 1 at 320x180,
-## 2 at 640x360, right for the baked 24x7 plate). Use 1 with HD art.
-@export_range(0, 8) var art_scale := 0
+@export var base_texture: Texture2D = preload("res://assets/art_hd/pad_base.png")
+@export var glow_texture: Texture2D = preload("res://assets/art_hd/pad_glow.png")
+## Pixel scale for the plate art. 1 = the HD plate (assets/art_hd/pad_base.png);
+## 0 = auto (FXScale.whole), for old reference-resolution art.
+@export_range(0, 8) var art_scale := 1
 
 @export var kind: FXPalette.Pad = FXPalette.Pad.SURGE:
 	set(v):

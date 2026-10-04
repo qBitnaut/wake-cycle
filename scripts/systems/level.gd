@@ -5,11 +5,17 @@ extends Node2D
 
 @export var player_path: NodePath = ^"Cat"
 @export var start_path: NodePath = ^"PlayerStart"
-@export var limits := Rect2i(0, 0, 1280, 288)
-@export var death_margin := 48
+## Camera rectangle in px. Exactly one screen tall (640x360) keeps the camera
+## pinned vertically; the level scrolls sideways only.
+@export var limits := Rect2i(0, 24, 1280, 360)
+## When > 0, the camera floor drops to this y while the cat is below the normal
+## floor (a chamber, falling into a pit), then comes back up.
+@export var deep_bottom := 0
+@export var death_margin := 64
 
 var cat: Cat
 var _checkpoint_id := ""
+var _normal_bottom := 0
 
 
 func _enter_tree() -> void:
@@ -28,3 +34,21 @@ func _ready() -> void:
 	cat.global_position = spawn
 	cat.death_y = limits.end.y + death_margin
 	cat.set_camera_limits(limits)
+	_normal_bottom = limits.end.y
+	cat.shockwave.connect(_on_cat_shockwave)
+
+
+## The cat's double-jump burst and ground pound become the ShockwaveFX ring
+## (refraction, flash, dust) plus a camera shake. Ground pounds hit harder.
+func _on_cat_shockwave(pos: Vector2, radius: float, source: String) -> void:
+	if source == "pound":
+		ShockwaveFX.spawn(self, pos, radius, FXPalette.IMPACT, 0.55)
+	else:
+		ShockwaveFX.spawn(self, pos, radius, FXPalette.SHOCKWAVE, 0.25)
+
+
+func _physics_process(_delta: float) -> void:
+	if deep_bottom <= 0 or cat == null:
+		return
+	var want := deep_bottom if cat.global_position.y > _normal_bottom - 24 else _normal_bottom
+	cat.camera.limit_bottom = int(move_toward(cat.camera.limit_bottom, want, 6.0))

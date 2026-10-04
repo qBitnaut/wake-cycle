@@ -78,6 +78,11 @@ const HALO := preload("res://assets/fx/halo.png")
 	set(v):
 		dust_amount = v
 		_rebuild()
+## Mote size in px. 1 = one art pixel (HD); 0 = auto (FXScale.whole, 2 px at 640x360).
+@export_range(0, 8) var dust_px := 1:
+	set(v):
+		dust_px = v
+		_rebuild()
 @export var dust_color := Color(1.6, 1.7, 2.0):
 	set(v):
 		dust_color = v
@@ -127,8 +132,6 @@ func _ready() -> void:
 	_dust.initial_velocity_max = 3.0 * f
 	_dust.damping_min = 0.1 * f
 	_dust.damping_max = 0.4 * f
-	_dust.scale_amount_min = float(FXScale.whole(self))
-	_dust.scale_amount_max = _dust.scale_amount_min
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(1, 1, 1, 0))
 	ramp.add_point(0.2, Color(1, 1, 1, 1))
@@ -180,6 +183,8 @@ func _rebuild() -> void:
 	_pool.position = Vector2(lean, length - 2.0)
 	_pool.scale = Vector2(bottom_width * 1.5, 14.0 * FXScale.factor(self)) / float(HALO.get_width())
 	_pool.modulate = Color(color * floor_glow, 1.0)
+	_dust.scale_amount_min = float(dust_px if dust_px > 0 else FXScale.whole(self))
+	_dust.scale_amount_max = _dust.scale_amount_min
 	_dust.amount = maxi(dust_amount, 1)
 	_dust.emitting = dust_amount > 0
 	_dust.visible = dust_amount > 0

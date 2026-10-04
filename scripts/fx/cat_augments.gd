@@ -6,7 +6,7 @@ extends Node2D
 ## pulse in the active power colour.
 ##
 ##     var aug := CatAugments.attach(cat)        # hidden until reveal()
-##     aug.reveal(1.2)                            # materialise, flash, settle
+##     aug.reveal(3.6)                            # piece by piece, then settle
 ##     aug.set_power(FXPalette.SPRING)            # emitters go green
 ##     aug.clear_power()                          # neutral soft blue-green
 ##     aug.flare()                                # burst (shockwave, dash)
@@ -22,10 +22,16 @@ extends Node2D
 ## cat starts a dash (Cat.is_phasing()).
 
 signal revealed
+## A piece has just landed during reveal(): kind is ear, plate0..2 (from the
+## neck back), tail or eye; local_pos is in the cat sprite's local space.
+signal piece_revealed(kind: String, local_pos: Vector2)
 
 const SHEETS := "res://assets/sprites/cat/augments/aug_%s.png"
 const METAL_SHADER := preload("res://shaders/cat_augment.gdshader")
 const GLOW_SHADER := preload("res://shaders/cat_augment_glow.gdshader")
+const PIECES := "res://assets/sprites/cat/augments/pieces.json"
+
+static var _pieces := {}
 
 ## Emitter colour and level with no power active: a soft blue-green.
 @export var idle_color := Color(0.13, 0.65, 0.82)
@@ -48,6 +54,7 @@ var _tween: Tween
 var _color_tween: Tween
 var _cat: Node
 var _was_phasing := false
+var _landed := {}
 
 
 ## Add augments to `cat` (a Cat, or anything with a `sprite` or a "Sprite"
@@ -98,18 +105,21 @@ func _ready() -> void:
 	_push()
 
 
-## Materialise: the pieces print outward from their emitters with a bright
-## edge, the emitters flash, then settle into the gentle pulse.
-func reveal(duration := 1.2) -> void:
+## Materialise piece by piece on the shared schedule: the ear implant, the
+## spine plates one by one from the neck back, the tail band, the eye ring.
+## Each prints out of its emitter, which flashes as it lands
+## (piece_revealed); then all the emitters glow once and settle.
+func reveal(duration := 3.6) -> void:
 	shown = true
 	if _tween:
 		_tween.kill()
 	_reveal = 0.0
 	_flash = 0.0
+	_landed = {}
 	_tween = create_tween()
-	_tween.tween_method(_set_reveal, 0.0, 1.0, duration * 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_tween.tween_callback(_set_flash.bind(1.0))
-	_tween.tween_method(_set_flash, 1.0, 0.0, duration * 0.45).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	_tween.tween_method(_set_reveal, 0.0, 1.0, duration * 0.85)
+	_tween.tween_callback(_set_flash.bind(0.7))
+	_tween.tween_method(_set_flash, 0.7, 0.0, duration * 0.15).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	_tween.tween_callback(revealed.emit)
 
 
@@ -178,6 +188,23 @@ func _set_energy(v: float) -> void:
 func _set_reveal(v: float) -> void:
 	_reveal = v
 	_push()
+	var src := get_parent() as AnimatedSprite2D
+	if src == null:
+		return
+	for pc in _frame_pieces(src):
+		if _reveal >= float(pc["s"]) and not _landed.has(pc["k"]):
+			_landed[pc["k"]] = true
+			piece_revealed.emit(pc["k"], CatOverlay.frame_to_local(src, Vector2(pc["x"], pc["y"])))
+
+
+func _frame_pieces(src: AnimatedSprite2D) -> Array:
+	if _pieces.is_empty():
+		_pieces = NanoHD.load_json(PIECES)
+	var sf := CatOverlay.sheet_frame(src)
+	if sf.is_empty() or not _pieces.has("sheets") or not _pieces["sheets"].has(sf[0]):
+		return []
+	var frames: Array = _pieces["sheets"][sf[0]]
+	return frames[sf[1]] if sf[1] < frames.size() else []
 
 
 func _set_flash(v: float) -> void:

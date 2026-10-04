@@ -4,7 +4,9 @@
 //
 // Data half of the augment sheet (UV + (0, 0.5)):
 //   R emitter strength (1 emitter, 0.78 seam, 0.27 eye ring, 0 metal)
-//   G pulse phase      B reveal order      A augment pixel
+//   G pulse phase      B reveal time       A augment pixel
+// Each piece lands at its own time on the reveal schedule; its emitter
+// flashes as it does, and freshly printed metal glows for a moment.
 shader_type canvas_item;
 render_mode unshaded, blend_add;
 
@@ -21,17 +23,19 @@ uniform float pulse_speed = 0.8;
 void fragment() {
 	vec4 metal = texture(TEXTURE, UV);
 	vec4 d = texture(TEXTURE, UV + vec2(0.0, 0.5));
-	float thr = reveal * 1.2 - 0.1;
-	if (d.a < 0.5 || d.b > thr) {
+	if (d.a < 0.5 || d.b > reveal + 0.002) {
 		discard;
 	}
 	vec3 col = vec3(0.0);
 	// Materialising edge: freshly printed pixels glow, then cool to metal.
-	float fresh = (1.0 - smoothstep(0.0, 0.2, thr - d.b)) * (1.0 - step(0.999, reveal));
+	float age = reveal - d.b;
+	float fresh = (1.0 - smoothstep(0.0, 0.05, age)) * (1.0 - step(0.999, reveal));
 	col += mix(power_color.rgb, vec3(1.0), 0.45) * fresh * 1.5;
 	if (d.r > 0.0) {
 		float pulse = 0.5 + 0.5 * sin((TIME * pulse_speed - d.g) * 6.2832);
-		col += power_color.rgb * d.r * (energy * (0.55 + 0.45 * pulse) + flash * 2.6 + flare * 2.2);
+		// The emitter flashes as its piece lands, then settles to the pulse.
+		float landed = (1.0 - smoothstep(0.0, 0.09, age)) * (1.0 - step(0.999, reveal));
+		col += power_color.rgb * d.r * (energy * (0.55 + 0.45 * pulse) + flash * 2.6 + flare * 2.2 + landed * 3.0);
 	} else if (metal.a > 0.5 && metal.g > 0.5) {
 		// Light metal edges catch the emitters' colour, and the burst.
 		col += power_color.rgb * (energy * 0.1 + flare * 0.55 + flash * 0.3);

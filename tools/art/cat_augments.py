@@ -25,8 +25,15 @@ Each output sheet is twice the cat sheet's height:
   bottom half  emitter and reveal data, read by the shaders at UV + (0, 0.5):
       R  emitter strength (255 emitter, 200 seam, 70 eye ring, 0 metal)
       G  pulse phase (0..255 = 0..1 of a cycle)
-      B  reveal order (0 = first, 255 = last): pieces grow out of their emitter
+      B  reveal time (0 = first, 255 = last) on one schedule shared by every
+         frame: the ear implant, then the spine plates one by one from the
+         neck back, then the tail band, then the eye ring. Each piece grows
+         out of its emitter inside its own window (WINDOWS below)
       A  255 on every augment pixel
+
+Also writes augments/pieces.json: per sheet and frame, each piece drawn
+with its kind, reveal start and centre (frame px), so the HD layer can flash
+as each one lands.
 
 Usage: cat_augments.py [--preview out.png]
 """
@@ -54,21 +61,59 @@ LENS = P.hex_to_rgb(P.RAMPS["teal"]["ink"])
 PLATE = 4   # plate length, px
 SEAM = 1
 
+# Reveal windows on the shared 0..1 schedule; plates count from the neck.
+WINDOWS = {
+    "ear": (0.0, 0.12),
+    "plate0": (0.17, 0.28),
+    "plate1": (0.32, 0.43),
+    "plate2": (0.47, 0.58),
+    "tail": (0.64, 0.76),
+    "eye": (0.84, 0.96),
+}
+
 
 class Canvas:
     def __init__(self, frame_rgba):
         self.a, self.ink, self.eye, self.inner = A.masks(frame_rgba)
         self.metal = np.zeros((FRAME, FRAME, 4), np.uint8)
         self.data = np.zeros((FRAME, FRAME, 4), np.uint8)
+        self.win = (0.0, 1.0)
+        self.pieces = []
+        self._pts = []
+
+    def piece(self, kind):
+        """Start drawing piece `kind`: later puts use its reveal window."""
+        self._close()
+        self.win = WINDOWS[kind]
+        self.pieces.append({"k": kind, "s": self.win[0]})
+        self._pts = []
+
+    def _close(self):
+        if self.pieces and self._pts:
+            xs, ys = zip(*self._pts)
+            self.pieces[-1]["x"] = round(sum(xs) / len(xs) + 0.5, 1)
+            self.pieces[-1]["y"] = round(sum(ys) / len(ys) + 0.5, 1)
+        elif self.pieces and "x" not in self.pieces[-1]:
+            self.pieces.pop()
+
+    def done(self):
+        self._close()
+        return self.pieces
+
+    def _when(self, order):
+        s, e = self.win
+        return int(np.clip((s + order * (e - s)) * 255, 0, 255))
 
     def put(self, x, y, rgb, order, emit=0, phase=0.0):
         if not (0 <= x < FRAME and 0 <= y < FRAME):
             return
         self.metal[y, x] = (*rgb, 255)
-        self.data[y, x] = (emit, round(phase * 255) % 256, int(np.clip(order * 255, 0, 255)), 255)
+        self.data[y, x] = (emit, round(phase * 255) % 256, self._when(order), 255)
+        self._pts.append((x, y))
 
-    def glow_only(self, x, y, emit, phase):
-        self.data[y, x] = (emit, round(phase * 255) % 256, 255, 255)
+    def glow_only(self, x, y, emit, phase, order=0.0):
+        self.data[y, x] = (emit, round(phase * 255) % 256, self._when(order), 255)
+        self._pts.append((x, y))
 
 
 def ear_piece(cv, info):
@@ -84,6 +129,7 @@ def ear_piece(cv, info):
         pts.append((max(row) if front else min(row), ey + dy))
     if len(pts) < 3:
         return
+    cv.piece("ear")
     n = len(pts) - 1
     cv.put(*pts[0], LENS, 0.0, 255, 0.0)
     for i, (x, y) in enumerate(pts[1:]):
@@ -94,11 +140,21 @@ def eye_ring(cv, info):
     if info["view"] != "side" or not info["eye_px"]:
         return
     eye = {tuple(p) for p in info["eye_px"]}
+    ring = []
     for x, y in eye:
         for dx, dy in A.N8:
             q = (x + dx, y + dy)
-            if q not in eye and cv.inner[q[1], q[0]] and cv.metal[q[1], q[0], 3] == 0:
-                cv.glow_only(q[0], q[1], 70, 0.0)
+            if q not in eye and q not in ring and cv.inner[q[1], q[0]] and cv.metal[q[1], q[0], 3] == 0:
+                ring.append(q)
+    if not ring:
+        return
+    cv.piece("eye")
+    # The ring closes round the eye: order by angle from the back of it.
+    ex = sum(p[0] for p in eye) / len(eye)
+    ey = sum(p[1] for p in eye) / len(eye)
+    for q in ring:
+        ang = (np.arctan2(q[1] - ey, -(q[0] - ex)) / (2 * np.pi)) % 1.0
+        cv.glow_only(q[0], q[1], 70, 0.0, ang)
 
 
 def spine_plates(cv, info, prev_start):
@@ -116,24 +172,30 @@ def spine_plates(cv, info, prev_start):
     if any(x not in back for x in cols):
         return None
     seam_cols = {start + (i + 1) * PLATE + i * SEAM for i in range(n - 1)}
-    for x in cols:
-        y0 = back[x]
-        k = x - start
-        order = abs(k - total / 2) / (total / 2)
-        if not cv.a[y0 - 1, x]:
-            cv.put(x, y0 - 1, INK, order)
-        if x in seam_cols:
-            seam = sorted(seam_cols).index(x)
-            cv.put(x, y0, LENS, order, 200, 0.18 + 0.12 * seam)
-            cv.put(x, y0 + 1, LENS, order, 200, 0.18 + 0.12 * seam)
-            continue
-        edge = x == start or x == start + total - 1 or (x - 1) in seam_cols or (x + 1) in seam_cols
-        cv.put(x, y0, FACE if edge else LIGHT, order)
-        cv.put(x, y0 + 1, SHADOW if edge else FACE, order)
-    # One specular glint on the middle plate's leading edge.
-    mid = start + (n // 2) * (PLATE + SEAM) + 1
-    if mid in back:
-        cv.put(mid, back[mid], HIGH, 0.0)
+    # Plates count from the neck (the cat faces +x). Each plate owns the seam
+    # on its neck side, which lights first as the plate prints toward the tail.
+    for j in range(n):
+        k = n - 1 - j                       # 0 = nearest the neck
+        x0 = start + j * (PLATE + SEAM)
+        x1 = x0 + PLATE - 1
+        cols = list(range(x0, x1 + 1))
+        if j < n - 1:
+            cols.append(x1 + 1)             # the seam toward the neck
+        cv.piece(f"plate{k}")
+        for x in cols:
+            y0 = back[x]
+            order = (x1 + 1 - x) / (PLATE + 1)
+            if not cv.a[y0 - 1, x]:
+                cv.put(x, y0 - 1, INK, order)
+            if x in seam_cols:
+                cv.put(x, y0, LENS, 0.0, 200, 0.18 + 0.12 * k)
+                cv.put(x, y0 + 1, LENS, 0.0, 200, 0.18 + 0.12 * k)
+                continue
+            edge = x == x0 or x == x1
+            cv.put(x, y0, FACE if edge else LIGHT, order)
+            cv.put(x, y0 + 1, SHADOW if edge else FACE, order)
+            if k == n // 2 and x == x0 + 1:
+                cv.put(x, y0, HIGH, order)  # one specular glint, middle plate
     return start
 
 
@@ -152,6 +214,7 @@ def tail_band(cv, info):
     ex, ey = line[k]
     if (ex, ey) not in band:
         return
+    cv.piece("tail")
     top = min(y for _, y in band)
     for x, y in band:
         if (x, y) == (ex, ey):
@@ -165,6 +228,7 @@ def draw_sheet(img, infos):
     n = img.shape[1] // FRAME
     out = np.zeros((FRAME * 2, n * FRAME, 4), np.uint8)
     prev_start = None
+    pieces = []
     for i in range(n):
         cv = Canvas(img[:, i * FRAME:(i + 1) * FRAME])
         info = infos[i]
@@ -172,22 +236,26 @@ def draw_sheet(img, infos):
         prev_start = spine_plates(cv, info, prev_start)
         tail_band(cv, info)
         eye_ring(cv, info)
+        pieces.append(cv.done())
         out[:FRAME, i * FRAME:(i + 1) * FRAME] = cv.metal
         out[FRAME:, i * FRAME:(i + 1) * FRAME] = cv.data
-    return out
+    return out, pieces
 
 
 def run(preview=None):
     data = json.loads(A.ANCHORS.read_text())
     previews = []
+    all_pieces = {"frame": FRAME, "sheets": {}}
     for name, img in A.sheets():
         infos = data["sheets"].get(name)
         if not infos:
             continue
-        sheet = draw_sheet(img, infos)
+        sheet, pieces = draw_sheet(img, infos)
+        all_pieces["sheets"][name] = pieces
         Image.fromarray(sheet).save(OUT / f"aug_{name}.png")
         previews.append((name, img, sheet))
         print(f"{name}: aug_{name}.png ({sheet.shape[1]}x{sheet.shape[0]})")
+    (OUT / "pieces.json").write_text(json.dumps(all_pieces, separators=(",", ":")) + "\n")
     if preview:
         write_preview(previews, preview)
 

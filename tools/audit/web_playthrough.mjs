@@ -10,9 +10,11 @@
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-const PW = process.env.PW_DIR || '/home/chris/.local/share/mise/installs/npm-playwright/latest/node_modules/playwright';
+const PW = process.env.PW_DIR
+  || path.join(os.homedir(), '.local/share/mise/installs/npm-playwright/latest/node_modules/playwright');
 const { chromium } = createRequire(import.meta.url)(PW);
 
 const args = process.argv.slice(2).filter(a => !a.startsWith('--'));

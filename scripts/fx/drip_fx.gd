@@ -10,6 +10,7 @@ signal landed(global_pos: Vector2)
 @export var interval_max := 2.6
 @export var puddle: Puddle
 @export var drop_color := Color(0.75, 0.86, 1.0)
+## Reference px/s^2 (scaled by FXScale).
 @export var gravity := 420.0
 
 enum _State { WAIT, SWELL, FALL }
@@ -20,9 +21,13 @@ var _wait := 0.5
 var _y := 0.0
 var _vy := 0.0
 var _splash: CPUParticles2D
+var _f := 1.0
+var _px := 1.0
 
 
 func _ready() -> void:
+	_f = FXScale.factor(self)
+	_px = float(FXScale.whole(self))
 	var self_mat := CanvasItemMaterial.new()
 	self_mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	material = self_mat
@@ -34,9 +39,11 @@ func _ready() -> void:
 	_splash.lifetime = 0.35
 	_splash.direction = Vector2(0, -1)
 	_splash.spread = 60.0
-	_splash.gravity = Vector2(0, 300)
-	_splash.initial_velocity_min = 18.0
-	_splash.initial_velocity_max = 38.0
+	_splash.gravity = Vector2(0, 300) * _f
+	_splash.initial_velocity_min = 18.0 * _f
+	_splash.initial_velocity_max = 38.0 * _f
+	_splash.scale_amount_min = _px
+	_splash.scale_amount_max = _px
 	_splash.color = drop_color
 	_splash.position = Vector2(0, fall_height)
 	var ramp := Gradient.new()
@@ -68,7 +75,7 @@ func _process(delta: float) -> void:
 				_y = 1.0
 				_vy = 0.0
 		_State.FALL:
-			_vy += gravity * delta
+			_vy += gravity * _f * delta
 			_y += _vy * delta
 			if _y >= fall_height:
 				_land()
@@ -91,7 +98,7 @@ func _draw() -> void:
 	match _state:
 		_State.SWELL:
 			var h := 1.0 if _t < 0.35 else 2.0
-			draw_rect(Rect2(0, 0, 1, h), drop_color)
+			draw_rect(Rect2(0, 0, _px, h * _px), drop_color)
 		_State.FALL:
 			var y := floorf(_y)
-			draw_rect(Rect2(0, y - 2, 1, 3), Color(drop_color, 0.9))
+			draw_rect(Rect2(0, y - 2 * _px, _px, 3 * _px), Color(drop_color, 0.9))

@@ -8,8 +8,11 @@
 ##   ?station=2&notitle=1&strike=1
 extends Node2D
 
-const STATIONS := [Vector2(160, 90), Vector2(488, 90)]
-const PAN_SPEED := 90.0
+const PAN_SPEED := 90.0   # reference px per second
+
+## World width of the lab room (the builder sets it). Camera stations and
+## panning derive from it and the viewport size, so any resolution works.
+@export var lab_width := 648.0
 
 @export var shockwave_every := 3.2
 @export var shockwave_pos := Vector2(462, 162)
@@ -26,12 +29,15 @@ var _cat_t := 0.0
 var _shock_t := 0.0
 var _pad_i := 0
 var _fps_t := 0.0
+var _stations: Array[Vector2] = []
 var _cam_target := Vector2.ZERO
 var _cam_pos := Vector2.ZERO   # unrounded; the camera itself sits on whole pixels
 
 
 func _ready() -> void:
-	_cam_target = STATIONS[0]
+	var view := get_viewport().get_visible_rect().size
+	_stations = [view * 0.5, Vector2(maxf(lab_width - view.x * 0.5, view.x * 0.5), view.y * 0.5)]
+	_cam_target = _stations[0]
 	_cam_pos = _cam_target
 	_cam.position = _cam_target
 	var params := _url_params()
@@ -75,7 +81,7 @@ func _process(delta: float) -> void:
 	# Camera.
 	var pan := Input.get_axis("ui_left", "ui_right")
 	if pan != 0.0:
-		_cam_target.x = clampf(_cam_target.x + pan * PAN_SPEED * delta, 160.0, 488.0)
+		_cam_target.x = clampf(_cam_target.x + pan * PAN_SPEED * FXScale.factor(self) * delta, _stations[0].x, _stations[1].x)
 	_cam_pos = _cam_pos.lerp(_cam_target, 1.0 - exp(-delta * 6.0))
 	_cam.position = _cam_pos.round()
 	_fps_t += delta
@@ -86,7 +92,7 @@ func _process(delta: float) -> void:
 
 ## Jump the camera to station i (0 hero, 1 machinery). For scripted shots.
 func go_station(i: int) -> void:
-	_cam_target = STATIONS[clampi(i, 0, STATIONS.size() - 1)]
+	_cam_target = _stations[clampi(i, 0, _stations.size() - 1)]
 	_cam_pos = _cam_target
 	_cam.position = _cam_target
 
@@ -104,9 +110,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match (event as InputEventKey).physical_keycode:
 		KEY_1:
-			_cam_target = STATIONS[0]
+			_cam_target = _stations[0]
 		KEY_2:
-			_cam_target = STATIONS[1]
+			_cam_target = _stations[1]
 		KEY_L:
 			$Lightning.strike()
 		KEY_K:

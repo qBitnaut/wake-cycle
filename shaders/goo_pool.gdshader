@@ -16,6 +16,7 @@ uniform float pulse_speed = 26.0;   // px per second
 uniform float rect_width = 72.0;
 uniform float rect_height = 14.0;
 uniform float surge = 0.0;          // 0..1 extra brightness, e.g. when stepped in
+uniform float px_scale = 1.0;       // art pixel size: 2 at 640x360 with the baked mask
 
 varying vec2 local_px;
 
@@ -24,7 +25,9 @@ void vertex() {
 }
 
 void fragment() {
-	vec2 p = floor(local_px);
+	vec2 p = floor(local_px / px_scale);    // art pixels
+	float rw = rect_width / px_scale;
+	float rh = rect_height / px_scale;
 	vec2 csize = vec2(textureSize(circuit, 0));
 	float trace = texture(circuit, (p + 0.5) / csize).a;
 	// Packets: a sawtooth running right, phase-shifted per row so they stagger.
@@ -33,7 +36,7 @@ void fragment() {
 	float lvl = idle + packet * 1.6 + surge;
 	float mixer = texture(noise, vec2(p.x * 0.008 + TIME * 0.015, p.y * 0.03)).r;
 	vec3 tc = mix(color_a.rgb, color_b.rgb, smoothstep(0.38, 0.62, mixer));
-	float depth = clamp(p.y / max(rect_height, 1.0), 0.0, 1.0);
+	float depth = clamp(p.y / max(rh, 1.0), 0.0, 1.0);
 	vec3 col = body_color.rgb;
 	// Oily sheen: slow, sparse bands, strongest just under the surface.
 	float sheen = texture(noise, vec2(p.x * 0.012 - TIME * 0.04, p.y * 0.06 + TIME * 0.015)).r;
@@ -45,6 +48,6 @@ void fragment() {
 	if (p.y < 1.0) {
 		col = tc * (0.45 + packet * 0.8 + surge) + sheen_color.rgb * 0.25;
 	}
-	float ends = min(p.x, rect_width - 1.0 - p.x);
+	float ends = min(p.x, rw - 1.0 - p.x);
 	COLOR = vec4(col, clamp(ends + 1.0, 0.0, 1.0));
 }

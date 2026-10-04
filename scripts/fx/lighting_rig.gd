@@ -87,7 +87,9 @@ const MASK_BACKDROP := 4
 ## replaced by merged, edge-inset ones (see TileOccluderBaker) so lamps light
 ## the surfaces they shine on.
 @export var solid_layers: Array[TileMapLayer] = []
-@export_range(0, 8) var occluder_inset_px := 3
+## Lit rim depth in px. -1 = auto: a sixth of the tile height (3 px on
+## 18 px tiles, 5 px on 32 px tiles).
+@export_range(-1, 16) var occluder_inset_px := -1
 
 var _modulate: CanvasModulate
 var _moon: DirectionalLight2D
@@ -130,10 +132,19 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		for layer in solid_layers:
 			if layer:
-				TileOccluderBaker.bake(layer, occluder_inset_px)
+				var inset := occluder_inset_px
+				if inset < 0 and layer.tile_set:
+					inset = maxi(roundi(layer.tile_set.tile_size.y / 6.0), 1)
+				TileOccluderBaker.bake(layer, inset)
 
 
 ## The CanvasModulate that tints the unlit world (lightning tweens it).
+## How far directional shadows are cast, in world px: 3.4x the internal
+## viewport height (612 at 320x180), so it follows the resolution.
+static func shadow_reach(node: Node) -> float:
+	return FXScale.factor(node) * FXScale.REFERENCE_HEIGHT * 3.4
+
+
 func get_canvas_modulate() -> CanvasModulate:
 	return _modulate
 
@@ -159,7 +170,7 @@ func _apply() -> void:
 	_moon.shadow_color = Color(0, 0, 0, 1)
 	_moon.range_item_cull_mask = MASK_WORLD | MASK_MOTES
 	_moon.shadow_item_cull_mask = MASK_WORLD | MASK_MOTES
-	_moon.max_distance = 600.0
+	_moon.max_distance = shadow_reach(self)
 	_vignette.visible = vignette > 0.0
 	(_vignette.material as ShaderMaterial).set_shader_parameter("strength", vignette)
 	var env := _env.environment

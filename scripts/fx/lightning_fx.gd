@@ -43,7 +43,7 @@ func _ready() -> void:
 	_light.shadow_filter = Light2D.SHADOW_FILTER_NONE
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
 	_light.shadow_item_cull_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
-	_light.max_distance = 600.0
+	_light.max_distance = LightingRig.shadow_reach(self)
 	add_child(_light)
 	_next = randf_range(2.0, interval_min)
 

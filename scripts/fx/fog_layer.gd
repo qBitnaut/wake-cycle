@@ -32,7 +32,7 @@ const NOISE := preload("res://assets/fx/fog_noise.png")
 	set(v):
 		density = v
 		_apply()
-## Drift in px per second.
+## Drift in reference px per second (scaled by FXScale). Band size is world px.
 @export var drift := Vector2(5.0, 0.0):
 	set(v):
 		drift = v
@@ -84,7 +84,9 @@ func _apply() -> void:
 	mat.set_shader_parameter("noise_scale", noise_scale)
 	mat.set_shader_parameter("rect_width", band_width)
 	mat.set_shader_parameter("rect_height", band_height)
-	mat.set_shader_parameter("repeats", maxf(roundf(band_width / 256.0), 1.0))
+	var f := FXScale.factor(self)
+	mat.set_shader_parameter("px_scale", f)
+	mat.set_shader_parameter("repeats", maxf(roundf(band_width / (256.0 * f)), 1.0))
 	mat.set_shader_parameter("fade_top", fade_top)
 	mat.set_shader_parameter("fade_bottom", fade_bottom)
 	mat.set_shader_parameter("steps", float(steps))

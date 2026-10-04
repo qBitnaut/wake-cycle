@@ -29,25 +29,33 @@ const MOON := preload("res://assets/fx/moon.png")
 @export var lamp := Color(1.0, 0.70, 0.38)
 ## A small pixel moon in the sky layer, relative to the horizon (origin).
 @export var moon_visible := true
+## In reference art px from the horizon (multiplied by the art scale).
 @export var moon_position := Vector2(99, -107)
+## Pixel scale for the 272 px ansimuz art. 0 = auto (FXScale.whole), so the
+## city keeps its on-screen size at 640x360. Use 1 with HD replacement art.
+@export_range(0, 8) var art_scale := 0
+
+var _s := 1.0
 @export var moon_color := Color(1.25, 1.3, 1.45)
 
 var _mats: Array[ShaderMaterial] = []
 
 
 func _ready() -> void:
+	_s = float(art_scale if art_scale > 0 else FXScale.whole(self))
 	for i in LAYERS.size():
 		var def: Array = LAYERS[i]
 		var tex: Texture2D = load(def[0])
 		var px := Parallax2D.new()
 		px.name = "Layer%d" % i
 		px.scroll_scale = Vector2(def[1], def[1])
-		px.repeat_size = Vector2(tex.get_width(), 0)
+		px.repeat_size = Vector2(tex.get_width() * _s, 0)
 		px.repeat_times = repeat_times
 		var spr := Sprite2D.new()
 		spr.texture = tex
 		spr.centered = false
-		spr.position = Vector2(0, -tex.get_height())
+		spr.scale = Vector2(_s, _s)
+		spr.position = Vector2(0, -tex.get_height() * _s)
 		var mat := ShaderMaterial.new()
 		mat.shader = SHADER
 		mat.set_shader_parameter("brightness", def[2])
@@ -69,8 +77,8 @@ func _add_moon() -> void:
 	add_child(px)
 	var halo := Sprite2D.new()
 	halo.texture = HALO
-	halo.position = moon_position
-	halo.scale = Vector2(0.9, 0.9)
+	halo.position = moon_position * _s
+	halo.scale = Vector2(0.9, 0.9) * _s
 	halo.modulate = Color(0.35, 0.42, 0.62)
 	var am := CanvasItemMaterial.new()
 	am.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
@@ -80,7 +88,8 @@ func _add_moon() -> void:
 	var disc := Sprite2D.new()
 	disc.name = "Moon"
 	disc.texture = MOON
-	disc.position = moon_position
+	disc.position = moon_position * _s
+	disc.scale = Vector2(_s, _s)
 	disc.modulate = moon_color
 	var um := CanvasItemMaterial.new()
 	um.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED

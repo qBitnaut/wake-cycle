@@ -10,6 +10,7 @@ extends Node
 ## Trauma model: strength stacks up to 1 and decays; offset = trauma^2.
 
 @export var camera: Camera2D
+## Reference px at full trauma (scaled by FXScale: 10x8 at 640x360).
 @export var max_offset := Vector2(5, 4)
 @export var frequency := 28.0
 
@@ -60,7 +61,7 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	_trauma = maxf(_trauma - _decay * delta, 0.0)
-	var k := _trauma * _trauma
+	var k := _trauma * _trauma * FXScale.factor(self)
 	var nx := sin(_t * frequency + _seed.x) * 0.6 + sin(_t * frequency * 2.3 + _seed.y) * 0.4
 	var ny := sin(_t * frequency * 1.1 + _seed.y) * 0.6 + sin(_t * frequency * 1.9 + _seed.x) * 0.4
 	camera.offset = _base_offset + Vector2(roundf(nx * max_offset.x * k), roundf(ny * max_offset.y * k))

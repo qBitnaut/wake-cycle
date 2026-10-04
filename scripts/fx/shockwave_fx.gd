@@ -56,6 +56,7 @@ func _ready() -> void:
 	mat.set_shader_parameter("rect_size", radius * 2.0)
 	mat.set_shader_parameter("flatten", flatten)
 	mat.set_shader_parameter("progress", 0.0)
+	mat.set_shader_parameter("distortion", 6.0 * FXScale.factor(self))
 	_ring.material = mat
 	add_child(_ring)
 	_light = PointLight2D.new()
@@ -68,6 +69,8 @@ func _ready() -> void:
 	if dust:
 		_puff = CPUParticles2D.new()
 		_puff.texture = PUFFS
+		_puff.scale_amount_min = float(FXScale.whole(self))
+		_puff.scale_amount_max = _puff.scale_amount_min
 		var pm := CanvasItemMaterial.new()
 		pm.particles_animation = true
 		pm.particles_anim_h_frames = 5

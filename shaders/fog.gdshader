@@ -15,6 +15,7 @@ uniform float fade_bottom = 0.15;
 uniform float repeats = 2.0;            // noise tiles across rect_width; keep it an integer
 uniform float rect_width = 512.0;
 uniform float steps = 0.0;              // >0 posterises the density for a retro look
+uniform float px_scale = 1.0;           // FXScale: fog features and drift keep their on-screen size
 
 varying vec2 local_px;
 
@@ -24,8 +25,10 @@ void vertex() {
 
 void fragment() {
 	vec2 p = floor(local_px) + 0.5;
-	vec2 uv1 = vec2(p.x / rect_width * repeats, p.y / 128.0 * noise_scale) + TIME * scroll / vec2(rect_width / repeats, 128.0);
-	vec2 uv2 = vec2(p.x / rect_width * repeats * 2.0, p.y / 64.0 * noise_scale) - TIME * scroll * 0.6 / vec2(rect_width / repeats, 64.0) + vec2(0.37, 0.11);
+	float ty = 128.0 * px_scale;
+	vec2 sc = scroll * px_scale;
+	vec2 uv1 = vec2(p.x / rect_width * repeats, p.y / ty * noise_scale) + TIME * sc / vec2(rect_width / repeats, ty);
+	vec2 uv2 = vec2(p.x / rect_width * repeats * 2.0, p.y / (ty * 0.5) * noise_scale) - TIME * sc * 0.6 / vec2(rect_width / repeats, ty * 0.5) + vec2(0.37, 0.11);
 	float n = texture(noise, uv1).r * 0.65 + texture(noise, uv2).r * 0.45;
 	n = smoothstep(0.3, 0.95, n);
 	float y = p.y / max(rect_height, 1.0);

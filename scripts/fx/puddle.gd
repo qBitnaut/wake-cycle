@@ -20,6 +20,7 @@ const MAX_RIPPLES := 4
 	set(v):
 		reflectivity = v
 		_sync()
+## Wobble and edge softness are in reference (320x180) px, scaled by FXScale.
 @export_range(0.0, 4.0, 0.05) var wave_amp := 0.6:
 	set(v):
 		wave_amp = v
@@ -80,3 +81,4 @@ func _sync() -> void:
 	mat.set_shader_parameter("edge_fade", edge_fade)
 	mat.set_shader_parameter("rect_width", size.x)
 	mat.set_shader_parameter("rect_height", size.y)
+	mat.set_shader_parameter("px_scale", FXScale.factor(self))

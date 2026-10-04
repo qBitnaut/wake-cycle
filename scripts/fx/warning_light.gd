@@ -2,12 +2,11 @@ class_name WarningLight
 extends Node2D
 ## A failing sodium warning lamp: the Kenney beacon housing, an emissive glass
 ## dome pushed into HDR, an additive halo, and a shadow-casting PointLight2D.
-## The origin is the centre of the 18x18 beacon tile.
+## The origin is the centre of the lamp sprite. Swap in HD art with
+## `base_texture` / `glass_texture`; the halo sizes itself to the sprite.
 
 enum Mode { FLICKER, PULSE, STEADY, ROTATE }
 
-const BASE := preload("res://assets/fx/beacon_base.png")
-const GLASS := preload("res://assets/fx/beacon_glass.png")
 const HALO := preload("res://assets/fx/halo.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 
@@ -16,8 +15,14 @@ const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 		color = v
 		_level_changed()
 @export var mode := Mode.FLICKER
+## Lamp housing, and a greyscale mask of the glass (tinted by `color`).
+@export var base_texture: Texture2D = preload("res://assets/fx/beacon_base.png")
+@export var glass_texture: Texture2D = preload("res://assets/fx/beacon_glass.png")
+## Pixel scale for the lamp art. 0 = auto (FXScale.whole), 1 for HD art.
+@export_range(0, 8) var art_scale := 0
 @export_range(0.0, 8.0, 0.05) var energy := 1.3
-@export_range(0.25, 8.0, 0.05) var light_radius_scale := 1.5:
+## Light radius in world px is about 64 x this (geometry: not auto-scaled).
+@export_range(0.25, 16.0, 0.05) var light_radius_scale := 1.5:
 	set(v):
 		light_radius_scale = v
 		if _light:
@@ -45,17 +50,23 @@ var _next_stutter := 2.0
 
 
 func _ready() -> void:
+	var s := float(art_scale if art_scale > 0 else FXScale.whole(self))
+	var lamp_h := base_texture.get_size().y * s
+	# Glass centre sits a little below the sprite centre on the Kenney beacon.
+	var glass_c := Vector2(0, roundf(lamp_h / 18.0))
 	_base = Sprite2D.new()
-	_base.texture = BASE
+	_base.texture = base_texture
+	_base.scale = Vector2(s, s)
 	add_child(_base)
 	_glass = Sprite2D.new()
-	_glass.texture = GLASS
+	_glass.texture = glass_texture
+	_glass.scale = Vector2(s, s)
 	_glass.material = _unshaded()
 	add_child(_glass)
 	_halo = Sprite2D.new()
 	_halo.texture = HALO
-	_halo.position = Vector2(0, 1)
-	_halo.scale = Vector2(0.9, 0.9)
+	_halo.position = glass_c
+	_halo.scale = Vector2.ONE * 0.9 * lamp_h / 18.0
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	add.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
@@ -64,7 +75,7 @@ func _ready() -> void:
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
 	_light.texture_scale = light_radius_scale
-	_light.position = Vector2(0, 1)
+	_light.position = glass_c
 	_light.shadow_enabled = shadows
 	_light.shadow_filter = Light2D.SHADOW_FILTER_PCF5
 	_light.shadow_filter_smooth = 1.5

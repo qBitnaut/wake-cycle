@@ -7,7 +7,6 @@ extends Node2D
 
 const SHADER := preload("res://shaders/goo_pool.gdshader")
 const NOISE := preload("res://assets/fx/noise_small.png")
-const CIRCUIT := preload("res://assets/fx/goo_circuit.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 
 @export var width := 72.0:
@@ -33,6 +32,10 @@ const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 		_apply()
 @export_range(0.0, 6.0, 0.05) var light_energy := 2.0
 @export var bubbles := true
+## Trace mask (white traces, tiles horizontally) and its pixel scale.
+## 0 = auto (FXScale.whole, right for the baked mask); 1 with an HD mask.
+@export var circuit_texture: Texture2D = preload("res://assets/fx/goo_circuit.png")
+@export_range(0, 8) var art_scale := 0
 
 var _rect: ColorRect
 var _light: PointLight2D
@@ -47,7 +50,7 @@ func _ready() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER
 	mat.set_shader_parameter("noise", NOISE)
-	mat.set_shader_parameter("circuit", CIRCUIT)
+	mat.set_shader_parameter("circuit", circuit_texture)
 	_rect.material = mat
 	add_child(_rect)
 	_light = PointLight2D.new()
@@ -101,11 +104,17 @@ func _apply() -> void:
 	mat.set_shader_parameter("glow_energy", trace_energy)
 	mat.set_shader_parameter("rect_width", width)
 	mat.set_shader_parameter("rect_height", depth)
+	mat.set_shader_parameter("px_scale", float(art_scale if art_scale > 0 else FXScale.whole(self)))
 	_light.position = Vector2(width * 0.5, -2)
 	_light.texture_scale = maxf(width / 128.0 * 2.2, 0.6)
 	_light.color = color_a
 	_light.energy = light_energy
 	_bubbles.position = Vector2(width * 0.5, depth * 0.8)
 	_bubbles.emission_rect_extents = Vector2(width * 0.42, 1)
-	_bubbles.lifetime = maxf(depth * 0.8 / 4.5, 0.4)
+	var f := FXScale.factor(self)
+	_bubbles.initial_velocity_min = 3.0 * f
+	_bubbles.initial_velocity_max = 6.0 * f
+	_bubbles.scale_amount_min = float(FXScale.whole(self))
+	_bubbles.scale_amount_max = _bubbles.scale_amount_min
+	_bubbles.lifetime = maxf(depth * 0.8 / (4.5 * f), 0.4)
 	_bubbles.emitting = bubbles

@@ -15,7 +15,8 @@ const FONT := preload("res://assets/fonts/m5x7.ttf")
 @export var title := "Find Your Way Out"
 @export var autoplay := true
 ## Font size; keep it a multiple of 16 so m5x7 stays pixel-exact.
-@export_range(16, 64, 16) var font_size := 32
+## 0 = auto: 32 at 320x180, 64 at 640x360 (16 x 2 x FXScale.whole).
+@export_range(0, 128, 16) var font_size := 0
 @export var text_color := Color(0.86, 0.91, 1.0)
 ## Push the title slightly over 1.0 so the 2D glow gives it a faint bloom.
 @export_range(1.0, 2.0, 0.05) var text_glow := 1.15
@@ -42,7 +43,7 @@ func _ready() -> void:
 	_label = Label.new()
 	_label.text = title
 	_label.add_theme_font_override("font", FONT)
-	_label.add_theme_font_size_override("font_size", font_size)
+	_label.add_theme_font_size_override("font_size", font_size if font_size > 0 else 32 * FXScale.whole(self))
 	_label.add_theme_color_override("font_color", Color(text_color * text_glow, 1.0))
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

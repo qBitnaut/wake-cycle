@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fx/window_rain.gd" id="1_script"]
+
+[node name="WindowRain" type="ColorRect"]
+offset_right = 54.0
+offset_bottom = 36.0
+script = ExtResource("1_script")

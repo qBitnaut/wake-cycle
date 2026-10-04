@@ -7,7 +7,8 @@ uniform vec4 beam_color : source_color = vec4(0.2, 0.6, 1.0, 1.0);
 uniform float intensity = 0.5;
 uniform float rect_width = 20.0;
 uniform float rect_height = 30.0;
-uniform float speed = 14.0;
+uniform float speed = 14.0;          // reference px per second
+uniform float px_scale = 1.0;        // FXScale: 2 at 640x360
 
 varying vec2 local_px;
 
@@ -20,9 +21,9 @@ float hash(float n) {
 }
 
 void fragment() {
-	vec2 p = floor(local_px);
-	float x = (p.x + 0.5) / rect_width;
-	float y = 1.0 - (p.y + 0.5) / rect_height;     // 0 at the pad, 1 at the top
+	vec2 p = floor(local_px / px_scale);    // reference pixels: streaks keep their look
+	float x = (p.x + 0.5) / (rect_width / px_scale);
+	float y = 1.0 - (p.y + 0.5) / (rect_height / px_scale);     // 0 at the pad, 1 at the top
 	float cx = (x - 0.5) * 2.0;
 	float across = exp(-cx * cx * 3.5);
 	float up = pow(1.0 - y, 1.8);

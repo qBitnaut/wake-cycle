@@ -28,11 +28,13 @@ const MOTE_SHADER := preload("res://shaders/mote.gdshader")
 	set(v):
 		density = v
 		_apply()
+## Fall speed, reference px per second (scaled by FXScale). width and
+## floor_y are world px and are not scaled.
 @export var speed := 260.0:
 	set(v):
 		speed = v
 		_apply()
-## Horizontal drift, px per second (positive blows right).
+## Horizontal drift, reference px per second (positive blows right).
 @export var wind := 40.0:
 	set(v):
 		wind = v
@@ -84,8 +86,9 @@ func set_intensity(k: float) -> void:
 func _apply() -> void:
 	if _drops == null:
 		return
-	var v := Vector2(wind, speed)
-	var life := floor_y / speed
+	var f := FXScale.factor(self)
+	var v := Vector2(wind, speed) * f
+	var life := floor_y / v.y
 	_drops.lifetime = life
 	_drops.preprocess = life
 	_drops.direction = v.normalized()
@@ -93,8 +96,10 @@ func _apply() -> void:
 	_drops.initial_velocity_max = v.length()
 	_drops.amount = maxi(int(density * width / 100.0 * life) + 1, 1)
 	# Spawn upwind so the slanted rain still covers the whole floor span.
-	_drops.position = Vector2(-wind * life * 0.5, 0)
-	_drops.emission_rect_extents = Vector2(width * 0.5 + absf(wind) * life * 0.25, 0.5)
+	_drops.position = Vector2(-v.x * life * 0.5, 0)
+	_drops.emission_rect_extents = Vector2(width * 0.5 + absf(v.x) * life * 0.25, 0.5)
+	_drops.scale_amount_min = float(FXScale.whole(self))
+	_drops.scale_amount_max = _drops.scale_amount_min
 	_drops.color = rain_color
 	var mat: Material
 	match lighting:

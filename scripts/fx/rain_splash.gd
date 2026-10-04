@@ -24,11 +24,13 @@ func _ready() -> void:
 	emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	direction = Vector2(0, -1)
 	spread = 55.0
-	gravity = Vector2(0, 260)
-	initial_velocity_min = 14.0
-	initial_velocity_max = 30.0
-	scale_amount_min = 1.0
-	scale_amount_max = 1.0
+	var f := FXScale.factor(self)
+	var px := float(FXScale.whole(self))
+	gravity = Vector2(0, 260) * f
+	initial_velocity_min = 14.0 * f
+	initial_velocity_max = 30.0 * f
+	scale_amount_min = px
+	scale_amount_max = px
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(1, 1, 1, 1))
 	ramp.set_color(1, Color(1, 1, 1, 0))

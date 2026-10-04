@@ -3,6 +3,10 @@
 ##     godot --headless --path . --script res://scenes/lab/build_fx_lab.gd
 ## The saved scene is a normal scene: open it in the editor and tweak freely
 ## (but re-running this script overwrites it).
+##
+## Layout is in tiles of the current 18 px Kenney TileSet (atlas coords
+## below) and fills a 320x180 view. The FX nodes scale themselves with
+## FXScale, but a 640x360 / 32 px tile pass needs a new layout here.
 extends SceneTree
 
 const T := 18
@@ -64,6 +68,7 @@ func _initialize() -> void:
 	lab = Node2D.new()
 	lab.name = "FxLab"
 	lab.set_script(load("res://scenes/lab/fx_lab.gd"))
+	lab.set("lab_width", float(COLS * T))
 
 	# --- Exterior: behind everything, seen through holes in the back wall ---
 	var outside := _node(Node2D.new(), "Outside", lab)
@@ -72,16 +77,8 @@ func _initialize() -> void:
 	var rain_rects: Array[CanvasItem] = []
 	for i in WINDOWS.size():
 		var w: Vector2i = WINDOWS[i]
-		var wr := ColorRect.new()
-		var mat := ShaderMaterial.new()
-		mat.shader = load("res://shaders/window_rain.gdshader")
-		mat.set_shader_parameter("intensity", 0.4)
-		mat.set_shader_parameter("wind", 0.22)
-		wr.material = mat
-		wr.position = Vector2(w * T)
+		var wr := _fx("res://scenes/fx/window_rain.tscn", "WindowRain%d" % i, outside, Vector2(w * T)) as WindowRain
 		wr.size = Vector2(3 * T, 2 * T)
-		wr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_node(wr, "WindowRain%d" % i, outside)
 		rain_rects.append(wr)
 
 	# --- Back wall (no occlusion), darker for depth ---

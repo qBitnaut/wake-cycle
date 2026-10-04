@@ -9,6 +9,7 @@ uniform float wind = 0.25;          // x shift per px of fall
 uniform float speed = 220.0;        // px per second, near layer
 uniform float density : hint_range(0.0, 1.0) = 0.5;
 uniform float flash = 0.0;          // lightning brightens the streaks
+uniform float px_scale = 1.0;       // FXScale: streak size and speed in 320x180 pixels
 
 float hash(float n) {
 	return fract(sin(n * 127.1) * 43758.5453);
@@ -33,7 +34,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec2 p = floor(local_px);
+	vec2 p = floor(local_px / px_scale);
 	float near = layer(p, 5.0, speed, 6.0, 1.0);
 	float far = layer(p + vec2(2.0, 0.0), 3.0, speed * 0.6, 3.0, 7.0) * 0.45;
 	float a = max(near, far) * intensity * (1.0 + flash * 3.0);

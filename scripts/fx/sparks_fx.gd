@@ -26,13 +26,19 @@ var _next := 1.0
 var _flash := 0.0
 
 
+var _f := 1.0
+var _px := 1.0
+
+
 func _ready() -> void:
+	_f = FXScale.factor(self)
+	_px = float(FXScale.whole(self))
 	_particles = CPUParticles2D.new()
 	# Short streaks aligned to velocity read as hot sparks, not dust.
 	_particles.texture = STREAK
 	_particles.particle_flag_align_y = true
-	_particles.scale_amount_min = 0.6
-	_particles.scale_amount_max = 1.0
+	_particles.scale_amount_min = 0.6 * _px
+	_particles.scale_amount_max = 1.0 * _px
 	_particles.emitting = false
 	_particles.one_shot = true
 	_particles.explosiveness = 0.9
@@ -41,11 +47,11 @@ func _ready() -> void:
 	_particles.local_coords = false
 	_particles.direction = Vector2(0, 1)
 	_particles.spread = 75.0
-	_particles.gravity = Vector2(0, 320)
-	_particles.initial_velocity_min = 30.0
-	_particles.initial_velocity_max = 95.0
-	_particles.damping_min = 10.0
-	_particles.damping_max = 30.0
+	_particles.gravity = Vector2(0, 320) * _f
+	_particles.initial_velocity_min = 30.0 * _f
+	_particles.initial_velocity_max = 95.0 * _f
+	_particles.damping_min = 10.0 * _f
+	_particles.damping_max = 30.0 * _f
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(2.2, 1.9, 1.2, 1.0))
 	ramp.add_point(0.2, Color(color.r * 1.8, color.g * 1.2, color.b * 0.6, 1.0))
@@ -58,7 +64,7 @@ func _ready() -> void:
 	add_child(_particles)
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
-	_light.texture_scale = 1.3
+	_light.texture_scale = 1.3 * _f
 	_light.color = color
 	_light.energy = 0.0
 	_light.enabled = false
@@ -96,7 +102,7 @@ func _process(delta: float) -> void:
 func _tip() -> Vector2:
 	if cable_length <= 0.0:
 		return Vector2.ZERO
-	var sway := sin(_t * 1.3) * 2.0 + sin(_t * 3.1) * 0.6
+	var sway := (sin(_t * 1.3) * 2.0 + sin(_t * 3.1) * 0.6) * _f
 	return Vector2(roundf(sway), cable_length)
 
 
@@ -105,13 +111,14 @@ func _draw() -> void:
 		return
 	var tip := _tip()
 	var prev := Vector2.ZERO
-	var steps := int(cable_length / 3.0)
+	var steps := maxi(int(cable_length / (3.0 * _px)), 1)
+	var w := _px
 	for i in range(1, steps + 1):
 		var f := float(i) / steps
 		var p := Vector2(roundf(tip.x * f * f), roundf(cable_length * f))
-		draw_line(prev, p, cable_color, 1.0)
-		draw_line(prev + Vector2(1, 0), p + Vector2(1, 0), cable_color.darkened(0.3), 1.0)
+		draw_line(prev, p, cable_color, w)
+		draw_line(prev + Vector2(w, 0), p + Vector2(w, 0), cable_color.darkened(0.3), w)
 		prev = p
 	# Frayed copper ends.
-	draw_rect(Rect2(tip + Vector2(-1, 0), Vector2(1, 2)), Color(0.75, 0.45, 0.2))
-	draw_rect(Rect2(tip + Vector2(1, 0), Vector2(1, 2)), Color(0.65, 0.38, 0.18))
+	draw_rect(Rect2(tip + Vector2(-w, 0), Vector2(w, 2 * w)), Color(0.75, 0.45, 0.2))
+	draw_rect(Rect2(tip + Vector2(w, 0), Vector2(w, 2 * w)), Color(0.65, 0.38, 0.18))

@@ -1,15 +1,18 @@
 @tool
 class_name GooPool
 extends Node2D
-## Nanotech goo pool. From a distance it is just darker water: a dim mirror
-## with a cool meniscus line. Its circuit traces wake (packets of blue and
-## green light, a glow light, rising nanite bubbles) only up close, when
-## disturbed (surge(), or the cat wading through) or while it grips.
-## `dormancy` 0 brings back the always-awake look.
+## The goo pool: black, oily liquid with no colour of its own (the colour
+## of the transformation belongs to the cat). A dim desaturated mirror, a
+## muted silver sheen, a slow viscous swell and dark bubbles that swell and
+## pop; disturbing it (surge(), or the cat wading through) stirs it harder.
 ##
 ## grip(x) is the transformation's hold on the cat: the surface swells into
-## a mound, the goo boils, nanites rise and tendrils climb the legs.
-## release() lets go. The origin is the pool's top-left (the surface line).
+## a mound round the legs, the goo boils with dark bubbles and droplets, and
+## dark tendrils climb. release() lets go. The origin is the pool's top-left
+## (the surface line).
+##
+## `circuit` brings back the older nanotech look (glowing traces that wake
+## up close, a coloured glow light, glowing bubbles); off by default.
 
 const SHADER := preload("res://shaders/goo_pool.gdshader")
 const NOISE := preload("res://assets/fx/noise_small.png")
@@ -39,14 +42,25 @@ const TOP_MARGIN := 8.0
 		trace_energy = v
 		_apply()
 @export_range(0.0, 6.0, 0.05) var light_energy := 2.0
+## Glowing bubbles (circuit look only).
 @export var bubbles := true
-## 1 = reads as darker water from a distance (traces wake near the cat or
-## when disturbed); 0 = always awake.
+## The older nanotech look: circuit traces, glow light, glowing bubbles.
+@export var circuit := false:
+	set(v):
+		circuit = v
+		_apply()
+## Strength of the slow swell and the surface bubbles (0 = still).
+@export_range(0.0, 3.0, 0.05) var ripple := 1.0:
+	set(v):
+		ripple = v
+		_apply()
+## Circuit look only: 1 = traces wake near the cat or when disturbed;
+## 0 = always awake.
 @export_range(0.0, 1.0, 0.01) var dormancy := 1.0:
 	set(v):
 		dormancy = v
 		_apply()
-## How near (px) the cat must be before the traces start to show.
+## Circuit look only: how near (px) the cat must be before traces show.
 @export var reveal_radius := 72.0
 ## Wading through it disturbs it (a surge on entry, a trickle while moving).
 @export var auto_disturb := true
@@ -64,7 +78,6 @@ var _rect: ColorRect
 var _light: PointLight2D
 var _bubbles: CPUParticles2D
 var _boil: CPUParticles2D
-var _nanites: CPUParticles2D
 var _back: GooTendrils
 var _front: GooTendrils
 var _t := 0.0
@@ -125,8 +138,8 @@ func surge(amount := 1.0) -> void:
 	_surge = clampf(maxf(_surge, amount), 0.0, 1.0)
 
 
-## The goo takes hold at global x: the surface swells, boils and sends
-## tendrils up the legs. `actor_z` is the held actor's z_index; tendrils are
+## The goo takes hold at global x: the surface swells, boils (dark bubbles
+## and droplets) and sends dark tendrils up the legs. `actor_z` is the held actor's z_index; tendrils are
 ## drawn just behind and just in front of it.
 func grip(global_x: float, amount := 1.0, actor_z := 5) -> void:
 	_grip_x = global_x - global_position.x
@@ -146,14 +159,6 @@ func grip(global_x: float, amount := 1.0, actor_z := 5) -> void:
 		_boil.scale_amount_max = 2.0
 		_boil.color = Color(0.06, 0.07, 0.11)
 		add_child(_boil)
-		_nanites = _particles(14, true)
-		_nanites.direction = Vector2(0, -1)
-		_nanites.spread = 12.0
-		_nanites.gravity = Vector2(0, -6)
-		_nanites.initial_velocity_min = 12.0
-		_nanites.initial_velocity_max = 26.0
-		_nanites.lifetime = 1.3
-		add_child(_nanites)
 	for t in [_back, _front]:
 		t.position = Vector2(_grip_x, 0)
 		t.z_as_relative = false
@@ -161,8 +166,6 @@ func grip(global_x: float, amount := 1.0, actor_z := 5) -> void:
 	_front.z_index = actor_z + 2
 	_boil.position = Vector2(_grip_x, 0)
 	_boil.emission_rect_extents = Vector2(12, 1)
-	_nanites.position = Vector2(_grip_x, 0)
-	_nanites.emission_rect_extents = Vector2(14, 1)
 	if tighter:
 		surge(0.8)
 
@@ -178,6 +181,7 @@ func _make_tendrils(n: int, spread: float, h: float, seed: float) -> GooTendrils
 	t.spread = spread
 	t.max_height = h
 	t.seed_offset = seed
+	t.glowing_tips = circuit
 	t.tip_a = color_a
 	t.tip_b = color_b
 	add_child(t)
@@ -191,7 +195,7 @@ func _process(delta: float) -> void:
 	_surge = maxf(_surge - delta * 0.8, 0.0)
 	_grip = move_toward(_grip, _grip_target, delta * (0.8 if _grip_target > _grip else 1.0))
 	_track_cat(delta)
-	var awake := clampf(maxf(maxf(1.0 - dormancy, _surge), maxf(_reveal * 0.4, _grip)), 0.0, 1.0)
+	var awake := clampf(maxf(maxf(1.0 - dormancy, _surge), maxf(_reveal * 0.4, _grip)), 0.0, 1.0) if circuit else 0.0
 	# The light wakes less than the traces: a held cat stands right on it.
 	var lit := clampf(maxf(maxf(1.0 - dormancy, _surge), maxf(_reveal * 0.3, _grip * 0.6)), 0.0, 1.0)
 	var k := 0.5 + 0.5 * sin(_t * 0.9)
@@ -208,8 +212,6 @@ func _process(delta: float) -> void:
 		_back.amount = _grip
 		_front.amount = _grip
 		_boil.emitting = _grip > 0.15
-		_nanites.emitting = _grip > 0.1
-		_nanites.color = Color(color_a.lerp(color_b, k) * 1.6, 1.0)
 
 
 ## The nearest player sets the proximity reveal; wading disturbs the goo.
@@ -251,6 +253,8 @@ func _apply() -> void:
 	mat.set_shader_parameter("dormancy", dormancy)
 	mat.set_shader_parameter("reveal_radius", reveal_radius)
 	mat.set_shader_parameter("reflectivity", reflectivity)
+	mat.set_shader_parameter("circuit_on", 1.0 if circuit else 0.0)
+	mat.set_shader_parameter("ripple", ripple)
 	mat.set_shader_parameter("px_scale", float(art_scale if art_scale > 0 else FXScale.whole(self)))
 	_light.position = Vector2(width * 0.5, -2)
 	_light.texture_scale = maxf(width / 128.0 * 2.2, 0.6)
@@ -264,4 +268,6 @@ func _apply() -> void:
 	_bubbles.scale_amount_min = float(FXScale.whole(self))
 	_bubbles.scale_amount_max = _bubbles.scale_amount_min
 	_bubbles.lifetime = maxf(depth * 0.8 / (4.5 * f), 0.4)
-	_bubbles.emitting = bubbles
+	_bubbles.emitting = bubbles and circuit
+	_bubbles.visible = circuit
+	_light.enabled = circuit

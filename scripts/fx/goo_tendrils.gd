@@ -2,7 +2,8 @@ class_name GooTendrils
 extends Node2D
 ## Goo tendrils rising out of a pool surface and leaning in to wrap whatever
 ## stands there. Drawn in whole pixels: lit ink bodies with a cool sheen on
-## one edge, and emissive nanite tips on an unshaded child that bloom.
+## one edge and a wet highlight at the tip (or emissive nanite tips on an
+## unshaded child that bloom, with glowing_tips).
 ##
 ## The origin is a point on the pool surface. Set `amount` (0..1) and the
 ## tendrils ease toward it: up as the goo grips, back down as it lets go.
@@ -20,6 +21,8 @@ extends Node2D
 @export var tip_b: Color = FXPalette.NANO_GREEN
 ## Seconds to rise to full height; falling back is a little quicker.
 @export var rise_time := 1.4
+## Emissive coloured tips (the circuit look); off = dark, wet tips.
+@export var glowing_tips := false
 
 var amount := 0.0
 var _cur := 0.0
@@ -74,10 +77,14 @@ func _draw() -> void:
 			draw_rect(Rect2(px, -y - 1, w, 1), body_color)
 			if w > 1:
 				draw_rect(Rect2(px, -y - 1, 1, 1), body_color.lerp(sheen_color, 0.25))
+		if not glowing_tips:
+			draw_rect(Rect2(roundf(x - 0.5), -height, 1, 1), body_color.lerp(sheen_color, 0.5))
 		_tip_pts.append(Vector3(roundf(x - 0.5), -height, h2))
 
 
 func _draw_tips() -> void:
+	if not glowing_tips:
+		return
 	for p in _tip_pts:
 		var c := tip_a.lerp(tip_b, p.z)
 		var pulse := 1.0 + 0.4 * sin(_t * 6.0 + p.z * 9.0)

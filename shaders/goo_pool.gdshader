@@ -1,12 +1,14 @@
-// Nanotech goo. Dormant, it reads as dark, oily water: a dim mirror with a
-// cool meniscus line and its circuit traces all but invisible. Up close (the
-// cat within reveal_radius), when disturbed (surge) or while it grips the
-// cat (grip), the traces wake: packets of blue and green light run along
-// them and the meniscus takes their colour. Unshaded so the traces read as
-// emissive; energies stay near 1.0 so hues survive, glow does the rest.
+// The goo: black, oily liquid with no colour of its own. A dim desaturated
+// mirror, a muted silver sheen, a slow viscous undulation, and dark bubbles
+// that swell and pop at the surface (boiling round whatever it grips). The
+// colour of the transformation belongs to the cat, never to the pool.
+//
+// circuit_on = 1 brings back the old nanotech look: circuit traces that wake up
+// close, when disturbed (surge) or while gripping, with packets of blue and
+// green light (unshaded, energies near 1 so hues survive the glow).
 //
 // The rect starts `top_margin` px above the resting surface: headroom for
-// the mound that swells up round the cat's legs when it grips.
+// the mound, the undulation and the bubbles.
 shader_type canvas_item;
 render_mode unshaded;
 
@@ -14,7 +16,7 @@ uniform sampler2D circuit : filter_nearest, repeat_enable;
 uniform sampler2D noise : filter_linear, repeat_enable;
 uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
 uniform vec4 body_color : source_color = vec4(0.03, 0.04, 0.065, 1.0);
-uniform vec4 sheen_color : source_color = vec4(0.35, 0.42, 0.62, 1.0);
+uniform vec4 sheen_color : source_color = vec4(0.38, 0.43, 0.55, 1.0);
 uniform vec4 color_a : source_color = vec4(0.12, 0.42, 1.0, 1.0);
 uniform vec4 color_b : source_color = vec4(0.15, 1.0, 0.55, 1.0);
 uniform float glow_energy = 1.4;
@@ -34,7 +36,26 @@ uniform float grip = 0.0;           // 0..1 the goo has hold of the cat
 uniform float grip_x = 0.0;         // local x of the grip, px
 uniform float mound_height = 4.0;
 uniform float reflectivity = 0.22;
-uniform vec4 reflect_tint : source_color = vec4(0.55, 0.62, 0.8, 1.0);
+uniform vec4 reflect_tint : source_color = vec4(0.5, 0.54, 0.62, 1.0);
+uniform float circuit_on = 0.0;     // 1 = the old glowing traces
+uniform float ripple = 1.0;         // undulation and bubble strength
+
+float pool_hash(vec2 q) {
+	return fract(sin(dot(q, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+// A bubble that swells and pops: slot k comes round every `period` s at a
+// random x near `cx` (spread `w`); returns its height at x, px.
+float bubble(float x, float k, float period, float cx, float w, float size) {
+	float u = (TIME + k * 1.37) / period;
+	float n = floor(u);
+	float f = fract(u);
+	float bx = cx + (pool_hash(vec2(n, k)) - 0.5) * w;
+	float r = 1.5 + size * pool_hash(vec2(k, n + 3.0));
+	float life = smoothstep(0.0, 0.18, f) * (1.0 - step(0.26, f));
+	float dx = (x - bx) / r;
+	return max(1.0 - dx * dx, 0.0) * life * (0.8 + size * 0.5);
+}
 
 varying vec2 local_px;
 
@@ -49,6 +70,20 @@ void fragment() {
 	float gx = (x - grip_x) / 13.0;
 	float bell = exp(-gx * gx);
 	float mound = grip * (mound_height * bell + sin(x * 0.7 + TIME * 4.0) * bell);
+	// Slow viscous undulation, stronger when disturbed or gripping.
+	float amp = ripple * (0.55 + surge * 1.2 + grip * 0.6);
+	mound += amp * (0.5 + 0.3 * sin(x * 0.09 - TIME * 0.9) + 0.2 * sin(x * 0.23 + TIME * 0.55));
+	// Dark bubbles: a few slow ones anywhere, a boil round the grip.
+	float bub = 0.0;
+	for (float k = 0.0; k < 3.0; k += 1.0) {
+		bub = max(bub, bubble(x, k, 2.6 + k * 0.9, rect_width * 0.5, rect_width * 0.9, 1.0));
+	}
+	if (grip > 0.01) {
+		for (float k = 3.0; k < 7.0; k += 1.0) {
+			bub = max(bub, grip * bubble(x, k, 0.7 + (k - 3.0) * 0.17, grip_x, 34.0, 2.0));
+		}
+	}
+	mound += ripple * bub;
 	float surf = -floor(mound + 0.5);
 	if (y < surf) {
 		discard;
@@ -64,7 +99,7 @@ void fragment() {
 	float near = reveal * (1.0 - smoothstep(reveal_radius * 0.35, reveal_radius, abs(x - reveal_x)));
 	float held = grip * (1.0 - smoothstep(12.0, 44.0, abs(x - grip_x)));
 	// Up close it is only a subtle glow; a surge or the grip wakes it fully.
-	float awake = clamp(max(max(1.0 - dormancy, surge), max(near * 0.4, held)), 0.0, 1.0);
+	float awake = circuit_on * clamp(max(max(1.0 - dormancy, surge), max(near * 0.4, held)), 0.0, 1.0);
 	float lvl = (idle + packet * 1.6) * mix(0.05, 1.0, awake) + surge * 0.6 + held * 0.3;
 	float mixer = texture(noise, vec2(p.x * 0.008 + TIME * 0.015, p.y * 0.03)).r;
 	vec3 tc = mix(color_a.rgb, color_b.rgb, smoothstep(0.38, 0.62, mixer));
@@ -75,6 +110,8 @@ void fragment() {
 	uv.y -= 2.0 * (d + 0.5) * SCREEN_PIXEL_SIZE.y;
 	uv.x += round(sin(y * 0.9 + TIME * 1.6 + x * 0.13) * 0.7) * SCREEN_PIXEL_SIZE.x;
 	vec3 refl = texture(screen_tex, uv).rgb;
+	// Desaturated: the mirror never carries colour into the goo.
+	refl = vec3(dot(refl, vec3(0.3, 0.59, 0.11)));
 	col = mix(col, refl * reflect_tint.rgb, reflectivity * (1.0 - depth * 0.7));
 	// Oily sheen: slow, sparse bands, strongest just under the surface.
 	float sheen = texture(noise, vec2(p.x * 0.012 - TIME * 0.04, p.y * 0.06 + TIME * 0.015)).r;
@@ -82,12 +119,15 @@ void fragment() {
 	// Faint glow bleeding around the traces, only once awake. The light
 	// gathers at the surface and fades into the deep.
 	col += tc * 0.06 * (1.0 + packet) * (1.0 - depth * 0.7) * awake;
-	col += tc * trace * lvl * glow_energy * (1.0 - depth * 0.8);
+	col += tc * trace * lvl * glow_energy * (1.0 - depth * 0.8) * circuit_on;
 	// Surface line: a cool moonlit meniscus that takes the trace colour awake.
 	if (d < 1.0) {
-		vec3 calm = sheen_color.rgb * 0.75;
+		// Brighter on the crests of the swell and the tops of the bubbles.
+		vec3 calm = sheen_color.rgb * (0.62 + 0.25 * clamp(-surf, 0.0, 2.0));
 		vec3 lit = tc * (0.45 + packet * 0.8 + surge) + sheen_color.rgb * 0.25;
 		col = mix(calm, lit, awake);
+	} else if (d < 2.0) {
+		col = mix(col, sheen_color.rgb, 0.08);
 	}
 	float ends = min(x / px_scale, rw - 1.0 - x / px_scale);
 	COLOR = vec4(col, clamp(ends + 1.0, 0.0, 1.0));

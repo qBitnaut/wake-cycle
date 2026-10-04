@@ -27,6 +27,7 @@ var _beat_start := 0
 var _timeline: Array = []
 var _lines: Array = []
 var _set_done := {}
+var _zoom_state: Array = []  # per subtitle line: [close-up pass live, subtitles overlaid on it]
 
 
 func gs() -> Node:
@@ -190,7 +191,10 @@ func _main() -> void:
 	cat.hurt_taken.connect(func(_hp): _hurt += 1)
 	cat.died.connect(func(): print("  (cat died at x=%.0f y=%.0f)" % [x(), y()]))
 	var mono := root.get_node("Monologue")
-	mono.line_started.connect(func(id: String, text: String): _lines.append([id, text]))
+	mono.line_started.connect(func(id: String, text: String):
+		_lines.append([id, text])
+		var cz := CineZoom.current()
+		_zoom_state.append([cz != null, cz != null and cz.is_overlaid(mono)]))
 	mono.set_finished.connect(func(id: String): _set_done[id] = true)
 	if OS.get_environment("STUB_ANIMS") != "":
 		_stub_anims()
@@ -551,11 +555,7 @@ func _beat_pool() -> void:
 	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 2600, "after %.1f s" % (n / 60.0))
 	note("I the goo's gift: the mind is awakened, no power, no shockwave", gs().intelligence and not gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
 	note("I control returns", cat.can_move)
-	# Lines wait out the close-up (CineZoom magnifies every canvas layer), then start.
-	n = 0
-	while _lines.is_empty() and n < 300:
-		await ticks(1)
-		n += 1
+	note("I the first line starts at mind_awakened, during the close-up, drawn on its overlay", not _zoom_state.is_empty() and _zoom_state[0][0] and _zoom_state[0][1], str(_zoom_state[0]) if not _zoom_state.is_empty() else "no line")
 	var awake_ids := _lines.filter(func(l): return l[0] == "awakening")
 	note("I the awakening monologue starts with the mind (subtitles)", awake_ids.size() >= 1 and awake_ids[0][1] == "...Wait. Whaa- what?", "%d line(s) so far: %s" % [awake_ids.size(), str(awake_ids[0][1]) if awake_ids.size() else "-"])
 	await ticks(40)  # the fade-in is done

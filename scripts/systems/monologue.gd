@@ -9,9 +9,8 @@ extends CanvasLayer
 ##   Monologue.play_once("exit_hint")   same, but only the first time
 ##   Monologue.say("Hmm.", 2.5)         one ad-hoc line (hold < 0 = by length)
 ##
-## CineZoom magnifies every CanvasLayer with the frame (it has no unmagnified
-## overlay yet), so a line cannot be drawn legibly during the close-up: queued
-## lines wait until the cinematic pass ends, then start (a second or so).
+## Over a CineZoom close-up the layer is handed to CineZoom's unmagnified overlay
+## (CineZoom.attach_overlay), so lines show over the letterbox too.
 ##
 ## Timing: hold = max(MIN_HOLD, CHARS_PER_SEC_COST * length + BASE_HOLD), plus
 ## the fades. Monogram has only ASCII: typographic characters are folded to
@@ -52,9 +51,6 @@ var _root: Control
 var _plate: Panel
 var _label: Label
 var _tween: Tween
-var _cine: Node
-var _waiting := false
-var _scan_t := 0.0
 
 
 func _ready() -> void:
@@ -148,7 +144,6 @@ func reset() -> void:
 	history.clear()
 	_queue.clear()
 	_busy = false
-	_waiting = false
 	if _tween:
 		_tween.kill()
 	if _root:
@@ -171,34 +166,11 @@ static func clean(text: String) -> String:
 	return out
 
 
-func _process(delta: float) -> void:
-	if _busy and _waiting:
-		if not _cine_active(delta):
-			_waiting = false
-			_next()
-
-
-## True while a CineZoom pass is magnifying the frame.
-func _cine_active(delta: float) -> bool:
-	if not is_instance_valid(_cine):
-		_cine = null
-		_scan_t -= delta
-		if _scan_t > 0.0:
-			return false
-		_scan_t = 0.25
-		_cine = _find_cine(get_tree().root)
-	return _cine != null and _cine.call("has_fx")
-
-
-func _find_cine(n: Node) -> Node:
-	var sc: Script = n.get_script()
-	if sc and sc.get_global_name() == &"CineZoom":
-		return n
-	for c in n.get_children():
-		var f := _find_cine(c)
-		if f:
-			return f
-	return null
+func _process(_delta: float) -> void:
+	# A line already showing when a close-up starts moves over it too.
+	var cz := CineZoom.current()
+	if _busy and cz and not cz.is_overlaid(self):
+		cz.attach_overlay(self)
 
 
 func _next() -> void:
@@ -206,9 +178,9 @@ func _next() -> void:
 		_busy = false
 		return
 	_busy = true
-	if _cine_active(0.25):
-		_waiting = true
-		return
+	var cz := CineZoom.current()
+	if cz:
+		cz.attach_overlay(self)  # drawn unmagnified over the close-up and the letterbox
 	var line: Array = _queue.pop_front()
 	var text := clean(line[1])
 	var hold: float = line[2] if line[2] >= 0.0 else hold_for(text)

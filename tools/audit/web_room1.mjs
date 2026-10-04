@@ -334,6 +334,10 @@ for (let t = 0; t < 200 && W.beat === 1; t++) {
 }
 await stop();
 const caughtX = W.x, fT = W.f;
+// The camera entering the pool: shots every ~130 ms and the camera centre, which must not jump.
+const camLog = [];
+for (let k = 0; k < 8; k++) { camLog.push([W.cam[1], W.cz]); await shot('pool_entry_' + k); await sleep(40); await poll(); }
+note('I the game camera holds steady entering the pool (no drop)', camLog.every(c => Math.abs(c[0] - camLog[0][0]) < 1), camLog.map(c => `${c[0].toFixed(0)}@z${c[1].toFixed(2)}`).join(' '));
 note('I jumping the pool fails: the cat is caught', W.beat === 3 && caughtX < 4736, `caught at x=${caughtX.toFixed(0)} (pool 4416..4736)`);
 note('I input locked in the pool', !W.can_move);
 const px0 = W.x;
@@ -351,8 +355,12 @@ await atSec(8.1, 'seq4_eyes');
 await atSec(8.55, 'seq5_pulse');
 await atSec(10.8, 'seq6_normal');
 await atSec(13.0, 'seq7_augments');
-// The first subtitle line comes up as the close-up ends (CineZoom magnifies every canvas layer, so lines wait it out).
+// The first subtitle line comes up at mind_awakened, over the close-up (CineZoom's unmagnified overlay).
 for (let i = 0; i < 1500 && W.mono < 1; i++) { await sleep(8); await poll(); }
+await sleep(350); await poll();
+const overCine = W.cineActive && W.overlaid && W.speaking;
+await shot('subtitles_during_close_up');
+note('I a subtitle is on screen while the zoom pass is active (overlay)', overCine, `zoom ${W.cz.toFixed(2)} overlaid ${W.overlaid}`);
 await sleep(900); await shot('subtitles_awakening_line1');
 await atSec(16.0, 'seq8_mind');
 await atSec(17.9, 'seq9_zoom_out');
@@ -382,7 +390,8 @@ await sleep(1100); await shot('J_container_and_monologue_line1');
 for (let i = 0; i < 1500 && W.monoIds.filter(id => id === 'nanofluid_container').length < 4; i++) { await sleep(20); await poll(); }
 note('J container monologue: four lines', W.monoIds.filter(id => id === 'nanofluid_container').length === 4);
 await sleep(1200); await shot('J_container_monologue_line4');
-await goTo(4880, 6); await ticks(6);
+await goTo(4872, 6); await ticks(6);
+await sleep(300); await shot('J_crate_label_cat_in_front');
 note('J the exit hint plays once the container was read', W.hint);
 await dir(1);
 for (let n = 0; W.scene.endsWith('room1.tscn') && n < 600; n++) { await frame(); if (n === 40) await shot('J_exit_fade'); }

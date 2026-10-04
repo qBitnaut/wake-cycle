@@ -524,7 +524,7 @@ func _nanofluid_crate() -> void:
 	## in front of it; it is dressing only.
 	var crate := NanofluidCrate.new()
 	crate.name = "NanofluidCrate"
-	crate.position = Vector2(4872, G * T)  # right edge at the end pipe (x 4928)
+	crate.position = Vector2(4864, G * T)  # spans the floor from the far sill (x 4800) to the end pipe (x 4928)
 	crate.z_index = 2
 	_own(crate)
 	# Reading it: stepping up to the crate, once the mind is awake.

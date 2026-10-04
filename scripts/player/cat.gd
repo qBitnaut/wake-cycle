@@ -19,7 +19,7 @@ signal died
 @export var ground_friction := 2667.0
 @export var air_accel := 1511.0
 @export var air_friction := 747.0
-@export var crouch_speed := 64.0
+@export var crouch_speed := 40.0  # a stalk: the crawl's planted paws then match the ground (see _paw_scale)
 @export_group("Jump")
 @export var gravity := 1600.0
 @export var fall_gravity_mult := 1.45
@@ -400,7 +400,9 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 		_idle_t = 0.0
 		var anim := "crawl" if moving and _has("crawl") else "crouch_idle" if not moving and _has("crouch_idle") else "crouch"
 		_play(anim)
-		if anim == "crouch":  # the old two-frame crouch: frozen while still
+		if anim == "crawl":
+			sprite.speed_scale = _paw_scale("crawl")
+		elif anim == "crouch":  # the old two-frame crouch: frozen while still
 			sprite.speed_scale = 1.0 if moving else 0.0
 			if not moving:
 				sprite.frame = 0
@@ -412,7 +414,7 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 		_oneshot = 0.0
 		var pushing := _has("push")
 		_play("push" if pushing else "walk")
-		sprite.speed_scale = 1.0 if pushing else PUSH_SLOW_SCALE
+		sprite.speed_scale = _paw_scale("push") if pushing else PUSH_SLOW_SCALE
 		return
 	sprite.speed_scale = 1.0
 	if not on_floor:
@@ -457,6 +459,13 @@ func _idle_loop() -> void:
 		_play("sit")
 	else:
 		_play("idle")
+
+
+## Playback speed that plants the paws: they travel 2 px per frame in crawl, push
+## and crouch_idle, so scale = |vx| / (2 * fps), kept within a readable range.
+func _paw_scale(anim: String) -> float:
+	var fps := sprite.sprite_frames.get_animation_speed(anim)
+	return clampf(absf(velocity.x) / (2.0 * fps), 0.5, 2.0)
 
 
 func _has(anim: String) -> bool:

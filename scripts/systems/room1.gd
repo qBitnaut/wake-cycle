@@ -28,6 +28,7 @@ static var intro_done := false
 
 ## The cat is caught once it is this far in, and standing on the pool floor.
 @export var pool_trigger_x := 4480.0
+const POOL_FRAMING_DROP := 64
 
 var beat := Beat.PLAY
 var power_violations := 0
@@ -128,10 +129,23 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
+	_ease_pool_framing()
 	if beat == Beat.PLAY and not cat.dead and cat.is_on_floor() and cat.global_position.x >= pool_trigger_x:
 		_start_absorb()
 	if OS.has_feature("web"):
 		_publish()
+
+
+## Walking up to the pool the camera floor eases down by 64 px (the underfloor
+## tiles), lifting the cat from the very bottom of the frame towards its middle.
+## The close-up that follows must pan its focus to the cat; starting nearer the
+## middle makes that pan about half as long, instead of one hard drop.
+func _ease_pool_framing() -> void:
+	if beat != Beat.PLAY or cat.dead:
+		return
+	var k := smoothstep(pool_trigger_x - 420.0, pool_trigger_x - 60.0, cat.global_position.x)
+	var want := limits.end.y + int(roundf(POOL_FRAMING_DROP * k))
+	cat.camera.limit_bottom = want
 
 
 func _start_absorb() -> void:
@@ -222,6 +236,9 @@ func _publish() -> void:
 		"monoLast": Monologue.history.back() if Monologue.history.size() else null,
 		"monoIds": Monologue.history.map(func(l): return l[0]),
 		"container": Monologue.has_played("nanofluid_container"), "hint": Monologue.has_played("exit_hint"),
+		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
+		"cz": CineZoom.current().zoom if CineZoom.current() else 1.0, "cineActive": CineZoom.current() != null,
+		"overlaid": CineZoom.current() != null and CineZoom.current().is_overlaid(Monologue),
 		"speaking": Monologue.is_speaking(), "pushT": cat._push_t,
 		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
 		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),

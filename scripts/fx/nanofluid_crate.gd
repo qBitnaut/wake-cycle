@@ -22,8 +22,8 @@ const GOO := Color("0b0d16")
 const GOO_EDGE := Color("1a2236")
 const SPECK := Color(0.2, 1.4, 1.5)
 
-const W := 112.0
-const H := 72.0
+const W := 128.0
+const H := 96.0  # tall enough that the label's lines sit above the cat's head
 
 var _t := randf() * 10.0
 var _light: PointLight2D
@@ -77,20 +77,20 @@ func _draw() -> void:
 	draw_rect(Rect2(x0 + W - 24, top - 1, 24, 2), GOO)
 	# The label panel and its stencil.
 	var px := x0 + 10.0
-	draw_rect(Rect2(px - 1, top + 6, 85, 59), INK)
-	draw_rect(Rect2(px, top + 7, 83, 57), PANEL)
+	draw_rect(Rect2(px - 1, top + 6, 101, 61), INK)
+	draw_rect(Rect2(px, top + 7, 99, 59), PANEL)
 	draw_string(FONT, Vector2(px + 5, top + 21), "EXPERIMENTAL", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL)
-	draw_string(FONT, Vector2(px + 14, top + 34), "NANOFLUID", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL)
-	for i in 8:  # hazard stripes
+	draw_string(FONT, Vector2(px + 22, top + 34), "NANOFLUID", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL)
+	for i in 9:  # hazard stripes
 		draw_rect(Rect2(px + 3 + i * 10, top + 38, 5, 4), HAZARD)
-	draw_string(FONT, Vector2(px + 5, top + 54), "BATCH 7 - DO NOT", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL_DIM)
-	draw_string(FONT, Vector2(px + 5, top + 64), "HANDLE", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL_DIM)
+	draw_string(FONT, Vector2(px + 5, top + 54), "BATCH 7", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL_DIM)
+	draw_string(FONT, Vector2(px + 5, top + 65), "DO NOT HANDLE", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, STENCIL_DIM)
 	# The hole low on the right and the crack running up to the lid.
 	draw_colored_polygon(PackedVector2Array([Vector2(24, -26), Vector2(38, -30), Vector2(44, -20),
 		Vector2(40, -10), Vector2(28, -8), Vector2(22, -16)]), INK)
 	draw_colored_polygon(PackedVector2Array([Vector2(27, -23), Vector2(36, -26), Vector2(40, -19),
 		Vector2(36, -12), Vector2(28, -11), Vector2(25, -17)]), GOO)
-	var crack := PackedVector2Array([Vector2(34, -30), Vector2(30, -40), Vector2(36, -48), Vector2(31, -58), Vector2(35, -68)])
+	var crack := PackedVector2Array([Vector2(34, -30), Vector2(30, -40), Vector2(36, -48), Vector2(31, -58), Vector2(35, -70), Vector2(31, -86)])
 	draw_polyline(crack, INK, 2.0)
 	# The trickle: out of the hole, down the plating, into the puddle.
 	var run := fmod(_t * 0.45, 1.0)

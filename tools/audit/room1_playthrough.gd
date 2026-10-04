@@ -27,6 +27,8 @@ var _beat_start := 0
 var _timeline: Array = []
 var _lines: Array = []
 var _set_done := {}
+var _sub_cine := [0, 0, 0, "", 0.0]   # close-up samples: [seen, plate overlaps cat, plate off window, first miss, widest gap to the window bottom, game px]
+var _sub_play := [0, 0, 0, ""]   # same in normal play (plate vs cat and crate in the game frame)
 var _zoom_state: Array = []  # per subtitle line: [close-up pass live, subtitles overlaid on it]
 
 
@@ -153,6 +155,39 @@ func has_anim(a: String) -> bool:
 	return cat.sprite.sprite_frames.has_animation(a)
 
 
+## Every frame a line is showing: where does the plate sit against the cat?
+## During a close-up: in window pixels against the zoomed cat. Otherwise in the
+## game frame against the cat's sprite rect and the crate.
+func _sample_subtitle() -> void:
+	var mono := root.get_node_or_null("Monologue")
+	if mono == null or not mono.is_speaking() or mono._root.modulate.a < 0.3 or room == null or not is_instance_valid(room) or cat == null or not is_instance_valid(cat):
+		return
+	var cz := CineZoom.current()
+	var cr: Rect2 = mono.cat_screen_rect()
+	if cz != null and cz.is_overlaid(mono):
+		var pw: Rect2 = mono.plate_window_rect()
+		var cw: Rect2 = mono.cat_window_rect()
+		_sub_cine[0] += 1
+		if pw.intersects(cw):
+			_sub_cine[1] += 1
+			_sub_cine[3] = _sub_cine[3] if _sub_cine[3] != "" else "plate %s cat %s" % [str(pw), str(cw)]
+		if not Rect2(Vector2.ZERO, Vector2(DisplayServer.window_get_size())).encloses(pw):
+			_sub_cine[2] += 1
+		_sub_cine[4] = maxf(_sub_cine[4], (float(DisplayServer.window_get_size().y) - pw.end.y) / cz.overlay_rect_to_window(Rect2(0, 0, 1, 1)).size.x)
+	elif cz == null:
+		var pr: Rect2 = mono.plate_rect()
+		_sub_play[0] += 1
+		var crate := room.get_node_or_null("NanofluidCrate") as Node2D
+		var hit := pr.intersects(cr)
+		if crate:
+			hit = hit or pr.intersects(crate.get_global_transform_with_canvas() * Rect2(-66.0, -112.0, 200.0, 112.0))
+		if hit:
+			_sub_play[1] += 1
+			_sub_play[3] = _sub_play[3] if _sub_play[3] != "" else "plate %s cat %s x=%.0f" % [str(pr), str(cr), x()]
+		if not Rect2(Vector2.ZERO, root.get_visible_rect().size).encloses(pr):
+			_sub_play[2] += 1
+
+
 func note(name: String, ok: bool, detail := "") -> void:
 	results.append([name, ok, detail])
 	print("%s  %-46s %s" % ["PASS" if ok else "FAIL", name, detail])
@@ -196,6 +231,7 @@ func _main() -> void:
 		var cz := CineZoom.current()
 		_zoom_state.append([cz != null, cz != null and cz.is_overlaid(mono)]))
 	mono.set_finished.connect(func(id: String): _set_done[id] = true)
+	process_frame.connect(_sample_subtitle)
 	if OS.get_environment("STUB_ANIMS") != "":
 		_stub_anims()
 
@@ -211,6 +247,11 @@ func _main() -> void:
 	await _beat_exit()
 	await _beat_continue()
 	await _beat_respawn()
+	var headless_win: bool = DisplayServer.window_get_size() == Vector2i.ZERO
+	if headless_win:  # --headless has a 0x0 window: the window-space check lives in web_room1.mjs
+		_sub_cine = [999, 0, 0, "(headless: no window; web_room1.mjs checks this in window pixels)", 0.0]
+	note("I subtitles sit at the window bottom and never lie on the zoomed cat during the close-up", _sub_cine[0] > 20 and _sub_cine[1] == 0 and _sub_cine[2] == 0 and _sub_cine[4] <= 16.0, "%d frames sampled, %d overlap, %d off-window, at most %.0f game px above the window bottom %s" % [_sub_cine[0], _sub_cine[1], _sub_cine[2], _sub_cine[4], _sub_cine[3]])
+	note("J subtitles never cover the cat or the crate in normal play (right after the close-up too), and stay on screen", _sub_play[0] > 200 and _sub_play[1] == 0 and _sub_play[2] == 0, "%d frames sampled, %d overlap, %d off-screen %s" % [_sub_play[0], _sub_play[1], _sub_play[2], _sub_play[3]])
 
 	var ok_all := true
 	for r in results:
@@ -562,8 +603,7 @@ func _beat_pool() -> void:
 	var mono_node := root.get_node("Monologue")
 	var plate: Control = mono_node._plate
 	var view := root.get_visible_rect().size
-	var on_screen: bool = plate.position.x >= 0.0 and plate.position.y >= 0.0 and plate.position.x + plate.size.x <= view.x and plate.position.y + plate.size.y <= view.y - 24.0
-	note("I the subtitle plate is on screen, lower-centre, above the HUD strip", on_screen and absf(plate.position.x + plate.size.x / 2.0 - view.x / 2.0) < 2.0 and mono_node._root.modulate.a > 0.9, "plate %s %s" % [str(plate.position), str(plate.size)])
+	note("I the plate is a whole-pixel rect", plate.position == plate.position.round() and plate.size == plate.size.round(), "plate %s %s view %s" % [str(plate.position), str(plate.size), str(view)])
 	note("I no container line before the mind awakened / before the cat gets there", not root.get_node("Monologue").has_played("nanofluid_container"))
 	mark("I pool+transform")
 

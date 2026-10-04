@@ -206,6 +206,10 @@ func _flag(node_name: String, prop: String) -> Variant:
 	return n.get(prop) if n else null
 
 
+func _rect_arr(r: Rect2) -> Array:
+	return [r.position.x, r.position.y, r.size.x, r.size.y]
+
+
 func _publish() -> void:
 	var bot := get_node_or_null("Bot") as PatrolBot
 	var crate := get_node_or_null("PushCrate")
@@ -240,6 +244,10 @@ func _publish() -> void:
 		"cz": CineZoom.current().zoom if CineZoom.current() else 1.0, "cineActive": CineZoom.current() != null,
 		"overlaid": CineZoom.current() != null and CineZoom.current().is_overlaid(Monologue),
 		"speaking": Monologue.is_speaking(), "pushT": cat._push_t,
+		"win": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
+		"subWin": _rect_arr(Monologue.plate_window_rect()), "catWin": _rect_arr(Monologue.cat_window_rect()),
+		"subRect": _rect_arr(Monologue.plate_rect()), "catRect": _rect_arr(Monologue.cat_screen_rect()),
+		"subAlpha": Monologue._root.modulate.a if Monologue._root else 0.0,
 		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
 		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),
 		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),

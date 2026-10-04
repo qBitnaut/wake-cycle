@@ -3,6 +3,11 @@ extends CanvasLayer
 ## plate behind monogram text, fade in and out, a queue of lines. It can sit on
 ## top of the cinematic letterbox. Registered as the autoload "Monologue".
 ##
+## Where it sits: over a CineZoom close-up, at the bottom of the window (in the
+## letterbox bar), whatever the window's aspect, so it never lies on the zoomed
+## subject. In normal play, bottom-centre above the HUD strip; when the cat (or
+## the crate label) is there it moves to the top band, or sideways.
+##
 ## The words live in res://data/monologue.json, keyed by id. A line is either a
 ## string or {"text": "...", "hold": seconds}. Edit the file; no code changes.
 ##   Monologue.play("awakening")        queue every line of a set
@@ -10,7 +15,8 @@ extends CanvasLayer
 ##   Monologue.say("Hmm.", 2.5)         one ad-hoc line (hold < 0 = by length)
 ##
 ## Over a CineZoom close-up the layer is handed to CineZoom's unmagnified overlay
-## (CineZoom.attach_overlay), so lines show over the letterbox too.
+## (CineZoom.attach_overlay), which covers the whole window, so lines show over
+## the letterbox too.
 ##
 ## Timing: hold = max(MIN_HOLD, CHARS_PER_SEC_COST * length + BASE_HOLD), plus
 ## the fades. Monogram has only ASCII: typographic characters are folded to
@@ -25,10 +31,17 @@ const DATA := "res://data/monologue.json"
 const SIZE := 32
 const MAX_WIDTH := 380.0  # narrow: keeps the thoughts clear of whatever sits at the screen edge (the crate label)
 const PAD := Vector2(14.0, 5.0)
-## The plate's bottom edge sits this far above the screen bottom: just over the cat's head
-## (the floor line is 40 px up) and over the floor under the zoomed cat in the cinematic,
-## clear of the HUD strip.
-const BOTTOM := 76.0
+## The plate's bottom edge sits this far above the bottom of the view in normal play:
+## just over the HUD strip (24 px) ...
+const BOTTOM := 30.0
+## ... and this far from the top edge in the top band, and from the window bottom
+## over a close-up.
+const TOP := 8.0
+const WINDOW_BOTTOM := 6.0
+## Sideways shifts tried (after the top band) when the cat or the crate is in the way.
+const SHIFT := 120.0
+## Clearance kept around the cat and the crate, game px.
+const CLEAR := 6.0
 const FADE_IN := 0.45
 const FADE_OUT := 0.6
 const PER_CHAR := 0.06
@@ -51,6 +64,10 @@ var _root: Control
 var _plate: Panel
 var _label: Label
 var _tween: Tween
+var _size := Vector2.ZERO    # the plate's size
+var _slot := 0               # the slot in SLOTS last chosen (normal play)
+var _overlaid := false
+var _opaque := {}            # frame texture -> its visible pixel bounds
 
 
 func _ready() -> void:
@@ -170,7 +187,16 @@ func _process(_delta: float) -> void:
 	# A line already showing when a close-up starts moves over it too.
 	var cz := CineZoom.current()
 	if _busy and cz and not cz.is_overlaid(self):
-		cz.attach_overlay(self)
+		_attach(cz)
+	if _busy:
+		_place()
+
+
+func _attach(cz: CineZoom) -> void:
+	cz.attach_overlay(self)
+	# Back in the game frame the same frame the pass ends: no stray frame at overlay coordinates.
+	if not cz.pass_ended.is_connected(_place):
+		cz.pass_ended.connect(_place, CONNECT_ONE_SHOT)
 
 
 func _next() -> void:
@@ -180,7 +206,7 @@ func _next() -> void:
 	_busy = true
 	var cz := CineZoom.current()
 	if cz:
-		cz.attach_overlay(self)  # drawn unmagnified over the close-up and the letterbox
+		_attach(cz)  # drawn unmagnified over the close-up and the letterbox
 	var line: Array = _queue.pop_front()
 	var text := clean(line[1])
 	var hold: float = line[2] if line[2] >= 0.0 else hold_for(text)
@@ -202,9 +228,8 @@ func _next() -> void:
 		_next())
 
 
-## Size the plate to the text and sit it bottom-centre of the 640x360 view.
+## Size the plate to the text and put it where it belongs (see _place).
 func _layout(text: String) -> void:
-	var view := get_viewport().get_visible_rect().size
 	var inner := FONT.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, MAX_WIDTH, SIZE)
 	var w := minf(inner.x, MAX_WIDTH) + 6.0
 	var h := inner.y + 2.0
@@ -214,6 +239,122 @@ func _layout(text: String) -> void:
 	_label.size = Vector2(w, 1.0)
 	_label.text = text
 	_label.size = Vector2(w, h)
-	_label.position = Vector2((view.x - w) / 2.0, view.y - BOTTOM - h - PAD.y)
-	_plate.size = Vector2(w, h) + PAD * 2.0
-	_plate.position = _label.position - PAD
+	_size = Vector2(w, h) + PAD * 2.0
+	_plate.size = _size
+	_slot = 0
+	_place()
+
+
+## The plate's rect in the coordinates of the viewport it is drawn into: the
+## overlay while a close-up is live, else the game frame.
+func plate_rect() -> Rect2:
+	return Rect2(_plate.position, _plate.size)
+
+
+## The plate's rect in window pixels while a close-up overlays it, else an empty rect.
+func plate_window_rect() -> Rect2:
+	var cz := CineZoom.current()
+	if cz and cz.is_overlaid(self):
+		return cz.overlay_rect_to_window(plate_rect())
+	return Rect2()
+
+
+## The cat's rect in window pixels while a close-up is live, else an empty rect.
+func cat_window_rect() -> Rect2:
+	var cz := CineZoom.current()
+	var r := cat_screen_rect()
+	if cz == null or not r.has_area():
+		return Rect2()
+	var a := cz.game_to_window(r.position)
+	return Rect2(a, cz.game_to_window(r.end) - a).abs()
+
+
+## Over a close-up: centred on the bottom of the window. In normal play: the
+## first of bottom-centre, top-centre, then the bottom and top shifted aside,
+## that keeps clear of the cat and the crate label (the one in use is kept while
+## it stays clear, so the plate does not dance).
+func _place() -> void:
+	if _size == Vector2.ZERO:
+		return
+	var cz := CineZoom.current()
+	var view := get_viewport().get_visible_rect().size
+	var pos: Vector2
+	if cz and cz.is_overlaid(self):
+		_overlaid = true
+		var ov := cz.overlay_size()
+		pos = Vector2(roundf((ov.x - _size.x) / 2.0), ov.y - WINDOW_BOTTOM - _size.y)
+	else:
+		if _overlaid:
+			_overlaid = false
+			_slot = 0
+		var avoid := _avoid_rects()
+		var best := -1
+		for k in [_slot, 0, 1, 2, 3, 4, 5]:
+			if not _hits(Rect2(_slot_pos(k, view), _size), avoid):
+				best = k
+				break
+		if best >= 0:
+			_slot = best
+		pos = _slot_pos(_slot, view)
+	_plate.position = pos
+	_label.position = pos + PAD
+
+
+## Slot 0 bottom-centre, 1 top-centre, 2/3 bottom left/right, 4/5 top left/right.
+func _slot_pos(k: int, view: Vector2) -> Vector2:
+	var x := roundf((view.x - _size.x) / 2.0)
+	if k >= 2:
+		x += SHIFT if k % 2 == 1 else -SHIFT
+	x = clampf(x, TOP, view.x - _size.x - TOP)
+	var top := k == 1 or k >= 4
+	return Vector2(x, TOP if top else view.y - BOTTOM - _size.y)
+
+
+func _hits(r: Rect2, avoid: Array) -> bool:
+	for a: Rect2 in avoid:
+		if r.intersects(a.grow(CLEAR)):
+			return true
+	return false
+
+
+## What a subtitle must not cover in normal play, in game-frame coordinates:
+## the cat, and the crate with its stencilled label.
+func _avoid_rects() -> Array:
+	var out: Array = []
+	var r := cat_screen_rect()
+	if r.has_area():
+		out.append(r)
+	var crate := get_tree().current_scene.get_node_or_null("NanofluidCrate") as Node2D if get_tree().current_scene else null
+	if crate:
+		out.append(crate.get_global_transform_with_canvas() * Rect2(-66.0, -112.0, 200.0, 112.0))
+	return out
+
+
+## The bounds of the visible pixels of a frame texture, in texture pixels (cached).
+func _opaque_rect(tex: Texture2D) -> Rect2:
+	if _opaque.has(tex):
+		return _opaque[tex]
+	var r := Rect2(Vector2.ZERO, tex.get_size())
+	var img := tex.get_image()
+	if img != null and not img.is_empty():
+		var used := img.get_used_rect()
+		if used.has_area():
+			r = Rect2(used)
+	_opaque[tex] = r
+	return r
+
+
+## The cat's sprite rect in the game frame (the 640x360 view), or an empty rect.
+func cat_screen_rect() -> Rect2:
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	var spr := cat.get("sprite") as AnimatedSprite2D if cat else null
+	if spr == null or spr.sprite_frames == null:
+		return Rect2()
+	var tex := spr.sprite_frames.get_frame_texture(spr.animation, spr.frame)
+	if tex == null:
+		return Rect2()
+	var sz := tex.get_size()
+	var local := Rect2(spr.offset - sz * 0.5 if spr.centered else spr.offset, sz)
+	local.position += _opaque_rect(tex).position  # the frames are padded: use the drawn pixels
+	local.size = _opaque_rect(tex).size
+	return (spr.get_global_transform_with_canvas() * local).abs()

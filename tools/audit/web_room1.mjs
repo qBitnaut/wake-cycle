@@ -3,7 +3,7 @@
 // plain movement only. Reads the state Room 1 publishes in window.__wake every
 // physics frame, takes a screenshot at every beat and records console errors.
 //
-//   node tools/audit/web_room1.mjs <export_dir> <out_dir> [width height] [--gpu=swiftshader]
+//   node tools/audit/web_room1.mjs <export_dir> <out_dir> [width height] [--gpu=swiftshader] [--dpr=1.25]
 //
 // Needs the playwright package (PW_DIR env, default: the mise npm-playwright
 // install) and /usr/bin/chromium. By default it asks Chromium for the real GPU
@@ -46,7 +46,7 @@ const browser = await chromium.launch({
   args: [...launchArgs, '--ignore-gpu-blocklist', '--disable-gpu-vsync',
     '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
-const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: +((flags.find(f => f.startsWith('--dpr=')) || '--dpr=1').split('=')[1]) });
 const consoleErrors = [];
 page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -361,7 +361,33 @@ await sleep(350); await poll();
 const overCine = W.cineActive && W.overlaid && W.speaking;
 await shot('subtitles_during_close_up');
 note('I a subtitle is on screen while the zoom pass is active (overlay)', overCine, `zoom ${W.cz.toFixed(2)} overlaid ${W.overlaid}`);
-await sleep(900); await shot('subtitles_awakening_line1');
+// Over the close-up the line must hug the bottom of the window and stay off the zoomed cat;
+// once the zoom is over it must stay off the cat (and the crate) in the game frame.
+const hit = (a, b) => a[2] > 0 && b[2] > 0 && a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
+const sub = { cine: 0, cineHit: 0, cineOff: 0, cineGap: 0, play: 0, playHit: 0, playOff: 0, first: '' };
+let afterShot = false, clearAt = -1;
+for (let i = 0; i < 4000 && W.speaking; i++) {
+  await sleep(16); await poll();
+  if (W.subAlpha < 0.5) continue;
+  if (W.cineActive && W.overlaid) {
+    sub.cine++;
+    if (hit(W.subWin, W.catWin)) { sub.cineHit++; sub.first ||= `cine plate ${W.subWin} cat ${W.catWin}`; }
+    const [sx, sy, sw, sh] = W.subWin;
+    if (sx < 0 || sy < 0 || sx + sw > W.win[0] || sy + sh > W.win[1]) sub.cineOff++;
+    sub.cineGap = Math.max(sub.cineGap, W.win[1] - (sy + sh));
+  } else if (!W.cineActive) {
+    sub.play++;
+    if (hit(W.subRect, W.catRect)) { sub.playHit++; sub.first ||= `play plate ${W.subRect} cat ${W.catRect}`; }
+    const [sx, sy, sw, sh] = W.subRect;
+    if (sx < 0 || sy < 0 || sx + sw > 640 || sy + sh > 360) sub.playOff++;
+    if (clearAt < 0) clearAt = i;
+    if (!afterShot && i - clearAt > 25) { afterShot = true; await shot('subtitles_after_close_up'); }
+    if (i - clearAt > 400) break;
+  }
+}
+note('I subtitles hug the window bottom and stay off the zoomed cat during the close-up', sub.cine > 20 && sub.cineHit === 0 && sub.cineOff === 0 && sub.cineGap < 24 * (W.win[1] / 360), `${sub.cine} samples, ${sub.cineHit} overlap, ${sub.cineOff} off-window, widest gap ${sub.cineGap}px of ${W.win[1]} ${sub.first}`);
+note('I subtitles stay off the cat right after the close-up', sub.play > 20 && sub.playHit === 0 && sub.playOff === 0, `${sub.play} samples, ${sub.playHit} overlap, ${sub.playOff} off-screen ${sub.first}`);
+await shot('subtitles_awakening_line1');
 await atSec(16.0, 'seq8_mind');
 await atSec(17.9, 'seq9_zoom_out');
 note('I the awakening monologue starts with the mind (subtitles)', W.mono >= 1 && W.monoIds[0] === 'awakening', `${W.mono} line(s): ${W.monoLast && W.monoLast[1]}`);

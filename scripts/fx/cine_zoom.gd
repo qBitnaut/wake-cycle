@@ -44,10 +44,13 @@ extends Node
 ##
 ## Overlay (subtitles, captions): attach_overlay(layer) draws a CanvasLayer
 ## unmagnified, above the close-up and the letterbox, for as long as the
-## pass lasts. Its controls keep their 640x360 layout and sit where they
-## sit in normal play, at the game's own integer scale (crisp pixel text).
-## The layer renders into a transparent SubViewport (its custom_viewport)
-## and is handed back to the game frame by itself when the pass ends.
+## pass lasts, at the game's own integer scale (crisp pixel text). The layer
+## renders into a transparent SubViewport (its custom_viewport) and is handed
+## back to the game frame by itself when the pass ends.
+## The overlay covers the whole window, not just the game's box: it is
+## overlay_size() game px, and the 640x360 game frame sits at overlay_origin()
+## inside it, so a caption can hug the bottom of the window at any aspect
+## (overlay_rect_to_window() maps its rects onto the window).
 ##
 ##     var cz := CineZoom.current()        # the live pass, or null
 ##     if cz:
@@ -109,6 +112,8 @@ var _overlay_item := RID()
 var _overlay_mat: CanvasItemMaterial
 var _overlay_layers: Array[CanvasLayer] = []
 var _overlay_prev := {}     # layer -> the viewport it drew into before
+var _overlay_size := Vector2(640, 360)    # the overlay's size in game px: covers the window
+var _overlay_origin := Vector2.ZERO       # the game frame's top-left inside the overlay, game px
 var _solo := false          # the game frame is detached from the window
 
 static var _current: CineZoom
@@ -170,6 +175,22 @@ func is_overlaid(layer: CanvasLayer) -> bool:
 	return _overlay_layers.has(layer)
 
 
+## The overlay's size in game px (the window, in whole game pixels).
+func overlay_size() -> Vector2:
+	return _overlay_size
+
+
+## Where the 640x360 game frame's top-left sits inside the overlay, game px.
+func overlay_origin() -> Vector2:
+	return _overlay_origin
+
+
+## A rect in overlay (game px) coordinates to window pixels.
+func overlay_rect_to_window(r: Rect2) -> Rect2:
+	var o := _fit.position - _overlay_origin * _k_fit
+	return Rect2(o + r.position * _k_fit, r.size * _k_fit)
+
+
 func _open_overlay() -> void:
 	_overlay = SubViewport.new()
 	_overlay.name = "Overlay"
@@ -188,13 +209,21 @@ func _open_overlay() -> void:
 	_draw_overlay()
 
 
-## The overlay sits exactly where the game frame sits in normal play.
+## The overlay covers the window at the game's own integer scale, with the
+## game frame at exactly the place it has in normal play.
 func _draw_overlay() -> void:
 	if not _overlay_item.is_valid():
 		return
-	_overlay.size = Vector2i(_src)
+	var size := Vector2i((_win / _k_fit).ceil())
+	var src := Vector2i(_src)
+	size = size.max(src)
+	size += (size - src) % 2  # an even margin each side: whole game pixels
+	_overlay_size = Vector2(size)
+	_overlay_origin = Vector2(size - src) * 0.5
+	_overlay.size = size
 	RenderingServer.canvas_item_clear(_overlay_item)
-	RenderingServer.canvas_item_add_texture_rect(_overlay_item, _fit, _overlay.get_texture().get_rid())
+	var r := Rect2(_fit.position - _overlay_origin * _k_fit, _overlay_size * _k_fit)
+	RenderingServer.canvas_item_add_texture_rect(_overlay_item, r, _overlay.get_texture().get_rid())
 
 
 func _close_overlay() -> void:

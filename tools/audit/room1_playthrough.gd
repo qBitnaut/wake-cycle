@@ -447,7 +447,7 @@ func _beat_pool() -> void:
 			hold("jump", true)
 	stop()
 	var caught_x := x()
-	note("I jumping the pool fails: the cat is caught", room.get("beat") == 2 and caught_x < 4736.0, "caught at x=%.0f (pool 4416..4736)" % caught_x)
+	note("I jumping the pool fails: the cat is caught", room.get("beat") == 3 and caught_x < 4736.0, "caught at x=%.0f (pool 4416..4736)" % caught_x)
 	note("I nanotech_absorbed_started on the level and on GameState", signalled[0] and gs_signalled[0])
 	note("I input locked in the pool", not cat.can_move)
 	var x0 := x()
@@ -458,12 +458,12 @@ func _beat_pool() -> void:
 	note("I the cat is stuck: feet do not move", absf(x() - x0) < 3.0 and cat.is_on_floor(), "dx=%.1f" % (x() - x0))
 	var seq := room.get_node_or_null("TransformSequence")
 	var n := 0
-	while room.get("beat") != 4 and n < 1500:
+	while room.get("beat") != 4 and n < 2600:
 		await ticks(1)
 		if seq == null:
 			seq = room.get_node_or_null("TransformSequence")
 		n += 1
-	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 1500, "after %.1f s" % (n / 60.0 + 1.0))
+	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 2600, "after %.1f s" % (n / 60.0))
 	note("I the goo's gift: the mind is awakened, no power, no shockwave", gs().intelligence and not gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
 	note("I control returns", cat.can_move)
 	mark("I pool+transform")
@@ -485,6 +485,7 @@ func _beat_exit() -> void:
 	note("J exit fades out and loads Room 2", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))
 	var save: Dictionary = ss().read_save()
 	note("J auto-saved at the start of Room 2", save.get("scene", "") == "res://scenes/levels/room2.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))
+	note("J the cat keeps its augments in Room 2 (mind flag set)", r2 != null and r2.get_node_or_null("Cat/Sprite/Augments") != null and gs().intelligence)
 	note("J Room 2 stub shows the coming-soon text", r2 != null and r2.get_node_or_null("ComingSoon") != null)
 	mark("J exit")
 

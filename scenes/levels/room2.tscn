@@ -12,42 +12,42 @@
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="10_66dku"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="11_0j0nw"]
 
-[node name="Room2" type="Node2D" unique_id=1712906168]
+[node name="Room2" type="Node2D" unique_id=2010027073]
 script = ExtResource("1_0usi7")
 limits = Rect2i(0, 24, 640, 360)
 
-[node name="SkyFill" type="ColorRect" parent="." unique_id=380625041]
+[node name="SkyFill" type="ColorRect" parent="." unique_id=1146053562]
 offset_left = -64.0
 offset_top = -200.0
 offset_right = 704.0
 offset_bottom = 500.0
 color = Color(0.047058824, 0.0627451, 0.1882353, 1)
 
-[node name="Exterior" type="Node2D" parent="." unique_id=140351252]
+[node name="Exterior" type="Node2D" parent="." unique_id=2111037045]
 position = Vector2(0, 250)
 script = ExtResource("2_uthcp")
 moon_position = Vector2(-120, -141)
 
-[node name="Tiles" type="TileMapLayer" parent="." unique_id=138099164]
+[node name="Tiles" type="TileMapLayer" parent="." unique_id=1982654142]
 tile_map_data = PackedByteArray("AAAAAAoAAAAAAAIAAAAAAAsAAAANACIAAAAAAAwAAAAEACEAAAABAAoAAAAAAAIAAAABAAsAAAANACIAAAABAAwAAAAFACEAAAACAAoAAAAAAAIAAAACAAsAAAANACIAAAACAAwAAAAEACEAAAADAAoAAAAAAAIAAAADAAsAAAANACIAAAADAAwAAAAFACEAAAAEAAoAAAAAAAIAAAAEAAsAAAANACIAAAAEAAwAAAAEACEAAAAFAAoAAAAAAAIAAAAFAAsAAAANACIAAAAFAAwAAAAFACEAAAAGAAoAAAAAAAIAAAAGAAsAAAANACIAAAAGAAwAAAAEACEAAAAHAAoAAAAAAAIAAAAHAAsAAAANACIAAAAHAAwAAAAFACEAAAAIAAoAAAAAAAIAAAAIAAsAAAANACIAAAAIAAwAAAAEACEAAAAJAAoAAAAAAAIAAAAJAAsAAAANACIAAAAJAAwAAAAFACEAAAAKAAoAAAAAAAIAAAAKAAsAAAANACIAAAAKAAwAAAAEACEAAAALAAoAAAAAAAIAAAALAAsAAAANACIAAAALAAwAAAAFACEAAAAMAAoAAAAAAAIAAAAMAAsAAAANACIAAAAMAAwAAAAEACEAAAANAAoAAAAAAAIAAAANAAsAAAANACIAAAANAAwAAAAFACEAAAAOAAoAAAAAAAIAAAAOAAsAAAANACIAAAAOAAwAAAAEACEAAAAPAAoAAAAAAAIAAAAPAAsAAAANACIAAAAPAAwAAAAFACEAAAAQAAoAAAAAAAIAAAAQAAsAAAANACIAAAAQAAwAAAAEACEAAAARAAoAAAAAAAIAAAARAAsAAAANACIAAAARAAwAAAAFACEAAAASAAoAAAAAAAIAAAASAAsAAAANACIAAAASAAwAAAAEACEAAAATAAoAAAAAAAIAAAATAAsAAAANACIAAAATAAwAAAAFACEAAAD//wAAAAAEAA0AAAAUAAAAAAAEAA0AAAD//wEAAAAEAA0AAAAUAAEAAAAEAA0AAAD//wIAAAAEAA0AAAAUAAIAAAAEAA0AAAD//wMAAAAEAA0AAAAUAAMAAAAEAA0AAAD//wQAAAAEAA0AAAAUAAQAAAAEAA0AAAD//wUAAAAEAA0AAAAUAAUAAAAEAA0AAAD//wYAAAAEAA0AAAAUAAYAAAAEAA0AAAD//wcAAAAEAA0AAAAUAAcAAAAEAA0AAAD//wgAAAAEAA0AAAAUAAgAAAAEAA0AAAD//wkAAAAEAA0AAAAUAAkAAAAEAA0AAAD//woAAAAEAA0AAAAUAAoAAAAEAA0AAAD//wsAAAAEAA0AAAAUAAsAAAAEAA0AAAD//wwAAAAEAA0AAAAUAAwAAAAEAA0AAAD//w0AAAAEAA0AAAAUAA0AAAAEAA0AAAAPAAkAAAACACAAAAAQAAkAAAADACAAAAAQAAgAAAACACAAAAA=")
 tile_set = ExtResource("3_1fwxh")
 
-[node name="PlayerStart" type="Marker2D" parent="." unique_id=1110944512]
+[node name="PlayerStart" type="Marker2D" parent="." unique_id=1783052283]
 position = Vector2(112, 320)
 
-[node name="Rain" type="ColorRect" parent="." unique_id=1891304448]
+[node name="Rain" type="ColorRect" parent="." unique_id=1036035094]
 z_index = 8
 offset_right = 640.0
 offset_bottom = 330.0
 script = ExtResource("4_y8qxu")
 intensity = 0.55
 
-[node name="Puddle" type="Area2D" parent="." unique_id=1495339845]
+[node name="Puddle" type="Area2D" parent="." unique_id=1926153176]
 position = Vector2(320, 320)
 script = ExtResource("5_prre3")
 width = 128.0
 
-[node name="LampDock" type="Node2D" parent="." unique_id=2121320848]
+[node name="LampDock" type="Node2D" parent="." unique_id=1909164193]
 position = Vector2(560, 313)
 script = ExtResource("6_7bome")
 mode = 2
@@ -56,7 +56,7 @@ light_radius_scale = 3.0
 halo_strength = 0.4
 shadows = false
 
-[node name="ComingSoon" type="Label" parent="." unique_id=1596259734]
+[node name="ComingSoon" type="Label" parent="." unique_id=491793676]
 offset_left = 224.0
 offset_top = 128.0
 offset_right = 608.0
@@ -67,13 +67,13 @@ theme_override_colors/font_color = Color(0.94600004, 1.001, 1.1, 1.1)
 text = "Room 2 - coming soon"
 horizontal_alignment = 1
 
-[node name="Cat" type="CharacterBody2D" parent="." unique_id=1464934080 instance=ExtResource("8_d2cux")]
+[node name="Cat" type="CharacterBody2D" parent="." unique_id=2003004995 instance=ExtResource("8_d2cux")]
 z_index = 5
 collision_layer = 2
 collision_mask = 17
 floor_snap_length = 7.0
 
-[node name="LightingRig" type="Node2D" parent="." unique_id=1445127979 node_paths=PackedStringArray("solid_layers")]
+[node name="LightingRig" type="Node2D" parent="." unique_id=966485957 node_paths=PackedStringArray("solid_layers")]
 script = ExtResource("9_n8ypq")
 night_tint = Color(0.36, 0.4, 0.58, 1)
 moon_angle = 16.0
@@ -81,8 +81,8 @@ glow_intensity = 0.8
 vignette = 0.3
 solid_layers = [NodePath("../Tiles")]
 
-[node name="Ambience" type="Node" parent="." unique_id=390291231]
+[node name="Ambience" type="Node" parent="." unique_id=1537150229]
 script = ExtResource("10_66dku")
 
-[node name="Hud" type="CanvasLayer" parent="." unique_id=1875321381 instance=ExtResource("11_0j0nw")]
+[node name="Hud" type="CanvasLayer" parent="." unique_id=873660280 instance=ExtResource("11_0j0nw")]
 layer = 10

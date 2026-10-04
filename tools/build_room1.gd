@@ -510,11 +510,8 @@ func _pool() -> void:
 	var pool := GooPool.new()
 	pool.name = "GooPool"
 	pool.width = float((POOL[1] - POOL[0] + 1) * T)
-	pool.depth = 14.0
-	pool.position = Vector2(POOL[0] * T, G * T - 12.0)
-	pool.bubbles = false
-	pool.trace_energy = 0.12
-	pool.light_energy = 0.12
+	pool.depth = 36.0  # surface 4 px above the floor, covering the floor row
+	pool.position = Vector2(POOL[0] * T, G * T - 4.0)
 	pool.z_index = 6
 	_own(pool)
 

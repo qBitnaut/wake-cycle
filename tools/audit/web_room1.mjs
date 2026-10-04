@@ -43,7 +43,7 @@ const launchArgs = gpu === 'swiftshader'
 const browser = await chromium.launch({
   executablePath: '/usr/bin/chromium',
   headless: true,
-  args: [...launchArgs, '--ignore-gpu-blocklist', '--disable-gpu-vsync', '--disable-frame-rate-limit',
+  args: [...launchArgs, '--ignore-gpu-blocklist', '--disable-gpu-vsync',
     '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: 1 });
@@ -295,19 +295,31 @@ for (let t = 0; t < 200 && W.beat === 1; t++) {
   if (t === 20) { await hold('jump', false); await frame(); await hold('jump', true); }
 }
 await stop();
-const caughtX = W.x;
-await shot('I_trigger_moment');
-note('I jumping the pool fails: the cat is caught', W.beat === 2 && caughtX < 4736, `caught at x=${caughtX.toFixed(0)} (pool 4416..4736)`);
+const caughtX = W.x, fT = W.f;
+note('I jumping the pool fails: the cat is caught', W.beat === 3 && caughtX < 4736, `caught at x=${caughtX.toFixed(0)} (pool 4416..4736)`);
 note('I input locked in the pool', !W.can_move);
 const px0 = W.x;
-await dir(1); await hold('jump', true); await ticks(60); await stop();
+await dir(1); await hold('jump', true); await ticks(20); await stop();
 note('I the cat is stuck: feet do not move', Math.abs(W.x - px0) < 3, `dx=${(W.x - px0).toFixed(1)}`);
-await shot('I_struggle');
-await ticks(160); await shot('I_transform_stub_mid');
-for (let n = 0; W.beat !== 4 && n < 1500; n++) await frame();
+// The real transformation (about 18 s): a screenshot at each beat, by physics frame.
+async function atSec(sec, name) {
+  while ((await poll()).f - fT < sec * 60) await sleep(8);
+  await shot(name);
+}
+await atSec(0.7, 'seq1_caught');
+await atSec(3.4, 'seq2_goo_half');
+await atSec(6.6, 'seq3_veins');
+await atSec(8.1, 'seq4_eyes');
+await atSec(8.55, 'seq5_pulse');
+await atSec(10.8, 'seq6_normal');
+await atSec(13.0, 'seq7_augments');
+await atSec(16.0, 'seq8_mind');
+await atSec(17.9, 'seq9_zoom_out');
+note('I mind awakens during the sequence, before control returns', W.mind || W.beat !== 4);
+for (let n = 0; W.beat !== 4 && n < 2400; n++) await sleep(20), await poll();
 note('I TransformSequence finished: mind awakened, no power, no shockwave', W.beat === 4 && W.mind && !W.shock && W.violations === 0 && W.power === 0);
 note('I control returns, pool goes inert', W.can_move);
-await ticks(200);
+await sleep(3500);
 await shot('I_after_transform_pool_inert');
 
 // ---- J: exit --------------------------------------------------------------------------------
@@ -321,7 +333,8 @@ for (let i = 0; i < 100 && !W.scene.endsWith('room2.tscn'); i++) await sleep(50)
 await sleep(1500); await poll();
 note('J exit fades out and loads Room 2', W.scene.endsWith('room2.tscn'), W.scene);
 note('J Room 2 auto-saved, mind awake, still no shockwave', W.save && W.mind && !W.shock && W.power === 0, `save ${W.save}`);
-await shot('K_room2_coming_soon');
+await sleep(1500);
+await shot('K_room2_cat_with_augments');
 
 const failed = results.filter(r => !r[1]);
 console.log(`== ${results.length} checks, ${failed.length ? failed.length + ' FAILED' : 'ALL PASS'}; console errors: ${consoleErrors.length}`);

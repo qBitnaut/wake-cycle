@@ -5,8 +5,8 @@ extends Level
 ## pound. The goo's gift at the end is intelligence, not a power.
 ##
 ## Beats: INTRO (asleep in the nook, fade from black, the title, the stretch)
-## -> PLAY (the platforming challenge) -> STRUGGLE (the cat steps into the
-## dark pool and cannot get out) -> TRANSFORM (TransformSequence.play) -> FREE
+## -> PLAY (the platforming challenge) -> TRANSFORM (the cat steps into the
+## dark pool and cannot get out; TransformSequence.play owns it) -> FREE
 ## (the mind awakened, the pool inert, walk out through the loading door).
 ##
 ## Hooks for the transformation effect: `nanotech_absorbed_started` (also on
@@ -27,7 +27,6 @@ static var intro_done := false
 
 ## The cat is caught once it is this far in, and standing on the pool floor.
 @export var pool_trigger_x := 4480.0
-@export var struggle_time := 1.6
 
 var beat := Beat.PLAY
 var power_violations := 0
@@ -37,7 +36,6 @@ var _hud: CanvasLayer
 var _title: TitleOverlay
 var _t := 0.0
 var _sleep_anim := ""
-var _struggle_t := 0.0
 var _sprite_home := Vector2.ZERO
 var _inert := false
 var _intro_t := 0.0
@@ -124,9 +122,6 @@ func _process(delta: float) -> void:
 		var pressed := Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("move_right")
 		if _intro_t > 3.2 and pressed and _title:
 			_title.skip()
-	elif beat == Beat.STRUGGLE or beat == Beat.TRANSFORM:
-		_squirm(delta)
-	_pool_glow()
 
 
 func _physics_process(delta: float) -> void:
@@ -137,61 +132,23 @@ func _physics_process(delta: float) -> void:
 		_publish()
 
 
-## The pool reads as darker water from afar; the circuit glow only wakes up
-## as the cat comes close.
-func _pool_glow() -> void:
-	if pool == null or _inert:
-		return
-	var d := maxf(pool.global_position.x - cat.global_position.x, 0.0)
-	var near := 1.0 - clampf((d - 24.0) / 190.0, 0.0, 1.0)
-	near *= near
-	pool.trace_energy = lerpf(0.10, 1.2, near)
-	pool.light_energy = lerpf(0.05, 1.2, near)
-
-
 func _start_absorb() -> void:
-	beat = Beat.STRUGGLE
+	beat = Beat.TRANSFORM
 	cat.set_can_move(false)
 	cat.velocity.x = 0.0
 	GameState.nanotech_absorbed_started.emit()
 	nanotech_absorbed_started.emit()
-	if pool:
-		pool.surge(1.0)
-	_struggle_t = 0.0
-	await get_tree().create_timer(struggle_time).timeout
-	_begin_transform()
-
-
-## Feet stuck: the cat strains (jump frame), meows and shakes in place.
-func _squirm(delta: float) -> void:
-	_struggle_t += delta
-	var calm := beat == Beat.TRANSFORM and _transform_phase_calm()
-	var amp := 0.0 if calm else (1.5 if beat == Beat.STRUGGLE else 1.0)
-	cat.sprite.position = _sprite_home + Vector2(roundf(sin(_struggle_t * 41.0) * amp), roundf(sin(_struggle_t * 27.0) * amp * 0.7))
-	if calm:
-		cat.set_forced_anim("sit")
-		return
-	var seq := ["meow", "idle", "jump", "idle"]
-	cat.set_forced_anim(seq[int(_struggle_t / 0.45) % seq.size()])
-	if pool and int(_struggle_t * 6.0) != int((_struggle_t - delta) * 6.0):
-		pool.surge(0.35)
+	# The sequence owns the cat from here: its own caught beat, the creep, the
+	# veins, the augments and the awakened mind.
+	_seq = TransformSequence.play(cat, pool)
+	_seq.mind_awakened.connect(GameState.awaken_mind)  # the goo's gift: intelligence, no powers
+	_seq.finished.connect(_end_transform)
 
 
 var _seq: TransformSequence
 
 
-func _transform_phase_calm() -> bool:
-	return _seq != null and (_seq.phase == TransformSequence.LOOKS_NORMAL or _seq.phase == TransformSequence.AUGMENTS_APPEAR)
-
-
-func _begin_transform() -> void:
-	beat = Beat.TRANSFORM
-	_seq = TransformSequence.play(cat)
-	_seq.finished.connect(_end_transform)
-
-
 func _end_transform() -> void:
-	GameState.awaken_mind()  # the goo's gift: intelligence (no powers; those come later, via pads)
 	beat = Beat.FREE
 	cat.sprite.position = _sprite_home
 	cat.set_forced_anim("")
@@ -205,13 +162,9 @@ func _go_inert() -> void:
 	_inert = true
 	if pool == null:
 		return
-	pool.bubbles = false
-	pool._bubbles.emitting = false
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(pool, "depth", 3.0, 3.0)
-	tw.tween_property(pool, "position:y", pool.position.y + 11.0, 3.0)
-	tw.tween_property(pool, "trace_energy", 0.0, 2.0)
-	tw.tween_property(pool, "light_energy", 0.0, 2.0)
+	tw.tween_property(pool, "depth", 28.0, 3.0)
+	tw.tween_property(pool, "position:y", pool.position.y + 8.0, 3.0)
 
 
 # ---- web debug --------------------------------------------------------------

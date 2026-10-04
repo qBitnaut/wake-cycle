@@ -36,6 +36,9 @@ func _ready() -> void:
 	cat.set_camera_limits(limits)
 	_normal_bottom = limits.end.y
 	cat.shockwave.connect(_on_cat_shockwave)
+	if GameState.intelligence:
+		# The mind is awake (a reload, a later room): the augments show without the reveal.
+		CatAugments.attach(cat, true)
 	if RoomTransition.arriving:
 		# Came in through a RoomExit: fade up, and save at the start of this room.
 		RoomTransition.arriving = false

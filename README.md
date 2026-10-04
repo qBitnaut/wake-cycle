@@ -87,10 +87,26 @@ Regenerating generated content (all optional; the results are committed):
   see each script's docstring.
 - TileSet: `godot --headless --path . --script res://tools/build_tileset_hd.gd`
 - Test room: `godot --headless --path . --script res://tools/build_test_room.gd`
+- Room 1 and the Room 2 stub: `godot --headless --path . --script res://tools/build_room1.gd`
 
 Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and
 `web_playthrough.mjs` does the same in the web export with Playwright.
+`room1_playthrough.gd` and `web_room1.mjs` play Room 1 start to finish with plain
+movement only (wake-up, platforming, the pool, the transformation stub, the exit,
+Room 2) and assert that no power was granted before the pool. `room1_tour.gd`
+renders Room 1 stop by stop for a look.
+
+## Room 1 and the powers
+
+The game opens in Warehouse Room 1 (the main scene). It uses plain movement only:
+run, jump, double jump, crouch, stomping bots. A fresh game starts with nothing
+unlocked. The unavoidable dark pool at the end calls `TransformSequence.play(cat)`
+(`scripts/systems/transform_sequence.gd`, currently a timed placeholder) after
+emitting `nanotech_absorbed_started` (on the level and on `GameState`); when it
+finishes the level calls `GameState.unlock_shockwave()`. The exit fades to black
+and loads the next room, which auto-saves on arrival (`RoomExit`,
+`RoomTransition`). Pass `-- --skip-intro` to Godot to start Room 1 awake.
 
 ## Credits
 

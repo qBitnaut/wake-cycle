@@ -19,7 +19,8 @@
 ##   F  91-110  steps up to the key deck (letter A above it), brass door, checkpoint
 ##   G 111-123  three cycling steam vents under low ceilings
 ##   H 124-137  flooded lab hall: windows, puddles, drips, tanks (letter T on a perch)
-##   I 138-147  the pool: a sunken floor under a low ceiling, 10 tiles of dark water
+##   I 136-149  the pool: a trough between two one-tile sills under a low ceiling,
+##              10 tiles (cols 138-147) of dark water
 ##   J 148-153  the loading door, rain outside; the exit trigger at col 152
 extends SceneTree
 
@@ -287,7 +288,7 @@ func _lamps() -> void:
 	_lamp("LampDeck", Vector2(23 * T + 16, (G - 3) * T + 4 - 7), false)
 	_lamp("LampDoor", Vector2(101 * T + 16, G * T - 7), true, 1.5)
 	_lamp("LampVent", Vector2(124 * T + 16, G * T - 7), false, 1.5)
-	_lamp("LampPool", Vector2(136 * T + 16, G * T - 7), true, 1.4)
+	_lamp("LampPool", Vector2((POOL[0] - 2) * T + 16, (G - 1) * T - 7), true, 1.4)  # on the near sill
 
 
 func _build_props() -> void:
@@ -347,14 +348,6 @@ func _ground(x0: int, x1: int) -> void:
 		_cell(x, G + 3, MAROON, RIVET if x % 2 == 0 else FLAT)
 
 
-func _sunken(x0: int, x1: int) -> void:
-	## One tile down: the floor is the top of row G+1.
-	for x in range(x0, x1 + 1):
-		_cell(x, G + 1, STEEL, BEVEL)
-		_cell(x, G + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
-		_cell(x, G + 3, MAROON, RIVET if x % 2 == 0 else FLAT)
-
-
 func _block(x0: int, x1: int, y0: int, y1: int, mat := BULKHEAD) -> void:
 	for x in range(x0, x1 + 1):
 		for y in range(y0, y1 + 1):
@@ -378,9 +371,7 @@ func _girder(x0: int, x1: int, row: int, foot := G) -> void:
 
 
 func _build_geometry(skylights: Array[Rect2]) -> void:
-	_ground(0, POOL[0] - 1)
-	_sunken(POOL[0], POOL[1])
-	_ground(POOL[1] + 1, COLS - 1)
+	_ground(0, COLS - 1)
 	# Vent grates in the floor.
 	for v in VENTS:
 		_cell(v[0], G, STEEL, VENTBOX)
@@ -429,8 +420,10 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	# H: the letter T perch over the flooded hall, with crates to climb from.
 	_crates(128, 129, 2)
 	_girder(130, 131, G - 5)
-	# I: the pool tunnel: a low ceiling over the sunken floor (4 tiles of
-	# headroom above the ground line, 5 above the pool floor).
+	# I: the pool trough: a raised sill (one tile) at each end, so the pool floor
+	# reads as sunken between walls, and a low ceiling over it (3 tiles of headroom).
+	_block(POOL[0] - 2, POOL[0] - 1, G - 1, G - 1, STEEL)
+	_block(POOL[1] + 1, POOL[1] + 2, G - 1, G - 1, STEEL)
 	_block(POOL[0] - 1, POOL[1] + 1, 5, G - 4)
 	# J: the loading door header (rows 2-4), the opening below it.
 	_block(148, 154, 2, 4)
@@ -518,7 +511,7 @@ func _pool() -> void:
 	pool.name = "GooPool"
 	pool.width = float((POOL[1] - POOL[0] + 1) * T)
 	pool.depth = 14.0
-	pool.position = Vector2(POOL[0] * T, (G + 1) * T - 12.0)
+	pool.position = Vector2(POOL[0] * T, G * T - 12.0)
 	pool.bubbles = false
 	pool.trace_energy = 0.12
 	pool.light_energy = 0.12
@@ -591,7 +584,7 @@ func _roof_extensions(w: int) -> void:
 func _build_room2() -> void:
 	room = Node2D.new()
 	room.name = "Room2"
-	room.set_script(load("res://scripts/systems/level.gd"))
+	room.set_script(load("res://scripts/systems/room2.gd"))
 	room.set("limits", Rect2i(0, 24, 20 * T, 360))
 	var w := 20 * T
 
@@ -627,12 +620,14 @@ func _build_room2() -> void:
 	start.position = _p(3, G)
 	_own(start)
 
-	var rain := RainFX.new()
+	# Rain over the whole dock (the procedural rain shader: it renders the same
+	# on the web as on desktop), in front of everything but the HUD.
+	var rain := WindowRain.new()
 	rain.name = "Rain"
-	rain.position = Vector2(w / 2.0, 0)
-	rain.width = float(w)
-	rain.floor_y = float(G * T)
-	rain.lighting = RainFX.Lighting.SHADED
+	rain.position = Vector2(0, 0)
+	rain.size = Vector2(w, 330)
+	rain.intensity = 0.55
+	rain.z_index = 8
 	_own(rain)
 	var z := PuddleZone.new()
 	z.name = "Puddle"
@@ -643,12 +638,12 @@ func _build_room2() -> void:
 
 	var label := Label.new()
 	label.name = "ComingSoon"
-	label.text = "Room 2 — coming soon"
+	label.text = "Room 2 - coming soon"
 	label.add_theme_font_override("font", load("res://assets/fonts/monogram.ttf"))
 	label.add_theme_font_size_override("font_size", 32)
 	label.add_theme_color_override("font_color", Color(0.86, 0.91, 1.0) * 1.1)
-	label.position = Vector2(5 * T, 3 * T)
-	label.size = Vector2(10 * T, 40)
+	label.position = Vector2(7 * T, 4 * T)
+	label.size = Vector2(12 * T, 40)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_own(label)
 

@@ -105,6 +105,30 @@ func hop(d: float, dir_frames: int, dj := 0, hold_frames := 999, max_frames := 3
 	await ticks(8)
 
 
+## A running jump: run right, take off at x >= jx, hold direction for dir_frames.
+func run_hop(jx: float, dir_frames: int, dj := 0) -> void:
+	dir(1.0)
+	var n := 0
+	while x() < jx and n < 400:
+		await ticks(1)
+		n += 1
+	hold("jump", true)
+	var t := 0
+	while t < 300:
+		await ticks(1)
+		t += 1
+		if t == dir_frames:
+			dir(0.0)
+		if dj > 0 and t == dj:
+			hold("jump", false)
+			await ticks(1)
+			hold("jump", true)
+		if t > 8 and cat.is_on_floor():
+			break
+	stop()
+	await ticks(8)
+
+
 func note(name: String, ok: bool, detail := "") -> void:
 	results.append([name, ok, detail])
 	print("%s  %-46s %s" % ["PASS" if ok else "FAIL", name, detail])
@@ -154,6 +178,7 @@ func _main() -> void:
 	await _beat_pool()
 	await _beat_exit()
 	await _beat_continue()
+	await _beat_respawn()
 
 	var ok_all := true
 	for r in results:
@@ -208,14 +233,17 @@ func _beat_b() -> void:
 	await hop(1.0, 16, 14)
 	note("B letter C on the perch (double jump)", gs().letters >= 1, "letters %d %s" % [gs().letters, st()])
 	await go_to(858.0, 4.0)
-	dir(1.0)
-	await ticks(12)
+	dir(-1.0)  # walk off the perch's left end: back onto the deck
+	var wn := 0
+	while not (x() < 780.0 and cat.is_on_floor()) and wn < 300:
+		await ticks(1)
+		wn += 1
 	stop()
-	await ticks(20)
+	await ticks(10)
 	note("B back down on the deck", on_floor_at(228.0), "x=%.0f y=%.0f" % [x(), y()])
 	# Gap: 3 tiles (96 px) between the decks.
-	await go_to(884.0, 4.0)
-	await hop(1.0, 60)
+	await go_to(820.0, 4.0)
+	await run_hop(892.0, 60)
 	note("B catwalk gap crossed (3 tiles, single jump)", on_floor_at(228.0) and x() > 992.0, "x=%.0f y=%.0f" % [x(), y()])
 	await go_to(1180.0)
 	await ticks(30)
@@ -393,8 +421,11 @@ func _beat_h() -> void:
 	await ticks(60)
 	stop()
 	await ticks(40)
+	# Up onto the near sill (one tile), to the lip of the pool.
+	await go_to(4330.0, 4.0)
+	await hop(1.0, 10)
 	await go_to(4400.0)
-	note("H at the lip of the pool, still no powers", cat.is_on_floor() and no_powers(), "x=%.0f y=%.0f" % [x(), y()])
+	note("H up on the sill at the lip of the pool, still no powers", on_floor_at(288.0) and no_powers(), "x=%.0f y=%.0f" % [x(), y()])
 	mark("H flooded hall")
 
 
@@ -404,7 +435,7 @@ func _beat_pool() -> void:
 	room.nanotech_absorbed_started.connect(func(): signalled[0] = true)
 	var gs_signalled := [false]
 	gs().nanotech_absorbed_started.connect(func(): gs_signalled[0] = true)
-	await go_to(4290.0)
+	await go_to(4350.0)
 	dir(1.0)
 	while x() < 4416.0 - 6.0:
 		await ticks(1)
@@ -445,7 +476,7 @@ func _beat_exit() -> void:
 	# Walk out. The double jump now bursts.
 	await go_to(4690.0, 8.0)
 	await hop(1.0, 12)
-	note("J out of the pool and up onto the dock", on_floor_at(320.0) and x() > 4730.0, "x=%.0f y=%.0f" % [x(), y()])
+	note("J out of the pool and up onto the far sill", on_floor_at(288.0) and x() > 4730.0, "x=%.0f y=%.0f" % [x(), y()])
 	dir(1.0)
 	var n := 0
 	while current_scene == room and n < 600:
@@ -488,3 +519,15 @@ func _beat_continue() -> void:
 	cat = room.get_node("Cat")
 	note("K continue loads the checkpoint", absf(x() - 1360.0) < 12.0 and ss().session_checkpoint == "cp_a", "x=%.0f cp %s" % [x(), ss().session_checkpoint])
 	mark("continue")
+
+
+func _beat_respawn() -> void:
+	# Dying reloads the room at the last checkpoint: no intro again, control at once.
+	cat.kill()
+	await ticks(100)
+	room = current_scene
+	cat = room.get_node("Cat")
+	var hud: CanvasLayer = node("Hud")
+	note("L death respawns at the checkpoint, no intro", absf(x() - 1360.0) < 12.0 and cat.can_move and hud.visible and room.get("beat") == 1, "x=%.0f beat %s" % [x(), str(room.get("beat"))])
+	note("L no pads in Room 1, nothing unlocked on a fresh respawn", room.find_children("*", "PowerPad", true, false).is_empty() and gs().power == 0)
+	mark("respawn")

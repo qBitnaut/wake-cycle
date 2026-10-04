@@ -106,3 +106,10 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
   (`tools/audit/playthrough.gd`) and one in the web export with Playwright
   (`tools/audit/web_playthrough.mjs`). A jump-reach measurement
   (`tools/audit/reach.gd`) sized the pits and walls.
+- Room 1: `data` built Warehouse Room 1, the opening level (plain movement only),
+  from a level generator (`tools/build_room1.gd`) sized against the measured jump
+  reach; the room transition system, a stub Room 2, and the hooks for the goo
+  transformation (`TransformSequence`, a timed placeholder). `data` also wrote a
+  scripted playthrough of Room 1 in headless Godot
+  (`tools/audit/room1_playthrough.gd`) and in the web export
+  (`tools/audit/web_room1.mjs`).

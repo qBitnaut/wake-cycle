@@ -42,6 +42,7 @@ var _sprite_home := Vector2.ZERO
 var _inert := false
 var _intro_t := 0.0
 var _js_callbacks: Array = []
+var _zones: Array = []
 
 
 func _ready() -> void:
@@ -49,6 +50,8 @@ func _ready() -> void:
 	_hud = get_node_or_null("Hud") as CanvasLayer
 	pool = get_node_or_null("GooPool") as GooPool
 	_sprite_home = cat.sprite.position
+	for z in find_children("*", "PuddleZone", true, false):
+		_zones.append(z)
 	# Roof leaks ring the puddle they fall into.
 	for d in find_children("*", "DripFX", true, false):
 		if d.has_meta("puddle_path"):
@@ -83,10 +86,9 @@ func _start_intro() -> void:
 	if _hud:
 		_hud.visible = false
 	# The camera drifts in from the room towards the sleeping cat.
-	cat.camera.offset = Vector2(400, -25)
-	var tw := create_tween()
-	tw.tween_property(cat.camera, "offset", Vector2(176, -25), 6.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_callback(func(): cat.camera.offset = Vector2(0, -25))
+	# (The camera limit applies before the offset, so the pan is just the offset easing to 0.)
+	cat.camera.offset = Vector2(150, -25)
+	create_tween().tween_property(cat.camera, "offset", Vector2(0, -25), 7.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_title = (load("res://scenes/fx/title_overlay.tscn") as PackedScene).instantiate()
 	add_child(_title)
 	_title.finished.connect(_wake)
@@ -141,10 +143,10 @@ func _pool_glow() -> void:
 	if pool == null or _inert:
 		return
 	var d := maxf(pool.global_position.x - cat.global_position.x, 0.0)
-	var near := 1.0 - clampf((d - 40.0) / 300.0, 0.0, 1.0)
+	var near := 1.0 - clampf((d - 24.0) / 190.0, 0.0, 1.0)
 	near *= near
-	pool.trace_energy = lerpf(0.12, 1.2, near)
-	pool.light_energy = lerpf(0.12, 1.6, near)
+	pool.trace_energy = lerpf(0.10, 1.2, near)
+	pool.light_energy = lerpf(0.05, 1.2, near)
 
 
 func _start_absorb() -> void:
@@ -235,6 +237,9 @@ func _publish() -> void:
 	for n in ["Steam1", "Steam2", "Steam3"]:
 		var s := get_node_or_null(n) as SteamHazard
 		steam.append(s.is_dangerous() if s else false)
+	var ripples := 0
+	for z in _zones:
+		ripples = maxi(ripples, z.puddle._ripples.size())
 	var d := {
 		"f": Engine.get_physics_frames(),
 		"x": cat.global_position.x, "y": cat.global_position.y,
@@ -245,6 +250,9 @@ func _publish() -> void:
 		"crouch": cat.crouched, "save": SaveSystem.has_save(),
 		"cp": SaveSystem.session_checkpoint, "scene": get_tree().current_scene.scene_file_path,
 		"can_move": cat.can_move, "beat": int(beat), "violations": power_violations,
+		"anim": cat.sprite.animation, "hud": _hud.visible if _hud else false,
+		"title": _title != null and is_instance_valid(_title) and _title.visible,
+		"ripples": ripples, "inert": _inert, "pool_y": pool.position.y if pool else 0.0,
 		"bot": [bot.global_position.x, bot.global_position.y, bot.stomps, int(bot.state)] if bot else null,
 		"crate": [crate.global_position.x, crate.global_position.y] if crate else null,
 		"plate": _flag("PlateA", "active"), "shutter": _flag("Shutter", "open"),

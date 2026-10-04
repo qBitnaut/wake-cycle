@@ -16,6 +16,7 @@ signal state_changed(open: bool)
 
 var open := false
 var _lift := 0.0  # 0 shut .. 1 fully rolled up
+var _drawn_open := false
 var _shape := RectangleShape2D.new()
 var _cs := CollisionShape2D.new()
 
@@ -44,7 +45,8 @@ func _physics_process(delta: float) -> void:
 	var target := 1.0 if open else 0.0
 	var before := _lift
 	_lift = move_toward(_lift, target, delta / roll_time)
-	if _lift != before:
+	if _lift != before or open != _drawn_open:
+		_drawn_open = open
 		var h := height_tiles * 32.0 * (1.0 - _lift)
 		_shape.size.y = maxf(h, 0.01)
 		_cs.position.y = -h / 2.0
@@ -60,6 +62,10 @@ func _draw() -> void:
 	draw_rect(Rect2(-w / 2.0 - 4, top - 10, w + 8, 12), Color("10121f"))
 	draw_rect(Rect2(-w / 2.0 - 3, top - 9, w + 6, 10), Color("354655"))
 	draw_rect(Rect2(-w / 2.0 - 3, top - 9, w + 6, 2), Color("536a74"))
+	# Status lamp on the header: amber while shut, muted aqua once open.
+	var lamp := FXPalette.INDICATOR if open else FXPalette.SODIUM
+	draw_rect(Rect2(-3, top - 7, 6, 4), Color("141a2c"))
+	draw_rect(Rect2(-2, top - 6, 4, 2), lamp)
 	# Slats: shutter lowered by (1 - lift), rolled up part hidden in the header.
 	var shown := h * (1.0 - _lift)
 	if shown > 1.0:

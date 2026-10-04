@@ -13,6 +13,9 @@ enum Kind { KEY, LETTER, FISH, GEM }
 var _t := randf() * 6.0
 var _id := ""
 var _nope := 0.0
+## Hidden letters twinkle so a player scanning the room can spot them.
+const GLINT_PERIOD := 2.6
+const GLINT_TIME := 0.7
 
 
 func _ready() -> void:
@@ -78,8 +81,12 @@ func _draw() -> void:
 			draw_rect(Rect2(4, 1, 2, 3), c)
 		Kind.LETTER:
 			var col := Color("ff4a3a") if _nope > 0.0 else c
-			draw_circle(Vector2.ZERO, 7.0, Color(col, 0.2))
-			draw_string(FONT, Vector2(-8, 5), "CAT"[letter_index], HORIZONTAL_ALIGNMENT_CENTER, 16.0, 16, col)
+			var breath := 0.5 + 0.5 * sin(_t * 2.2)
+			# Emissive (HDR) so the night tint cannot bury it: a hidden letter must be findable.
+			draw_circle(Vector2.ZERO, 7.0 + breath, Color(col.r * 1.5, col.g * 1.5, col.b * 1.5, 0.22 + 0.12 * breath))
+			draw_string(FONT, Vector2(-8, 5), "CAT"[letter_index], HORIZONTAL_ALIGNMENT_CENTER, 16.0, 16, Color(col.r * 1.9, col.g * 1.9, col.b * 1.9))
+			_glint(Vector2(5, -6), _t, 1.0)
+			_glint(Vector2(-6, 2), _t + GLINT_PERIOD * 0.5, 0.6)
 		Kind.FISH:
 			draw_colored_polygon(PackedVector2Array([Vector2(-6, 0), Vector2(0, -3), Vector2(5, 0), Vector2(0, 3)]), c)
 			draw_colored_polygon(PackedVector2Array([Vector2(5, 0), Vector2(9, -3), Vector2(9, 3)]), c.darkened(0.2))
@@ -87,3 +94,16 @@ func _draw() -> void:
 		Kind.GEM:
 			draw_colored_polygon(PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-4, 0)]), c)
 			draw_rect(Rect2(-1, -3, 1, 2), Color(1, 1, 1, 0.8))
+
+
+## A four-point twinkle that swells and fades once per GLINT_PERIOD.
+func _glint(at: Vector2, t: float, strength: float) -> void:
+	var ph := fmod(t, GLINT_PERIOD) / GLINT_TIME
+	if ph >= 1.0:
+		return
+	var k := sin(ph * PI) * strength
+	var r := 2.0 + 5.0 * k
+	var c := Color(1.0, 0.97, 0.78, minf(k * 1.4, 1.0))
+	draw_line(at + Vector2(-r, 0), at + Vector2(r, 0), c, 1.0)
+	draw_line(at + Vector2(0, -r), at + Vector2(0, r), c, 1.0)
+	draw_rect(Rect2(at - Vector2(1, 1), Vector2(2, 2)), Color(1, 1, 1, c.a))

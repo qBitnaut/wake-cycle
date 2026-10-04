@@ -1,0 +1,18 @@
+{
+	"awakening": [
+		"...Wait. Whaa- what?",
+		"Everything is... louder. Sharper. Brighter.",
+		"I've been awake before. Never like this.",
+		"I can think. I mean really think.",
+		"Where am I? What is this place?"
+	],
+	"nanofluid_container": [
+		"'Experimental Nanofluid'... I can read that. Since when can I read?",
+		"Tiny machines. Millions of them. In that water... and now in me.",
+		"They didn't hurt me. They changed me.",
+		"If these are micro robots... what have they just done to me?"
+	],
+	"exit_hint": [
+		"The door's open. Outside... I should find a way home."
+	]
+}

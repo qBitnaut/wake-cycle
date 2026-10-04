@@ -1,8 +1,14 @@
 class_name PatrolBot
 extends CharacterBody2D
 ## Patrol robot (ansimuz Warped bipedal unit, harmonised: red glow = hostile).
-## Turns at walls, edges and bot-stoppers, hurts on side contact. Stomp it or
-## shockwave it to stun; after 3 stomps it becomes friendly.
+## Turns at walls, edges and bot-stoppers, hurts on side contact.
+##
+## A plain cat cannot hurt it: stomping bounces the cat off its head with a
+## clank and a flinch, nothing more, and it keeps patrolling. Once the cat has
+## powers (`can_be_harmed()`: the shockwave, or any enhancement; later the
+## "supervisor" mechanic) a stomp stuns it, and after 3 stomps it becomes
+## friendly. The shockwave and ground pound stun it regardless (only a cat with
+## powers can fire them). Set `armoured = false` for a bot that always yields.
 ##
 ## Stoppers: StaticBody2D on physics layer 7 ("bot_bounds"), invisible and
 ## solid only to bots, keep it off places it must not wander (cracked floor,
@@ -17,6 +23,8 @@ const BOUNDS_MASK := 64
 @export var speed := 46.0
 @export var stun_time := 3.0
 @export var stomps_to_befriend := 3
+## True: a cat without powers bounces off harmlessly (see above).
+@export var armoured := true
 
 var state := State.PATROL
 var dir := -1
@@ -25,6 +33,7 @@ var stomps := 0
 var _stun_left := 0.0
 var _stomp_lock := 0.0
 var _t := 0.0
+var _flinch := 0.0
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var hitbox: Area2D = $Hitbox
@@ -70,6 +79,7 @@ func _build_frames() -> SpriteFrames:
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_stomp_lock = maxf(_stomp_lock - delta, 0.0)
+	_flinch = maxf(_flinch - delta, 0.0)
 	velocity.y = minf(velocity.y + 1600.0 * delta, 533.0)
 	match state:
 		State.PATROL:
@@ -79,7 +89,7 @@ func _physics_process(delta: float) -> void:
 			if is_on_floor() and (blocked or not edge.is_colliding()):
 				dir = -dir
 			velocity.x = dir * speed
-			sprite.flip_h = dir > 0
+			sprite.flip_h = dir < 0  # the art faces right
 		State.STUNNED:
 			velocity.x = move_toward(velocity.x, 0.0, 711.0 * delta)
 			_stun_left -= delta
@@ -92,6 +102,8 @@ func _physics_process(delta: float) -> void:
 			velocity.x = 0.0
 			# Friendly: a soft white pulse (no power-hue tint).
 			sprite.modulate = Color(1.5, 1.5, 1.5) if int(_t * 10.0) % 2 == 0 else Color.WHITE
+	if state != State.FRIENDLY:
+		_flinch_fx()
 	move_and_slide()
 	if global_position.y > 3000.0:
 		queue_free()
@@ -109,18 +121,44 @@ func _touch(cat: Cat) -> void:
 		if _stomp_lock <= 0.0:
 			_stomp(cat)
 	elif state == State.PATROL:
+		# Hopping over an armoured bot is free: only the sides hurt.
+		if not can_be_harmed() and cat.global_position.y <= global_position.y - 40.0:
+			return
 		cat.hurt(global_position)
+
+
+## A cat may damage the bot only with powers (or a bot that is not armoured).
+func can_be_harmed() -> bool:
+	return not armoured or GameState.shockwave_unlocked or GameState.power != NanoPalette.Power.NONE
 
 
 func _stomp(cat: Cat) -> void:
 	_stomp_lock = 0.3
 	cat.bounce(462.0)
+	if not can_be_harmed():
+		_clank()
+		return
 	stomps += 1
 	Sfx.play(self, "land", -4.0, 0.8)
 	if stomps >= stomps_to_befriend:
 		befriend()
 	else:
 		stun(stun_time)
+
+
+## The "that did nothing" read: a metal clank, a quick blink and a shudder.
+func _clank() -> void:
+	_flinch = 0.28
+	Sfx.play(self, "res://assets/audio/sfx/impactMetal_heavy_002.ogg", -6.0, 1.3)
+
+
+func _flinch_fx() -> void:
+	if _flinch > 0.0:
+		sprite.modulate = Color(1.9, 1.9, 2.0) if int(_flinch * 36.0) % 2 == 0 else Color.WHITE
+		sprite.position.x = roundf(sin(_flinch * 90.0)) * 1.0 if state == State.PATROL else sprite.position.x
+	elif state == State.PATROL:
+		sprite.modulate = Color.WHITE
+		sprite.position.x = 0.0
 
 
 func stun(t: float) -> void:

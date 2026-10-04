@@ -11,7 +11,7 @@
 ##
 ## Beats, left to right (column numbers; 32 px tiles, floor surface at row 10):
 ##   A   0-13   the nook: asleep under a sliver of moonlight, wake-up, continue pad
-##              (bonus letter A hides in the cardboard box)
+##              (bonus letter A peeks out from behind the cardboard box)
 ##   B  14-40   crate stairs (1,2,3 high) up to a catwalk under two moon shafts,
 ##              a 3-tile gap, stairs down (secret letter C in the pocket under the gap); checkpoint at 42
 ##   C  42-56   puddle hall: rain window, puddles to wade through, a patrol bot
@@ -22,7 +22,8 @@
 ##   H 124-137  flooded lab hall: windows, puddles, drips, tanks (bonus letter T on a high perch)
 ##   I 136-149  the pool: a trough between two one-tile sills under a low ceiling,
 ##              10 tiles (cols 138-147) of dark water
-##   J 148-153  the loading door, rain outside; the exit trigger at col 152
+##   J 148-153  the loading door, rain outside; the wrecked NANOFLUID crate (cols 150-153),
+##              the exit trigger at col 153
 extends SceneTree
 
 const T := 32
@@ -32,7 +33,7 @@ const COLS := 155
 
 # Pool: sunken floor, cols inclusive.
 const POOL := [138, 147]
-const EXIT_COL := 152
+const EXIT_COL := 153
 
 const STEEL := 0
 const BULKHEAD := 1
@@ -157,6 +158,7 @@ func _build_room1() -> void:
 	_low_beam()
 	_stoppers()
 	_lamps()
+	_nanofluid_crate()
 
 	var exit_area := RoomExit.new()
 	exit_area.name = "RoomExit"
@@ -221,9 +223,9 @@ func _put(path: String, node_name: String, cx: int, cy: int, props := {}) -> Nod
 	var n: Node2D = load(path).instantiate()
 	n.name = node_name
 	for k in props:
-		if k != "_dy":
+		if k != "_dy" and k != "_dx":
 			n.set(k, props[k])
-	n.position = _p(cx, cy) + Vector2(0, props.get("_dy", 0.0))
+	n.position = _p(cx, cy) + Vector2(props.get("_dx", 0.0), props.get("_dy", 0.0))
 	_own(n)
 	return n
 
@@ -436,7 +438,7 @@ func _place_actors() -> void:
 	# --- A ---
 	_put("res://scenes/actors/continue_pad.tscn", "ContinuePad", 9, G)
 	_put("res://scenes/actors/gem.tscn", "GemA", 7, G - 1)
-	_put("res://scenes/actors/letter.tscn", "LetterA", 3, G, {"letter_index": 1})  # off-path: inside the cardboard box
+	_put("res://scenes/actors/letter.tscn", "LetterA", 3, G, {"letter_index": 1, "_dx": -2.0})  # off-path: a quarter hidden behind the cardboard box (its edge is x 106), peeking out and glinting
 	# --- B ---
 	_put("res://scenes/actors/gem.tscn", "GemStep", 18, G - 3)
 	_put("res://scenes/actors/letter.tscn", "LetterC", 29, G, {"letter_index": 0})  # secret: under the catwalk gap
@@ -514,6 +516,36 @@ func _pool() -> void:
 	pool.position = Vector2(POOL[0] * T, G * T - 4.0)
 	pool.z_index = 6
 	_own(pool)
+
+
+func _nanofluid_crate() -> void:
+	## The wrecked container past the pool (cols 150-153: the floor between the far
+	## sill and the exit), with the monologue triggers that read it. The cat walks
+	## in front of it; it is dressing only.
+	var crate := NanofluidCrate.new()
+	crate.name = "NanofluidCrate"
+	crate.position = Vector2(4872, G * T)  # right edge at the end pipe (x 4928)
+	crate.z_index = 2
+	_own(crate)
+	# Reading it: stepping up to the crate, once the mind is awake.
+	# (Loaded by path: the class references autoloads, which a --script run lacks at compile time.)
+	var trigger_script: Script = load("res://scripts/actors/monologue_trigger.gd")
+	var read: Area2D = trigger_script.new()
+	read.name = "ReadContainer"
+	read.set("line_id", "nanofluid_container")
+	read.set("require_mind", true)
+	read.set("size", Vector2(64, 96))
+	read.position = Vector2(4832, G * T)
+	_own(read)
+	# Nearing the exit afterwards: a nudge on what to do next.
+	var hint: Area2D = trigger_script.new()
+	hint.name = "HintExit"
+	hint.set("line_id", "exit_hint")
+	hint.set("require_mind", true)
+	hint.set("requires_played", "nanofluid_container")
+	hint.set("size", Vector2(48, 96))
+	hint.position = Vector2(4880, G * T)
+	_own(hint)
 
 
 func _low_beam() -> void:

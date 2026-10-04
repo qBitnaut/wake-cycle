@@ -21,7 +21,9 @@ func _draw() -> void:
 	draw_rect(Rect2(71, -4, 128, 1), CARD_LIT)
 	for x in [96, 131, 168]:
 		draw_rect(Rect2(x, -4, 1, 3), CARD_DARK)
-	# Box on its side, open to the right (x 8..66).
+	# Box on its side, open to the right (x -16..42, drawn shifted: the letter A
+	# sits behind its right edge, half hidden and peeking out).
+	draw_set_transform(Vector2(-24, 0))
 	draw_rect(Rect2(8, -50, 58, 50), INK)
 	draw_rect(Rect2(10, -48, 54, 46), CARD)
 	draw_rect(Rect2(10, -48, 54, 3), CARD_LIT)
@@ -30,6 +32,7 @@ func _draw() -> void:
 	draw_rect(Rect2(10, -3, 54, 3), CARD_DARK)
 	# Torn flap.
 	draw_colored_polygon(PackedVector2Array([Vector2(64, -48), Vector2(80, -40), Vector2(66, -36)]), CARD_LIT)
+	draw_set_transform(Vector2.ZERO)
 	# Tarp hung from a pipe above, folds falling to the floor (x 204..250).
 	draw_rect(Rect2(200, -74, 56, 4), INK)
 	var pts := PackedVector2Array([Vector2(204, -70), Vector2(250, -70), Vector2(256, -8), Vector2(246, -2),

@@ -47,6 +47,10 @@ const WIDTH := 22.0
 const SIT_AFTER := 3.0
 const LICK_AFTER := 6.0
 const SLEEP_AFTER := 14.0
+## The push pose holds this long after contact with the crate drops, so the
+## contact flickering on and off each physics frame cannot thrash the animation.
+const PUSH_HOLD := 0.15
+const PUSH_SLOW_SCALE := 0.7  # walk playback speed while pushing, when there is no push animation
 
 var death_y := 100000.0
 var facing := 1
@@ -74,6 +78,9 @@ var _idle_t := 0.0
 var _oneshot := 0.0
 var _slept := false
 var _fall_speed := 0.0
+var _push_t := 0.0
+## Number of animation changes made by _play(): an audit hook (flicker counting).
+var anim_switches := 0
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var body_shape: CollisionShape2D = $Shape
@@ -159,6 +166,7 @@ func _timers(delta: float, on_floor: bool) -> void:
 	_dash_cd = maxf(_dash_cd - delta, 0.0)
 	dash_left = maxf(dash_left - delta, 0.0)
 	_oneshot = maxf(_oneshot - delta, 0.0)
+	_push_t = maxf(_push_t - delta, 0.0)
 
 
 func _crouch(on_floor: bool) -> void:
@@ -282,6 +290,8 @@ func _push_bodies(pre_vx: float) -> void:
 		var rb := c.get_collider() as RigidBody2D
 		if rb and absf(c.get_normal().x) > 0.5:
 			rb.sleeping = false
+			if can_move and signf(pre_vx) == -signf(c.get_normal().x):
+				_push_t = PUSH_HOLD
 			rb.linear_velocity.x = move_toward(rb.linear_velocity.x, pre_vx * 0.85, 1067.0)
 
 
@@ -388,10 +398,21 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 		return
 	if crouched:
 		_idle_t = 0.0
-		_play("crouch")
-		sprite.speed_scale = 1.0 if moving else 0.0
-		if not moving:
-			sprite.frame = 0
+		var anim := "crawl" if moving and _has("crawl") else "crouch_idle" if not moving and _has("crouch_idle") else "crouch"
+		_play(anim)
+		if anim == "crouch":  # the old two-frame crouch: frozen while still
+			sprite.speed_scale = 1.0 if moving else 0.0
+			if not moving:
+				sprite.frame = 0
+		else:
+			sprite.speed_scale = 1.0
+		return
+	if _push_t > 0.0 and on_floor and dir != 0.0:
+		_idle_t = 0.0
+		_oneshot = 0.0
+		var pushing := _has("push")
+		_play("push" if pushing else "walk")
+		sprite.speed_scale = 1.0 if pushing else PUSH_SLOW_SCALE
 		return
 	sprite.speed_scale = 1.0
 	if not on_floor:
@@ -438,6 +459,11 @@ func _idle_loop() -> void:
 		_play("idle")
 
 
+func _has(anim: String) -> bool:
+	return sprite.sprite_frames != null and sprite.sprite_frames.has_animation(anim)
+
+
 func _play(anim: String) -> void:
 	if sprite.animation != anim:
+		anim_switches += 1
 		sprite.play(anim)

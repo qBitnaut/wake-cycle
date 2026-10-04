@@ -7,7 +7,8 @@ extends Level
 ## Beats: INTRO (asleep in the nook, fade from black, the title, the stretch)
 ## -> PLAY (the platforming challenge) -> TRANSFORM (the cat steps into the
 ## dark pool and cannot get out; TransformSequence.play owns it) -> FREE
-## (the mind awakened, the pool inert, walk out through the loading door).
+## (the mind awakened, the pool inert, the wrecked nanofluid crate to read, walk out
+## through the loading door).
 ##
 ## Hooks for the transformation effect: `nanotech_absorbed_started` (also on
 ## GameState), TransformSequence.play(cat) and its `finished`, then
@@ -68,6 +69,7 @@ func _ready() -> void:
 	if _checkpoint_id == "" and not intro_done:
 		# A fresh game: nothing unlocked, nothing carried over.
 		GameState.new_game()
+		Monologue.reset()
 		SaveSystem.session_snapshot = GameState.snapshot()
 		_start_intro()
 	if OS.has_feature("web"):
@@ -141,11 +143,18 @@ func _start_absorb() -> void:
 	# The sequence owns the cat from here: its own caught beat, the creep, the
 	# veins, the augments and the awakened mind.
 	_seq = TransformSequence.play(cat, pool)
-	_seq.mind_awakened.connect(GameState.awaken_mind)  # the goo's gift: intelligence, no powers
+	_seq.mind_awakened.connect(_on_mind_awakened)
 	_seq.finished.connect(_end_transform)
 
 
 var _seq: TransformSequence
+
+
+## The goo's gift: intelligence, no powers. The cat's thoughts come up as subtitles
+## (they keep playing after control returns; see data/monologue.json "awakening").
+func _on_mind_awakened() -> void:
+	GameState.awaken_mind()
+	Monologue.play("awakening")
 
 
 func _end_transform() -> void:
@@ -207,6 +216,16 @@ func _publish() -> void:
 		"title": _title != null and is_instance_valid(_title) and _title.visible,
 		"ripples": ripples, "inert": _inert, "pool_y": pool.position.y if pool else 0.0,
 		"bot": [bot.global_position.x, bot.global_position.y, bot.stomps, int(bot.state)] if bot else null,
+		"botVx": bot.velocity.x if bot else 0.0, "botFlip": bot.sprite.flip_h if bot else false,
+		"botFlinch": bot._flinch if bot else 0.0,
+		"sw": cat.anim_switches, "mono": Monologue.history.size(),
+		"monoLast": Monologue.history.back() if Monologue.history.size() else null,
+		"monoIds": Monologue.history.map(func(l): return l[0]),
+		"container": Monologue.has_played("nanofluid_container"), "hint": Monologue.has_played("exit_hint"),
+		"speaking": Monologue.is_speaking(), "pushT": cat._push_t,
+		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
+		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),
+		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),
 		"crate": [crate.global_position.x, crate.global_position.y] if crate else null,
 		"plate": _flag("PlateA", "active"), "shutter": _flag("Shutter", "open"),
 		"fenceT": _flag("FenceTimed", "active"), "steam": steam,

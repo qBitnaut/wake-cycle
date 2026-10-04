@@ -160,8 +160,11 @@ async function runHop(jx, dirFrames, dj = 0) {
 const onFloorAt = (y, tol = 3) => W.floor && Math.abs(W.y - y) < tol;
 const noPowers = () => W.power === 0 && !W.shock && W.violations === 0;
 
+// The hidden letter A peeks out from behind the box and twinkles: shoot it at the peak of a glint.
+for (let n = 0; !(W.glintA > 0.3 && W.glintA < 0.4) && n < 400; n++) await frame();
+await shot('A_letter_glint_peeking_behind_box');
 await goTo(112, 4);
-note('A bonus letter A tucked in the cardboard box', W.letters === 1, `letters ${W.letters}`);
+note('A bonus letter A peeking out behind the cardboard box', W.letters === 1, `letters ${W.letters}`);
 await shot('A_letter_in_box_hud_letters');
 
 // ---- B: crate stairs, the catwalk -------------------------------------------
@@ -175,6 +178,8 @@ await shot('B_catwalk_moonbeam');
 await goTo(820, 4); await runHop(892, 60);
 note('B catwalk gap crossed (3 tiles, single jump)', onFloorAt(228) && W.x > 992, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('B_catwalk_gap_crossed');
+for (let n = 0; !(W.glintC > 0.3 && W.glintC < 0.4) && n < 400; n++) await frame();
+await shot('B_letter_C_glint_in_pocket');
 // Secret letter C: drop off deck 2's left end into the pocket under the gap.
 await dir(-1);
 for (let n = 0; !(W.x < 985 && W.floor && W.y > 300) && n < 300; n++) await frame();
@@ -195,24 +200,44 @@ await dir(1);
 for (let n = 0; W.ripples === 0 && n < 200; n++) await frame();
 let rippled = W.ripples > 0, splashShot = false, hp0 = W.hp;
 await dir(0); await ticks(2); await shot('C_puddle_splash'); splashShot = true;
+// The bot faces the way it walks (the art faces right: flipped when going left).
+let faceOk = true;
+for (let i = 0; i < 90; i++) { await frame(); if (W.bot[3] === 0 && Math.abs(W.botVx) > 1 && W.botFlip !== (W.botVx < 0)) faceOk = false; }
+note('C the patrol bot faces the way it walks', faceOk);
+// Stomp it without powers: the cat bounces, nothing else happens.
+hp0 = W.hp;
+const bx0 = W.bot[0];
+await page.evaluate(([x, y]) => window.wakeTeleport(x, y), [W.bot[0], W.bot[1] - 80]);
+let bounced = false, flinched = false, bounceShot = false;
+for (let i = 0; i < 40; i++) {
+  await frame();
+  bounced = bounced || W.vy < -300;
+  if (W.botFlinch > 0.1) { flinched = true; if (!bounceShot) { bounceShot = true; await shot('C_bot_bounce_clank_flinch'); } }
+}
+note('C stomping the bot without powers bounces the cat', bounced && flinched, `bounced ${bounced} flinch ${flinched}`);
+note('C ...does no damage: no stun, no befriend, no hurt', W.bot[3] === 0 && W.bot[2] === 0 && W.hp === hp0 && !W.dead, `state ${W.bot[3]} stomps ${W.bot[2]} hp ${W.hp}`);
+await goTo(1440); await ticks(90);
+note('C ...and the bot keeps patrolling', W.bot[3] === 0 && Math.abs(W.bot[0] - bx0) > 6 && Math.abs(W.botVx) > 1, `x ${bx0.toFixed(0)} -> ${W.bot[0].toFixed(0)}`);
 await hold('right', true);
 for (let n = 0; W.x < 1830 && n < 1800 && !W.dead; n++) {
   const d = W.bot[0] - W.x;
-  if (d > 30 && d < 62 && W.floor && W.bot[3] === 0) {
+  if (d > 30 && d < 62 && W.floor) {
     await hold('jump', true); await ticks(22); await hold('jump', false);
   } else await hold('jump', false);
   await frame();
 }
 await stop(); await ticks(20);
 note('C waded through the puddle: ripple and splash', rippled && splashShot);
-note('C got past the patrol bot (stomp attempted)', W.x >= 1830 && !W.dead, `x=${W.x.toFixed(0)} hp ${W.hp} stomps ${W.bot[2]}`);
+note('C hopped over the patrol bot and got past', W.x >= 1830 && !W.dead && W.bot[2] === 0, `x=${W.x.toFixed(0)} hp ${W.hp} stomps ${W.bot[2]}`);
 await shot('C_hall_rain_window_bot');
 
 // ---- D: crawl ----------------------------------------------------------------
 await goTo(1880); await dir(1); await ticks(100); await stop();
 note('D low beam blocks the standing cat', W.x < 1952, `x=${W.x.toFixed(0)}`);
 await hold('down', true); await dir(1);
-for (let n = 0; W.x < 2190 && n < 1200; n++) { await frame(); if (n === 150) await shot('D_crawl'); }
+const crawlAnims = new Set();
+for (let n = 0; W.x < 2190 && n < 1200; n++) { await frame(); if (Math.abs(W.vx) > 14) crawlAnims.add(W.anim); if (n === 150) await shot('D_crawl'); }
+note('D crawling plays crawl (or the old crouch if there is no crawl)', crawlAnims.size === 1 && (crawlAnims.has('crawl') || crawlAnims.has('crouch')), [...crawlAnims].join());
 await stop(); await ticks(20);
 note('D crawled under the beam (crouch)', W.x >= 2150, `x=${W.x.toFixed(0)}`);
 
@@ -228,8 +253,18 @@ note('E timed fence crossed in its off window', W.x >= 2500 && W.hp === hp0, `x=
 await goTo(2490);
 note('E shutter shut at first', !W.shutter);
 await dir(1);
-for (let n = 0; !W.plate && n < 900; n++) await frame();
+// Count animation changes (from the cat's own counter) from first contact until 1.5 s after the plate: the crate is shoved against its stopper.
+let sw0 = -1, swFrames = 0, plateN = -1, pushShot = false; const pushAnims = new Set();
+for (let n = 0; n < 900 && (plateN < 0 || n - plateN < 90); n++) {
+  await frame();
+  if (plateN < 0 && W.plate) plateN = n;
+  if (sw0 < 0 && Math.abs(W.crate[0] - W.x) < 32) sw0 = W.sw;
+  if (sw0 >= 0) { swFrames++; pushAnims.add(W.anim); if (!pushShot && W.pushT > 0.1 && swFrames > 20) { pushShot = true; await shot('E_push_crate_onto_plate'); } }
+}
 await stop(); await ticks(40);
+const pushSw = W.sw - sw0, pushSecs = Math.max(swFrames / 60, 0.01);
+note('E pushing the crate: no animation thrash', sw0 >= 0 && pushSw <= 3 && pushSw / pushSecs <= 2, `${pushSw} switches in ${pushSecs.toFixed(1)} s (${(pushSw / pushSecs).toFixed(1)}/s), anims ${[...pushAnims].join()}`);
+note('E pushing plays push (or walk) and never idles', (pushAnims.has('push') || pushAnims.has('walk')) && !pushAnims.has('idle'), [...pushAnims].join());
 note('E crate pushed onto the plate, shutter opens', W.plate && W.shutter, `crate x=${W.crate[0].toFixed(0)}`);
 await shot('E_crate_on_plate_shutter_open');
 await ticks(30); await hop(1, 26); await goTo(2790); await goTo(2860);
@@ -275,7 +310,10 @@ await goTo(3900); await dir(1);
 for (let n = 0; W.ripples === 0 && n < 200; n++) await frame();
 for (let k = 0; k < 3; k++) { await shot(`H_puddle_splash_${k}`); await frame(); }
 await goTo(4050); await goTo(4080); await hop(1, 12); await hop(1, 12);
-await goTo(4140, 5); await hop(1, 24, 18);
+await goTo(4140, 5);
+for (let n = 0; !(W.glintT > 0.3 && W.glintT < 0.4) && n < 400; n++) await frame();
+await shot('H_letter_T_glint_on_perch');
+await hop(1, 24, 18);
 note('H bonus letter T on the high perch: all three, bonus score', W.letters === 3 && W.score >= 5000, `letters ${W.letters} score ${W.score}`);
 await goTo(4240, 6); await dir(1); await ticks(60); await stop(); await ticks(40);
 await shot('H_flooded_hall_tanks');
@@ -313,8 +351,12 @@ await atSec(8.1, 'seq4_eyes');
 await atSec(8.55, 'seq5_pulse');
 await atSec(10.8, 'seq6_normal');
 await atSec(13.0, 'seq7_augments');
+// The first subtitle line comes up as the close-up ends (CineZoom magnifies every canvas layer, so lines wait it out).
+for (let i = 0; i < 1500 && W.mono < 1; i++) { await sleep(8); await poll(); }
+await sleep(900); await shot('subtitles_awakening_line1');
 await atSec(16.0, 'seq8_mind');
 await atSec(17.9, 'seq9_zoom_out');
+note('I the awakening monologue starts with the mind (subtitles)', W.mono >= 1 && W.monoIds[0] === 'awakening', `${W.mono} line(s): ${W.monoLast && W.monoLast[1]}`);
 note('I mind awakens during the sequence, before control returns', W.mind || W.beat !== 4);
 for (let n = 0; W.beat !== 4 && n < 2400; n++) await sleep(20), await poll();
 note('I TransformSequence finished: mind awakened, no power, no shockwave', W.beat === 4 && W.mind && !W.shock && W.violations === 0 && W.power === 0);
@@ -325,7 +367,23 @@ await shot('I_after_transform_pool_inert');
 // ---- J: exit --------------------------------------------------------------------------------
 await goTo(4690, 8); await hop(1, 12);
 note('J out of the pool onto the far sill', onFloorAt(288) && W.x > 4730, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+// The awakening lines keep playing while the cat walks: subtitles over the moving cat.
+for (let i = 0; i < 600 && W.mono < 3; i++) { await sleep(20); await poll(); }
+await sleep(700); await shot('subtitles_awakening_line3_cat_free');
+for (let i = 0; i < 2000 && W.monoIds.filter(id => id === 'awakening').length < 5; i++) { await sleep(20); await poll(); }
+note('J awakening monologue: all five lines played', W.monoIds.filter(id => id === 'awakening').length === 5, `${W.mono} lines`);
+for (let i = 0; i < 1500 && W.speaking; i++) { await sleep(20); await poll(); }
+note('J the container is not read before the cat reaches it', !W.container, `x=${W.x.toFixed(0)}`);
 await shot('J_loading_door_night_outside');
+await goTo(4832, 6); await ticks(6);
+note('J the container trigger fires after the mind awakens', W.container && W.mind, `x=${W.x.toFixed(0)}`);
+for (let i = 0; i < 400 && W.monoIds.filter(id => id === 'nanofluid_container').length < 1; i++) { await sleep(20); await poll(); }
+await sleep(1100); await shot('J_container_and_monologue_line1');
+for (let i = 0; i < 1500 && W.monoIds.filter(id => id === 'nanofluid_container').length < 4; i++) { await sleep(20); await poll(); }
+note('J container monologue: four lines', W.monoIds.filter(id => id === 'nanofluid_container').length === 4);
+await sleep(1200); await shot('J_container_monologue_line4');
+await goTo(4880, 6); await ticks(6);
+note('J the exit hint plays once the container was read', W.hint);
 await dir(1);
 for (let n = 0; W.scene.endsWith('room1.tscn') && n < 600; n++) { await frame(); if (n === 40) await shot('J_exit_fade'); }
 await stop();

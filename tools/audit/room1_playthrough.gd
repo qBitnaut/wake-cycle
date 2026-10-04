@@ -5,10 +5,14 @@
 ##   godot --headless --path . --fixed-fps 60 --script res://tools/audit/room1_playthrough.gd
 ##
 ## Wake-up (input locked, then the stretch) -> platforming -> the pool
-## (unavoidable) -> the struggle -> TransformSequence -> shockwave unlocked ->
-## the loading door -> Room 2 (auto-saved). Asserts that no power was granted
-## before the pool. Exit code 1 if any beat fails. It deletes user://save.json
-## before and after.
+## (unavoidable) -> the struggle -> TransformSequence -> the awakening
+## monologue -> the nanofluid crate monologue -> the loading door -> Room 2
+## (auto-saved). Asserts that no power was granted before the pool, that a bot
+## stomp does nothing without powers, and that pushing the crate does not
+## thrash the cat's animation. Exit code 1 if any beat fails. It deletes
+## user://save.json before and after.
+## STUB_ANIMS=1 injects stand-in crawl / crouch_idle / push animations into the
+## cat's SpriteFrames at run time, to prove the hookup used once the real ones land.
 extends SceneTree
 
 const T := 32.0
@@ -21,6 +25,8 @@ var _hurt := 0
 var _frames := 0
 var _beat_start := 0
 var _timeline: Array = []
+var _lines: Array = []
+var _set_done := {}
 
 
 func gs() -> Node:
@@ -129,6 +135,23 @@ func run_hop(jx: float, dir_frames: int, dj := 0) -> void:
 	await ticks(8)
 
 
+## Stand-ins for the animations the art branch adds: clones of walk / crouch.
+func _stub_anims() -> void:
+	var sf: SpriteFrames = cat.sprite.sprite_frames
+	for pair in [["crawl", "walk"], ["crouch_idle", "idle"], ["push", "walk"]]:
+		if sf.has_animation(pair[0]):
+			continue
+		sf.add_animation(pair[0])
+		sf.set_animation_speed(pair[0], 8.0)
+		for i in sf.get_frame_count(pair[1]):
+			sf.add_frame(pair[0], sf.get_frame_texture(pair[1], i))
+	print("  (stub animations injected)")
+
+
+func has_anim(a: String) -> bool:
+	return cat.sprite.sprite_frames.has_animation(a)
+
+
 func note(name: String, ok: bool, detail := "") -> void:
 	results.append([name, ok, detail])
 	print("%s  %-46s %s" % ["PASS" if ok else "FAIL", name, detail])
@@ -166,6 +189,11 @@ func _main() -> void:
 	cat = room.get_node("Cat")
 	cat.hurt_taken.connect(func(_hp): _hurt += 1)
 	cat.died.connect(func(): print("  (cat died at x=%.0f y=%.0f)" % [x(), y()]))
+	var mono := root.get_node("Monologue")
+	mono.line_started.connect(func(id: String, text: String): _lines.append([id, text]))
+	mono.set_finished.connect(func(id: String): _set_done[id] = true)
+	if OS.get_environment("STUB_ANIMS") != "":
+		_stub_anims()
 
 	await _beat_intro()
 	await _beat_b()
@@ -214,7 +242,7 @@ func _beat_intro() -> void:
 	var start_ok := absf(x() - 144.0) < 8.0 and cat.is_on_floor()
 	note("A starts in the nook on the floor", start_ok, "x=%.0f y=%.0f" % [x(), y()])
 	await go_to(112.0, 4.0)
-	note("A bonus letter A tucked in the cardboard box", gs().letters == 1 and gs().letter_mask == 2, "mask %d" % gs().letter_mask)
+	note("A bonus letter A peeking out behind the cardboard box", gs().letters == 1 and gs().letter_mask == 2, "mask %d" % gs().letter_mask)
 	var cp: Node = node("ContinuePad")
 	note("A continue pad hidden without a save", not cp.visible)
 	mark("intro")
@@ -264,19 +292,40 @@ func _beat_c() -> void:
 	var rippled := false
 	await go_to(1440.0)
 	var bot = node("Bot")
+	# The bot faces the way it walks (the art faces right: flipped when it goes left).
+	var face_ok := true
+	for i in 90:
+		await ticks(1)
+		if bot.state == 0 and absf(bot.velocity.x) > 1.0 and bot.sprite.flip_h != (bot.velocity.x < 0.0):
+			face_ok = false
+	note("C the patrol bot faces the way it walks", face_ok)
+	# Stomp it without powers: the cat bounces, nothing else happens.
+	var hp0: int = gs().health
+	var bx0: float = bot.global_position.x
+	cat.global_position = Vector2(bot.global_position.x, bot.global_position.y - 80.0)
+	cat.velocity = Vector2(0.0, 220.0)
+	var bounced := false
+	var flinched := false
+	for i in 40:
+		await ticks(1)
+		bounced = bounced or cat.velocity.y < -300.0
+		flinched = flinched or bot._flinch > 0.0
+	note("C stomping the bot without powers bounces the cat", bounced and flinched, "bounced %s flinch %s" % [bounced, flinched])
+	note("C ...does no damage: no stun, no befriend, no hurt", bot.state == 0 and bot.stomps == 0 and gs().health == hp0 and not cat.dead, "state %d stomps %d hp %d" % [bot.state, bot.stomps, gs().health])
+	await go_to(1440.0)
+	await ticks(90)
+	note("C ...and the bot keeps patrolling", bot.state == 0 and absf(bot.global_position.x - bx0) > 6.0 and absf(bot.velocity.x) > 1.0, "x %.0f -> %.0f" % [bx0, bot.global_position.x])
+	# Now get past it by hopping over, as a player would.
 	hold("move_right", true)
 	var n := 0
+	var stomped_again := 0
 	while x() < 1830.0 and n < 1800 and not cat.dead:
 		if zone.puddle._ripples.size() > 0:
 			rippled = true
 		var d: float = bot.global_position.x - x()
-		# Stomp it: a jump with the bot a little ahead lands on its head.
-		if d > 30.0 and d < 62.0 and cat.is_on_floor() and bot.state == 0:
+		if d > 30.0 and d < 62.0 and cat.is_on_floor():
 			hold("jump", true)
 			await ticks(22)
-			hold("jump", false)
-		elif bot.state != 0 and d > 0.0 and d < 70.0 and cat.is_on_floor():
-			# stunned bots still hurt nobody; just run past
 			hold("jump", false)
 		else:
 			hold("jump", false)
@@ -285,7 +334,13 @@ func _beat_c() -> void:
 	stop()
 	await ticks(20)
 	note("C waded through the puddle, ripple + splash", rippled, "ripples seen")
-	note("C stomped the patrol bot and got past", x() >= 1830.0 and not cat.dead and bot.stomps >= 1, "x=%.0f hp %d stomps %d" % [x(), gs().health, bot.stomps])
+	note("C hopped over the patrol bot and got past", x() >= 1830.0 and not cat.dead and bot.stomps == 0, "x=%.0f hp %d stomps %d" % [x(), gs().health, bot.stomps])
+	# The harm logic is kept, gated: a bot that is not armoured (or a cat with powers) yields.
+	var gated: bool = not bot.can_be_harmed()
+	bot.armoured = false
+	var open_: bool = bot.can_be_harmed()
+	bot.armoured = true
+	note("C stun/befriend logic kept, gated behind powers", gated and open_)
 	mark("C hall")
 
 
@@ -298,12 +353,21 @@ func _beat_d() -> void:
 	hold("move_down", true)
 	dir(1.0)
 	var n := 0
+	var seen := {}
 	while x() < 2190.0 and n < 1200:
 		await ticks(1)
 		n += 1
-	stop()
-	await ticks(20)
+		if absf(cat.velocity.x) > 14.0:
+			seen[cat.sprite.animation] = true
 	note("D crawled under the beam (crouch)", x() >= 2150.0 and gs().score > 0, "x=%.0f score %d" % [x(), gs().score])
+	var want_move := "crawl" if has_anim("crawl") else "crouch"
+	note("D crawling plays '%s' (crawl when it exists, else crouch)" % want_move, seen.size() == 1 and seen.has(want_move), str(seen.keys()))
+	dir(0.0)
+	await ticks(20)
+	var want_idle := "crouch_idle" if has_anim("crouch_idle") else "crouch"
+	note("D still, crouched: '%s'" % want_idle, cat.crouched and cat.sprite.animation == want_idle, cat.sprite.animation)
+	stop()
+	await ticks(10)
 	mark("D crawl")
 
 
@@ -332,11 +396,32 @@ func _beat_e() -> void:
 	note("E shutter shut at first", not shutter.open)
 	dir(1.0)
 	var n := 0
-	while not node("PlateA").active and n < 900:
+	var sw := 0  # animation changes while pushing
+	var sw_frames := 0
+	var last_anim := ""
+	var pushing_anims := {}
+	var win_start := -1
+	var plate_n := -1
+	while n < 900 and (plate_n < 0 or n - plate_n < 90):  # push on for 1.5 s past the plate: shoving against the stopper
 		await ticks(1)
 		n += 1
+		if plate_n < 0 and node("PlateA").active:
+			plate_n = n
+		var near := absf(crate.global_position.x - x()) < 32.0
+		if near and win_start < 0:
+			win_start = n
+		if win_start >= 0:
+			sw_frames += 1
+			pushing_anims[cat.sprite.animation] = true
+			if cat.sprite.animation != last_anim:
+				sw += 1
+			last_anim = cat.sprite.animation
 	stop()
 	await ticks(40)
+	var secs := maxf(sw_frames / 60.0, 0.01)
+	note("E pushing the crate: no animation thrash", sw <= 3 and sw / secs <= 2.0, "%d switches in %.1f s (%.1f/s), anims %s" % [sw, secs, sw / secs, str(pushing_anims.keys())])
+	var want_push := "push" if has_anim("push") else "walk"
+	note("E pushing plays '%s' (push when it exists, else walk)" % want_push, pushing_anims.has(want_push) and not pushing_anims.has("idle"), str(pushing_anims.keys()))
 	note("E crate pushed onto the plate, shutter opens", node("PlateA").active and shutter.open, "crate x=%.0f" % crate.global_position.x)
 	await ticks(30)
 	await hop(1.0, 26)
@@ -466,16 +551,53 @@ func _beat_pool() -> void:
 	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 2600, "after %.1f s" % (n / 60.0))
 	note("I the goo's gift: the mind is awakened, no power, no shockwave", gs().intelligence and not gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
 	note("I control returns", cat.can_move)
+	# Lines wait out the close-up (CineZoom magnifies every canvas layer), then start.
+	n = 0
+	while _lines.is_empty() and n < 300:
+		await ticks(1)
+		n += 1
+	var awake_ids := _lines.filter(func(l): return l[0] == "awakening")
+	note("I the awakening monologue starts with the mind (subtitles)", awake_ids.size() >= 1 and awake_ids[0][1] == "...Wait. Whaa- what?", "%d line(s) so far: %s" % [awake_ids.size(), str(awake_ids[0][1]) if awake_ids.size() else "-"])
+	await ticks(40)  # the fade-in is done
+	var mono_node := root.get_node("Monologue")
+	var plate: Control = mono_node._plate
+	var view := root.get_visible_rect().size
+	var on_screen: bool = plate.position.x >= 0.0 and plate.position.y >= 0.0 and plate.position.x + plate.size.x <= view.x and plate.position.y + plate.size.y <= view.y - 24.0
+	note("I the subtitle plate is on screen, lower-centre, above the HUD strip", on_screen and absf(plate.position.x + plate.size.x / 2.0 - view.x / 2.0) < 2.0 and mono_node._root.modulate.a > 0.9, "plate %s %s" % [str(plate.position), str(plate.size)])
+	note("I no container line before the mind awakened / before the cat gets there", not root.get_node("Monologue").has_played("nanofluid_container"))
 	mark("I pool+transform")
 
 
 func _beat_exit() -> void:
-	# Walk out. The double jump now bursts.
+	# Walk out.
 	await go_to(4690.0, 8.0)
 	await hop(1.0, 12)
 	note("J out of the pool and up onto the far sill", on_floor_at(288.0) and x() > 4730.0, "x=%.0f y=%.0f" % [x(), y()])
-	dir(1.0)
+	# The awakening monologue finishes (five lines) whether or not the cat moves.
+	var mono := root.get_node("Monologue")
 	var n := 0
+	while not _set_done.has("awakening") and n < 3000:
+		await ticks(1)
+		n += 1
+	var awake: Array = _lines.filter(func(l): return l[0] == "awakening").map(func(l): return l[1])
+	note("J awakening monologue: all five lines played, in order", awake == ["...Wait. Whaa- what?", "Everything is... louder. Sharper. Brighter.", "I've been awake before. Never like this.", "I can think. I mean really think.", "Where am I? What is this place?"], "%d lines" % awake.size())
+	note("J subtitle text is plain ASCII Monogram can draw", _lines.all(func(l): return l[1] == mono.clean(l[1]) and not " \u2014 ".is_subsequence_of(l[1])))
+	# The container: stepping up to it reads it (mind awake).
+	note("J the container is not read before the cat reaches it", not mono.has_played("nanofluid_container"), "x=%.0f" % x())
+	await go_to(4832.0, 6.0)
+	await ticks(6)
+	note("J the container trigger fires after the mind awakens", mono.has_played("nanofluid_container") and gs().intelligence, "x=%.0f y=%.0f" % [x(), y()])
+	n = 0
+	while not _set_done.has("nanofluid_container") and n < 3000:
+		await ticks(1)
+		n += 1
+	var cont: Array = _lines.filter(func(l): return l[0] == "nanofluid_container")
+	note("J container monologue: four lines", cont.size() == 4 and cont[0][1].begins_with("'Experimental Nanofluid'..."), "%d lines" % cont.size())
+	await go_to(4880.0, 6.0)
+	await ticks(6)
+	note("J the exit hint plays once the container was read", mono.has_played("exit_hint"))
+	dir(1.0)
+	n = 0
 	while current_scene == room and n < 600:
 		await ticks(1)
 		n += 1

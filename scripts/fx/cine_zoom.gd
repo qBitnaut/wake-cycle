@@ -27,6 +27,16 @@ extends Node
 ## The HUD and every CanvasLayer of the root viewport are magnified with
 ## the frame, so hide the HUD while zoomed.
 ##
+## Native builds: the OpenGL renderer presents every viewport attached to
+## the window with its own buffer swap (Godot 4.7, renderer_viewport.cpp:
+## blit, then gl_end_frame, per viewport), so with both the game frame and
+## the close-up attached the window shows them on alternate refreshes and
+## the eye blends them into a see-through double image. For as long as the
+## pass lasts the game frame is detached from the window (it keeps rendering:
+## its texture is the close-up's source) and the close-up is the only thing
+## presented. The browser composites the canvas once per animation frame, so
+## the web build never alternates and keeps the plain stacking.
+##
 ## HD effects: fx_item() hands out canvas items drawn at native resolution
 ## between the magnified frame and the letterbox (additive by default,
 ## optionally clipped), and game_to_window() / window_scale() map game
@@ -99,6 +109,7 @@ var _overlay_item := RID()
 var _overlay_mat: CanvasItemMaterial
 var _overlay_layers: Array[CanvasLayer] = []
 var _overlay_prev := {}     # layer -> the viewport it drew into before
+var _solo := false          # the game frame is detached from the window
 
 static var _current: CineZoom
 
@@ -210,6 +221,9 @@ func _process(delta: float) -> void:
 	_shake = maxf(_shake - _shake_decay * delta, 0.0)
 	if not _vp.is_valid():
 		return
+	if _solo:
+		# Every frame: the Window re-attaches itself on any resize.
+		_detach_game_frame()
 	var game := get_viewport()
 	var c := focus
 	if is_instance_valid(target):
@@ -329,9 +343,27 @@ func _create() -> void:
 	rs.canvas_item_set_draw_index(_bars, 1000)
 	_mat.set_shader_parameter("src", get_viewport().get_texture())
 	_layout()
+	_solo = not OS.has_feature("web")
+	if _solo:
+		# Kept rendering while detached (a root window renders only while
+		# visible), then the close-up is all the window presents.
+		rs.viewport_set_update_mode(get_tree().root.get_viewport_rid(), RenderingServer.VIEWPORT_UPDATE_ALWAYS)
+		_detach_game_frame()
 	_process(0.0)
 	_current = self
 	pass_started.emit()
+
+
+func _detach_game_frame() -> void:
+	RenderingServer.viewport_attach_to_screen(get_tree().root.get_viewport_rid(), Rect2(), DisplayServer.INVALID_WINDOW_ID)
+
+
+## The game frame back on the window where the Window itself puts it: any
+## content-scale setter makes it recompute and re-attach its screen rect.
+func _reattach_game_frame() -> void:
+	var root := get_tree().root
+	RenderingServer.viewport_set_update_mode(root.get_viewport_rid(), RenderingServer.VIEWPORT_UPDATE_WHEN_VISIBLE)
+	root.content_scale_factor = root.content_scale_factor
 
 
 func _layout() -> void:
@@ -340,14 +372,15 @@ func _layout() -> void:
 	var rs := RenderingServer
 	var win := Vector2(DisplayServer.window_get_size())
 	var src := get_viewport().get_visible_rect().size
-	# Where the game itself sits in the window (stretch mode viewport, keep).
+	# Where the game itself sits in the window (stretch mode viewport, keep),
+	# rounded as the Window rounds its margins, so zoom 1 matches to the pixel.
 	var k := minf(win.x / src.x, win.y / src.y)
 	if get_tree().root.content_scale_stretch == Window.CONTENT_SCALE_STRETCH_INTEGER:
 		k = maxf(floorf(k), 1.0)
 	_win = win
 	_src = src
 	_k_fit = k
-	_fit = Rect2(((win - src * k) * 0.5).floor(), src * k)
+	_fit = Rect2(((win - src * k) * 0.5).round(), src * k)
 	_k_fill = maxf(win.x / src.x, win.y / src.y)
 	_drawn = Rect2()
 	rs.viewport_set_size(_vp, int(win.x), int(win.y))
@@ -362,6 +395,9 @@ func _free() -> void:
 	_close_overlay()
 	var rs := RenderingServer
 	rs.viewport_attach_to_screen(_vp, Rect2(), DisplayServer.INVALID_WINDOW_ID)
+	if _solo:
+		_solo = false
+		_reattach_game_frame()
 	for it in _fx:
 		rs.free_rid(it)
 	_fx.clear()

@@ -31,8 +31,26 @@ extends Node
 ## between the magnified frame and the letterbox (additive by default,
 ## optionally clipped), and game_to_window() / window_scale() map game
 ## pixels onto them. NanoHD draws the transformation's glow there.
+##
+## Overlay (subtitles, captions): attach_overlay(layer) draws a CanvasLayer
+## unmagnified, above the close-up and the letterbox, for as long as the
+## pass lasts. Its controls keep their 640x360 layout and sit where they
+## sit in normal play, at the game's own integer scale (crisp pixel text).
+## The layer renders into a transparent SubViewport (its custom_viewport)
+## and is handed back to the game frame by itself when the pass ends.
+##
+##     var cz := CineZoom.current()        # the live pass, or null
+##     if cz:
+##         cz.attach_overlay(subtitle_layer)
+##
+## pass_started / pass_ended fire as the pass is created and freed, and
+## every CineZoom is in the "cine_zoom" group.
+
+signal pass_started
+signal pass_ended
 
 const SHADER := preload("res://shaders/cine_zoom.gdshader")
+const OVERLAY_INDEX := 2000  # above the letterbox (1000)
 
 ## Magnification (1 = off).
 @export_range(1.0, 6.0, 0.01) var zoom := 1.0:
@@ -76,15 +94,109 @@ var _c := Vector2(320, 180)
 var _shake := 0.0
 var _shake_decay := 3.0
 var _t := 0.0
+var _overlay: SubViewport
+var _overlay_item := RID()
+var _overlay_mat: CanvasItemMaterial
+var _overlay_layers: Array[CanvasLayer] = []
+var _overlay_prev := {}     # layer -> the viewport it drew into before
+
+static var _current: CineZoom
 
 
 func _ready() -> void:
+	add_to_group("cine_zoom")
 	_mat = ShaderMaterial.new()
 	_mat.shader = SHADER
 	_add_mat = CanvasItemMaterial.new()
 	_add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_overlay_mat = CanvasItemMaterial.new()
+	_overlay_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA
 	get_tree().root.size_changed.connect(_layout)
 	process_priority = 1000  # after the camera and the target have moved
+
+
+## The CineZoom whose pass is live (zoom > 1 or bars > 0), or null.
+static func current() -> CineZoom:
+	if is_instance_valid(_current) and _current.has_fx():
+		return _current
+	return null
+
+
+## Draw `layer` unmagnified over the close-up and the letterbox until the
+## pass ends (then it goes back to the game frame by itself). Does nothing
+## without a live pass.
+func attach_overlay(layer: CanvasLayer) -> void:
+	if not _vp.is_valid() or layer == null or _overlay_layers.has(layer):
+		return
+	if _overlay == null:
+		_open_overlay()
+	_overlay_prev[layer] = layer.custom_viewport
+	layer.custom_viewport = _overlay
+	_overlay_layers.append(layer)
+
+
+## Hand `layer` back to the game frame before the pass ends.
+func detach_overlay(layer: CanvasLayer) -> void:
+	if not _overlay_layers.has(layer):
+		return
+	_overlay_layers.erase(layer)
+	_restore(layer)
+
+
+## Back to the viewport it drew into before (Godot 4.7 refuses a null
+## custom_viewport, so the game frame is named explicitly).
+func _restore(layer: CanvasLayer) -> void:
+	var prev: Variant = _overlay_prev.get(layer)
+	_overlay_prev.erase(layer)
+	if not is_instance_valid(layer):
+		return
+	if prev == null or not is_instance_valid(prev):
+		prev = get_tree().root
+	layer.custom_viewport = prev
+
+
+func is_overlaid(layer: CanvasLayer) -> bool:
+	return _overlay_layers.has(layer)
+
+
+func _open_overlay() -> void:
+	_overlay = SubViewport.new()
+	_overlay.name = "Overlay"
+	_overlay.size = Vector2i(_src)
+	_overlay.transparent_bg = true
+	_overlay.disable_3d = true
+	_overlay.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_overlay.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+	add_child(_overlay)
+	var rs := RenderingServer
+	_overlay_item = rs.canvas_item_create()
+	rs.canvas_item_set_parent(_overlay_item, _canvas)
+	rs.canvas_item_set_draw_index(_overlay_item, OVERLAY_INDEX)
+	rs.canvas_item_set_material(_overlay_item, _overlay_mat.get_rid())
+	rs.canvas_item_set_default_texture_filter(_overlay_item, RenderingServer.CANVAS_ITEM_TEXTURE_FILTER_NEAREST)
+	_draw_overlay()
+
+
+## The overlay sits exactly where the game frame sits in normal play.
+func _draw_overlay() -> void:
+	if not _overlay_item.is_valid():
+		return
+	_overlay.size = Vector2i(_src)
+	RenderingServer.canvas_item_clear(_overlay_item)
+	RenderingServer.canvas_item_add_texture_rect(_overlay_item, _fit, _overlay.get_texture().get_rid())
+
+
+func _close_overlay() -> void:
+	for l in _overlay_layers:
+		_restore(l)
+	_overlay_layers.clear()
+	_overlay_prev.clear()
+	if _overlay_item.is_valid():
+		RenderingServer.free_rid(_overlay_item)
+		_overlay_item = RID()
+	if _overlay:
+		_overlay.queue_free()
+		_overlay = null
 
 
 ## Shake the magnified view (0..1); dies away over about `duration` s.
@@ -218,6 +330,8 @@ func _create() -> void:
 	_mat.set_shader_parameter("src", get_viewport().get_texture())
 	_layout()
 	_process(0.0)
+	_current = self
+	pass_started.emit()
 
 
 func _layout() -> void:
@@ -240,10 +354,12 @@ func _layout() -> void:
 	rs.canvas_item_clear(_back)
 	rs.canvas_item_add_rect(_back, Rect2(Vector2.ZERO, win), Color.BLACK)
 	_place()
+	_draw_overlay()
 	rs.viewport_attach_to_screen(_vp, Rect2(Vector2.ZERO, win), DisplayServer.MAIN_WINDOW_ID)
 
 
 func _free() -> void:
+	_close_overlay()
 	var rs := RenderingServer
 	rs.viewport_attach_to_screen(_vp, Rect2(), DisplayServer.INVALID_WINDOW_ID)
 	for it in _fx:
@@ -259,6 +375,9 @@ func _free() -> void:
 	_vp = RID()
 	_canvas = RID()
 	_item = RID()
+	if _current == self:
+		_current = null
+	pass_ended.emit()
 
 
 func _exit_tree() -> void:

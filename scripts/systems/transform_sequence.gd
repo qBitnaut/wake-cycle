@@ -80,8 +80,13 @@ const T_RELEASE := 0.9
 @export var hum_stream: AudioStream = preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg")
 @export var hum_pitch := 0.45
 @export_range(-60.0, 0.0, 0.5) var hum_volume_db := -11.0
-## How far the feet sink into the goo while it holds the cat, px.
+## The feet sink until they are this deep in the goo (never below the
+## pool's bottom), px. A cat already wading deeper does not sink at all.
+@export var sink_to_px := 8.0
+## Most the sprite may sink, px.
 @export var sink_px := 4.0
+## The cat's height above its feet, px (centres the close-up on what shows).
+const CAT_HEIGHT := 30.0
 
 var cat: Cat
 var phase: StringName = &""
@@ -144,7 +149,7 @@ func start() -> void:
 	_struggle = 1.0
 	if pool:
 		pool.grip(cat.global_position.x, 1.0, cat.z_index)
-	create_tween().tween_property(self, "_sink", sink_px, T_STUCK + T_RISE) \
+	create_tween().tween_property(self, "_sink", _sink_amount(), T_STUCK + T_RISE) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await _wait(T_STUCK * 0.5)
 	_sprite.flip_h = not _sprite.flip_h  # tries the other way
@@ -293,9 +298,31 @@ func _setup() -> void:
 	_cine.name = "CineZoom"
 	add_child(_cine)
 	_cine.target = cat
-	_cine.target_offset = focus_offset
+	_cine.target_offset = _visible_focus()
 	_take_camera()
 	_fade_hud(true)
+
+
+## How far to sink: down to sink_to_px under the surface, not past the
+## pool's bottom, at most sink_px.
+func _sink_amount() -> float:
+	if pool == null:
+		return sink_px
+	var feet := cat.global_position.y
+	var surface := pool.global_position.y
+	var room := surface + pool.depth - 1.0 - feet
+	return clampf(minf(sink_to_px - (feet - surface), room), 0.0, sink_px)
+
+
+## focus_offset, moved up to the middle of what shows above the goo when
+## the cat stands deep in it.
+func _visible_focus() -> Vector2:
+	if pool == null:
+		return focus_offset
+	var feet := cat.global_position.y
+	var shown := minf(feet, pool.global_position.y + 2.0)
+	var mid := (feet - CAT_HEIGHT + shown) * 0.5 - feet
+	return Vector2(focus_offset.x, minf(focus_offset.y, mid))
 
 
 func _find_pool() -> GooPool:
@@ -346,7 +373,7 @@ func _take_camera() -> void:
 	# that is nothing at all, and the room never slides.
 	var vp := get_viewport().get_visible_rect().size
 	var half := vp * 0.5 / zoom_max
-	var at := cat.get_global_transform_with_canvas() * focus_offset
+	var at := cat.get_global_transform_with_canvas() * _cine.target_offset
 	var shift := (at - at.clamp(half, vp - half)) / _cam.zoom
 	if zoom_mode == ZoomMode.CAMERA:
 		shift = (at - vp * 0.5) / _cam.zoom  # camera zoom scales about the view centre

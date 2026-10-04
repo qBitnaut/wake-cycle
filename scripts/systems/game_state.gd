@@ -6,6 +6,8 @@ signal health_changed(hp: int)
 signal score_changed(score: int)
 signal keys_changed
 signal letters_changed
+## The goo's gift (Room 1): the cat's mind wakes. Hook for the inner monologue.
+signal mind_awakened
 signal power_changed(power: int, duration: float)
 signal shockwave_unlock_changed(unlocked: bool)
 ## Room 1: the cat has stepped into the nanotech pool and the transformation begins.
@@ -24,7 +26,13 @@ const KEY_COLORS := {
 var health := MAX_HEALTH
 var score := 0
 var keys: Array[String] = []
-var letters := 0  # next C-A-T letter expected (0..3)
+## Hidden C-A-T bonus letters, found in any order: bit 0 = C, 1 = A, 2 = T.
+var letter_mask := 0
+var letters: int:  # how many are found (0..3)
+	get:
+		return (letter_mask & 1) + ((letter_mask >> 1) & 1) + ((letter_mask >> 2) & 1)
+## True once the pool in Room 1 has awakened the cat's mind (saved).
+var intelligence := false
 var collected: Array[String] = []  # ids of one-off pickups and opened doors
 var shockwave_unlocked := false:
 	set(v):
@@ -47,7 +55,8 @@ func new_game() -> void:
 	health = MAX_HEALTH
 	score = 0
 	keys.clear()
-	letters = 0
+	letter_mask = 0
+	intelligence = false
 	collected.clear()
 	shockwave_unlocked = false
 	clear_power()
@@ -57,7 +66,15 @@ func new_game() -> void:
 	letters_changed.emit()
 
 
-## The goo's gift (Room 1): the double jump starts releasing a shockwave.
+## The cat's mind wakes (the goo's gift). Emits mind_awakened once.
+func awaken_mind() -> void:
+	if intelligence:
+		return
+	intelligence = true
+	mind_awakened.emit()
+
+
+## Unlocks the double jump's shockwave. Not used in Room 1: a later room grants it.
 func unlock_shockwave() -> void:
 	shockwave_unlocked = true
 
@@ -99,11 +116,12 @@ func use_key(color: String) -> bool:
 	return false
 
 
-## Returns true when the letter was the expected one.
+## Returns true when the letter was newly found (any order). All three: bonus.
 func collect_letter(index: int) -> bool:
-	if index != letters:
+	var bit := 1 << index
+	if letter_mask & bit:
 		return false
-	letters += 1
+	letter_mask |= bit
 	letters_changed.emit()
 	if letters == 3:
 		add_score(LETTER_BONUS)
@@ -124,7 +142,8 @@ func snapshot() -> Dictionary:
 		"health": health,
 		"score": score,
 		"keys": keys.duplicate(),
-		"letters": letters,
+		"letter_mask": letter_mask,
+		"mind": intelligence,
 		"collected": collected.duplicate(),
 		"shockwave": shockwave_unlocked,
 	}
@@ -136,7 +155,8 @@ func restore(data: Dictionary) -> void:
 	keys.clear()
 	for k in data.get("keys", []):
 		keys.append(String(k))
-	letters = int(data.get("letters", 0))
+	letter_mask = int(data.get("letter_mask", 0))
+	intelligence = bool(data.get("mind", false))
 	collected.clear()
 	for c in data.get("collected", []):
 		collected.append(String(c))

@@ -2,16 +2,16 @@ class_name Room1
 extends Level
 ## Warehouse Room 1, the opening level. Plain movement only (run, jump, double
 ## jump, crouch, stomping bots): no pads, no shockwave, no dash, no ground
-## pound. The only power in the room is the goo gift at the end.
+## pound. The goo's gift at the end is intelligence, not a power.
 ##
 ## Beats: INTRO (asleep in the nook, fade from black, the title, the stretch)
 ## -> PLAY (the platforming challenge) -> STRUGGLE (the cat steps into the
 ## dark pool and cannot get out) -> TRANSFORM (TransformSequence.play) -> FREE
-## (shockwave unlocked, the pool inert, walk out through the loading door).
+## (the mind awakened, the pool inert, walk out through the loading door).
 ##
 ## Hooks for the transformation effect: `nanotech_absorbed_started` (also on
 ## GameState), TransformSequence.play(cat) and its `finished`, then
-## GameState.unlock_shockwave().
+## GameState.awaken_mind() (intelligence; no power).
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
 ## every physics frame; window.wakeTeleport(x, y) moves the cat.
@@ -62,7 +62,7 @@ func _ready() -> void:
 		if p != NanoPalette.Power.NONE and beat != Beat.FREE:
 			power_violations += 1)
 	GameState.shockwave_unlock_changed.connect(func(on: bool):
-		if on and beat != Beat.FREE and beat != Beat.TRANSFORM:
+		if on:
 			power_violations += 1)
 	# Audit tools pass `-- --skip-intro` to start awake.
 	if OS.get_cmdline_user_args().has("--skip-intro"):
@@ -191,7 +191,7 @@ func _begin_transform() -> void:
 
 
 func _end_transform() -> void:
-	GameState.unlock_shockwave()  # the goo's gift
+	GameState.awaken_mind()  # the goo's gift: intelligence (no powers; those come later, via pads)
 	beat = Beat.FREE
 	cat.sprite.position = _sprite_home
 	cat.set_forced_anim("")
@@ -246,7 +246,7 @@ func _publish() -> void:
 		"vx": cat.velocity.x, "vy": cat.velocity.y, "floor": cat.is_on_floor(),
 		"hp": GameState.health, "score": GameState.score, "keys": GameState.keys,
 		"letters": GameState.letters, "power": GameState.power,
-		"shock": GameState.shockwave_unlocked, "dead": cat.dead,
+		"shock": GameState.shockwave_unlocked, "mind": GameState.intelligence, "dead": cat.dead,
 		"crouch": cat.crouched, "save": SaveSystem.has_save(),
 		"cp": SaveSystem.session_checkpoint, "scene": get_tree().current_scene.scene_file_path,
 		"can_move": cat.can_move, "beat": int(beat), "violations": power_violations,

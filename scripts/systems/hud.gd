@@ -70,6 +70,8 @@ func _draw() -> void:
 		draw_rect(Rect2(kx, top + 7, 14, 10), Color.BLACK)
 		draw_rect(Rect2(kx + 1, top + 8, 12, 8), col if held else Color(col, 0.18))
 		kx += 18.0
-	# C-A-T letters.
-	for i in 3:
-		_text(Vector2(w - 60 + i * 16, base), "CAT"[i], LETTER_ON if i < GameState.letters else Color(1, 1, 1, 0.25))
+	# Hidden C-A-T bonus letters: small and dim, and only shown once one is found.
+	if GameState.letter_mask != 0:
+		for i in 3:
+			var found := (GameState.letter_mask >> i) & 1 == 1
+			_text(Vector2(w - 56 + i * 14, base), "CAT"[i], Color(LETTER_ON, 0.9) if found else Color(1, 1, 1, 0.14))

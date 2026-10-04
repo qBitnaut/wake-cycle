@@ -104,7 +104,7 @@ run, jump, double jump, crouch, stomping bots. A fresh game starts with nothing
 unlocked. The unavoidable dark pool at the end calls `TransformSequence.play(cat)`
 (`scripts/systems/transform_sequence.gd`, currently a timed placeholder) after
 emitting `nanotech_absorbed_started` (on the level and on `GameState`); when it
-finishes the level calls `GameState.unlock_shockwave()`. The exit fades to black
+finishes the level calls `GameState.awaken_mind()` (the goo grants intelligence, saved as `intelligence`, signal `mind_awakened`; no power is granted, powers arrive later via pads). `Monologue.say(text, duration)` is the hook for the cat's inner monologue. The exit fades to black
 and loads the next room, which auto-saves on arrival (`RoomExit`,
 `RoomTransition`). Pass `-- --skip-intro` to Godot to start Room 1 awake.
 

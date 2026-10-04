@@ -11,14 +11,15 @@
 ##
 ## Beats, left to right (column numbers; 32 px tiles, floor surface at row 10):
 ##   A   0-13   the nook: asleep under a sliver of moonlight, wake-up, continue pad
+##              (bonus letter A hides in the cardboard box)
 ##   B  14-40   crate stairs (1,2,3 high) up to a catwalk under two moon shafts,
-##              a 3-tile gap, letter C on a perch, stairs down; checkpoint at 42
+##              a 3-tile gap, stairs down (secret letter C in the pocket under the gap); checkpoint at 42
 ##   C  42-56   puddle hall: rain window, puddles to wade through, a patrol bot
 ##   D  57-69   crawl-under (low beam), wet, one drip
 ##   E  71-90   timed laser fence, then push the crate onto the plate: shutter
-##   F  91-110  steps up to the key deck (letter A above it), brass door, checkpoint
+##   F  91-110  steps up to the key deck, brass door, checkpoint
 ##   G 111-123  three cycling steam vents under low ceilings
-##   H 124-137  flooded lab hall: windows, puddles, drips, tanks (letter T on a perch)
+##   H 124-137  flooded lab hall: windows, puddles, drips, tanks (bonus letter T on a high perch)
 ##   I 136-149  the pool: a trough between two one-tile sills under a low ceiling,
 ##              10 tiles (cols 138-147) of dark water
 ##   J 148-153  the loading door, rain outside; the exit trigger at col 152
@@ -393,13 +394,12 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	for y in range(2, G):
 		_cell(0, y, TEAL, PIPE_V[y % 2])
 
-	# B: crate stairs (1, 2, 3 high), a catwalk, the perch for letter C, stairs down.
+	# B: crate stairs (1, 2, 3 high), a catwalk, stairs down.
 	_crates(14, 15, 1)
 	_crates(17, 18, 2)
 	_crates(20, 21, 3)
 	_girder(22, 27, G - 3)
 	_girder(31, 35, G - 3)
-	_girder(25, 26, G - 6, G - 3)   # perch (letter C): reached with the double jump
 	_crates(36, 37, 2)
 	_crates(39, 40, 1)
 	# C: nothing solid: an open hall.
@@ -408,11 +408,10 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	# E: ceilings over the timed fence and the shutter so neither can be jumped.
 	_block(74, 76, 2, G - 4)
 	_block(87, 89, 2, G - 4)
-	# F: steps to the key deck, the deck, the perch for letter A, the door ceiling.
+	# F: steps to the key deck, the deck, the door ceiling.
 	_crates(93, 93, 1)
 	_crates(94, 94, 2)
 	_girder(95, 99, G - 3)
-	_girder(96, 97, G - 6, G - 3)
 	_block(103, 105, 2, G - 3)
 	# G: ceilings over each vent (3 tiles of headroom = the steam column).
 	for v in VENTS:
@@ -421,10 +420,11 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	_crates(128, 129, 2)
 	_girder(130, 131, G - 5)
 	# I: the pool trough: a raised sill (one tile) at each end, so the pool floor
-	# reads as sunken between walls, and a low ceiling over it (3 tiles of headroom).
+	# reads as sunken between walls, and a solid ceiling mass over it (3 tiles of headroom).
 	_block(POOL[0] - 2, POOL[0] - 1, G - 1, G - 1, STEEL)
 	_block(POOL[1] + 1, POOL[1] + 2, G - 1, G - 1, STEEL)
-	_block(POOL[0] - 1, POOL[1] + 1, 5, G - 4)
+	# Solid mass from the roof down to the clearance: nothing above reads as a route.
+	_block(POOL[0] - 1, POOL[1] + 1, 2, G - 4)
 	# J: the loading door header (rows 2-4), the opening below it.
 	_block(148, 154, 2, 4)
 	# Right end.
@@ -436,9 +436,10 @@ func _place_actors() -> void:
 	# --- A ---
 	_put("res://scenes/actors/continue_pad.tscn", "ContinuePad", 9, G)
 	_put("res://scenes/actors/gem.tscn", "GemA", 7, G - 1)
+	_put("res://scenes/actors/letter.tscn", "LetterA", 3, G, {"letter_index": 1})  # off-path: inside the cardboard box
 	# --- B ---
 	_put("res://scenes/actors/gem.tscn", "GemStep", 18, G - 3)
-	_put("res://scenes/actors/letter.tscn", "LetterC", 25, G - 6, {"letter_index": 0})
+	_put("res://scenes/actors/letter.tscn", "LetterC", 29, G, {"letter_index": 0})  # secret: under the catwalk gap
 	_put("res://scenes/actors/gem.tscn", "GemGap", 29, G - 5)
 	_put("res://scenes/actors/gem.tscn", "GemDeck", 33, G - 3)
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointA", 42, G, {"checkpoint_id": "cp_a"})
@@ -458,7 +459,6 @@ func _place_actors() -> void:
 		{"height_tiles": 3, "controller": NodePath("../PlateA")})
 	# --- F: key deck, the door, checkpoint ---
 	_put("res://scenes/actors/key.tscn", "KeyBrass", 97, G - 3, {"key_color": "brass"})
-	_put("res://scenes/actors/letter.tscn", "LetterA", 96, G - 6, {"letter_index": 1})
 	_put("res://scenes/actors/locked_door.tscn", "DoorBrass", 104, G, {"key_color": "brass"})
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointB", 108, G, {"checkpoint_id": "cp_b"})
 	# --- H ---

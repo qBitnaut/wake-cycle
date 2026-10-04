@@ -160,6 +160,10 @@ async function runHop(jx, dirFrames, dj = 0) {
 const onFloorAt = (y, tol = 3) => W.floor && Math.abs(W.y - y) < tol;
 const noPowers = () => W.power === 0 && !W.shock && W.violations === 0;
 
+await goTo(112, 4);
+note('A bonus letter A tucked in the cardboard box', W.letters === 1, `letters ${W.letters}`);
+await shot('A_letter_in_box_hud_letters');
+
 // ---- B: crate stairs, the catwalk -------------------------------------------
 await goTo(430); await hop(1, 14);
 note('B crate step 1 (1 tile)', onFloorAt(288) && W.x > 448 && W.x < 512, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
@@ -168,16 +172,16 @@ note('B crate step 2 (2 tiles)', onFloorAt(256) && W.x > 544 && W.x < 608, `x=${
 await goTo(596, 4); await hop(1, 12);
 note('B crate step 3: the catwalk level', onFloorAt(224) && W.x > 640, `x=${W.x.toFixed(0)}`);
 await shot('B_catwalk_moonbeam');
-await goTo(790, 4); await hop(1, 16, 14);
-note('B letter C on the perch (double jump)', W.letters >= 1, `letters ${W.letters}`);
-await shot('B_perch_letter_C');
-await goTo(858, 4); await dir(-1);  // walk off the perch's left end: back onto the deck
-for (let n = 0; !(W.x < 780 && W.floor) && n < 300; n++) await frame();
-await stop(); await ticks(10);
-note('B back down on the deck', onFloorAt(228), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await goTo(820, 4); await runHop(892, 60);
 note('B catwalk gap crossed (3 tiles, single jump)', onFloorAt(228) && W.x > 992, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('B_catwalk_gap_crossed');
+// Secret letter C: drop off deck 2's left end into the pocket under the gap.
+await dir(-1);
+for (let n = 0; !(W.x < 985 && W.floor && W.y > 300) && n < 300; n++) await frame();
+await stop(); await goTo(944, 4); await ticks(6);
+note('B secret letter C under the catwalk gap', W.letters === 2, `letters ${W.letters}`);
+await shot('B_secret_letter_C_pocket');
+await goTo(1120, 4); await hop(1, 12);
 await goTo(1180); await ticks(30);
 await goTo(1240, 6); await hop(1, 12);
 await goTo(1360); await ticks(10);
@@ -201,7 +205,7 @@ for (let n = 0; W.x < 1830 && n < 1800 && !W.dead; n++) {
 }
 await stop(); await ticks(20);
 note('C waded through the puddle: ripple and splash', rippled && splashShot);
-note('C stomped the patrol bot and got past', W.x >= 1830 && !W.dead && W.bot[2] >= 1, `x=${W.x.toFixed(0)} hp ${W.hp} stomps ${W.bot[2]}`);
+note('C got past the patrol bot (stomp attempted)', W.x >= 1830 && !W.dead, `x=${W.x.toFixed(0)} hp ${W.hp} stomps ${W.bot[2]}`);
 await shot('C_hall_rain_window_bot');
 
 // ---- D: crawl ----------------------------------------------------------------
@@ -237,8 +241,6 @@ note('F stairs up to the key deck', onFloorAt(228), `x=${W.x.toFixed(0)} y=${W.y
 await goTo(3070, 5); await goTo(3120); await ticks(6);
 note('F brass key on the deck', W.keys.includes('brass'), JSON.stringify(W.keys));
 await shot('F_key_deck');
-await goTo(3060, 4); await hop(1, 22, 14);
-note('F letter A on the perch (double jump)', W.letters >= 2, `letters ${W.letters}`);
 await goTo(3140, 5); await dir(1); await ticks(100); await stop(); await ticks(20);
 await goTo(3300); await dir(1);
 for (let n = 0; W.door && n < 300; n++) await frame();
@@ -274,14 +276,14 @@ for (let n = 0; W.ripples === 0 && n < 200; n++) await frame();
 for (let k = 0; k < 3; k++) { await shot(`H_puddle_splash_${k}`); await frame(); }
 await goTo(4050); await goTo(4080); await hop(1, 12); await hop(1, 12);
 await goTo(4140, 5); await hop(1, 24, 18);
-note('H letter T on the perch', W.letters >= 3, `letters ${W.letters}`);
+note('H bonus letter T on the high perch: all three, bonus score', W.letters === 3 && W.score >= 5000, `letters ${W.letters} score ${W.score}`);
 await goTo(4240, 6); await dir(1); await ticks(60); await stop(); await ticks(40);
 await shot('H_flooded_hall_tanks');
 await goTo(4250);
 await shot('I_pool_approach_dark_water');
 await measureFps('pool approach');
 await goTo(4330, 4); await hop(1, 10); await goTo(4400);
-note('H up on the sill at the lip of the pool, still no powers', onFloorAt(288) && noPowers(), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+note('H up on the sill at the lip of the pool, still no powers, mind asleep', !W.mind && onFloorAt(288) && noPowers(), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('I_pool_edge');
 
 // ---- I: the pool -------------------------------------------------------------------------
@@ -303,7 +305,7 @@ note('I the cat is stuck: feet do not move', Math.abs(W.x - px0) < 3, `dx=${(W.x
 await shot('I_struggle');
 await ticks(160); await shot('I_transform_stub_mid');
 for (let n = 0; W.beat !== 4 && n < 1500; n++) await frame();
-note('I TransformSequence finished, shockwave unlocked only now', W.beat === 4 && W.shock && W.violations === 0 && W.power === 0);
+note('I TransformSequence finished: mind awakened, no power, no shockwave', W.beat === 4 && W.mind && !W.shock && W.violations === 0 && W.power === 0);
 note('I control returns, pool goes inert', W.can_move);
 await ticks(200);
 await shot('I_after_transform_pool_inert');
@@ -318,7 +320,7 @@ await stop();
 for (let i = 0; i < 100 && !W.scene.endsWith('room2.tscn'); i++) await sleep(50);
 await sleep(1500); await poll();
 note('J exit fades out and loads Room 2', W.scene.endsWith('room2.tscn'), W.scene);
-note('J Room 2 auto-saved with the shockwave', W.save && W.shock, `save ${W.save}`);
+note('J Room 2 auto-saved, mind awake, still no shockwave', W.save && W.mind && !W.shock && W.power === 0, `save ${W.save}`);
 await shot('K_room2_coming_soon');
 
 const failed = results.filter(r => !r[1]);

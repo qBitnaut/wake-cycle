@@ -213,6 +213,8 @@ func _beat_intro() -> void:
 	await ticks(10)
 	var start_ok := absf(x() - 144.0) < 8.0 and cat.is_on_floor()
 	note("A starts in the nook on the floor", start_ok, "x=%.0f y=%.0f" % [x(), y()])
+	await go_to(112.0, 4.0)
+	note("A bonus letter A tucked in the cardboard box", gs().letters == 1 and gs().letter_mask == 2, "mask %d" % gs().letter_mask)
 	var cp: Node = node("ContinuePad")
 	note("A continue pad hidden without a save", not cp.visible)
 	mark("intro")
@@ -228,23 +230,22 @@ func _beat_b() -> void:
 	await go_to(596.0, 4.0)
 	await hop(1.0, 12)
 	note("B crate step 3: the catwalk level", on_floor_at(224.0) and x() > 640.0, "x=%.0f y=%.0f" % [x(), y()])
-	# Letter C on the perch (96 px above the deck: the double jump).
-	await go_to(790.0, 4.0)
-	await hop(1.0, 16, 14)
-	note("B letter C on the perch (double jump)", gs().letters >= 1, "letters %d %s" % [gs().letters, st()])
-	await go_to(858.0, 4.0)
-	dir(-1.0)  # walk off the perch's left end: back onto the deck
-	var wn := 0
-	while not (x() < 780.0 and cat.is_on_floor()) and wn < 300:
-		await ticks(1)
-		wn += 1
-	stop()
-	await ticks(10)
-	note("B back down on the deck", on_floor_at(228.0), "x=%.0f y=%.0f" % [x(), y()])
 	# Gap: 3 tiles (96 px) between the decks.
 	await go_to(820.0, 4.0)
 	await run_hop(892.0, 60)
 	note("B catwalk gap crossed (3 tiles, single jump)", on_floor_at(228.0) and x() > 992.0, "x=%.0f y=%.0f" % [x(), y()])
+	# Secret letter C: drop off deck 2's left end into the pocket under the gap.
+	dir(-1.0)
+	var dn := 0
+	while not (x() < 985.0 and cat.is_on_floor() and y() > 300.0) and dn < 300:
+		await ticks(1)
+		dn += 1
+	stop()
+	await go_to(944.0, 4.0)
+	await ticks(6)
+	note("B secret letter C under the catwalk gap", gs().letter_mask == 3, "mask %d" % gs().letter_mask)
+	await go_to(1120.0, 4.0)
+	await hop(1.0, 12)
 	await go_to(1180.0)
 	await ticks(30)
 	note("B descent stairs", cat.is_on_floor() and y() > 250.0, "x=%.0f y=%.0f" % [x(), y()])
@@ -355,10 +356,6 @@ func _beat_f() -> void:
 	await go_to(3120.0)
 	await ticks(6)
 	note("F brass key on the deck", gs().keys.has("brass"), str(gs().keys))
-	# Letter A above the deck: double jump.
-	await go_to(3060.0, 4.0)
-	await hop(1.0, 22, 14)
-	note("F letter A on the perch (double jump)", gs().letters >= 2, "letters %d x=%.0f y=%.0f" % [gs().letters, x(), y()])
 	await go_to(3140.0, 5.0)
 	dir(1.0)
 	await ticks(100)
@@ -415,7 +412,7 @@ func _beat_h() -> void:
 	note("H crates up to the T perch", cat.is_on_floor() and y() < 280.0, "x=%.0f y=%.0f" % [x(), y()])
 	await go_to(4140.0, 5.0)
 	await hop(1.0, 24, 18)
-	note("H letter T on the perch", gs().letters >= 3, "letters %d x=%.0f y=%.0f" % [gs().letters, x(), y()])
+	note("H bonus letter T on the high perch: all three, bonus score", gs().letters == 3 and gs().score >= 5000, "letters %d score %d" % [gs().letters, gs().score])
 	await go_to(4240.0, 6.0)
 	dir(1.0)
 	await ticks(60)
@@ -425,7 +422,7 @@ func _beat_h() -> void:
 	await go_to(4330.0, 4.0)
 	await hop(1.0, 10)
 	await go_to(4400.0)
-	note("H up on the sill at the lip of the pool, still no powers", on_floor_at(288.0) and no_powers(), "x=%.0f y=%.0f" % [x(), y()])
+	note("H up on the sill at the lip of the pool, still no powers, mind asleep", on_floor_at(288.0) and no_powers() and not gs().intelligence, "x=%.0f y=%.0f" % [x(), y()])
 	mark("H flooded hall")
 
 
@@ -467,7 +464,7 @@ func _beat_pool() -> void:
 			seq = room.get_node_or_null("TransformSequence")
 		n += 1
 	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 1500, "after %.1f s" % (n / 60.0 + 1.0))
-	note("I the goo's gift: shockwave unlocked only now", gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
+	note("I the goo's gift: the mind is awakened, no power, no shockwave", gs().intelligence and not gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
 	note("I control returns", cat.can_move)
 	mark("I pool+transform")
 
@@ -487,7 +484,7 @@ func _beat_exit() -> void:
 	var r2 := current_scene
 	note("J exit fades out and loads Room 2", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))
 	var save: Dictionary = ss().read_save()
-	note("J auto-saved at the start of Room 2", save.get("scene", "") == "res://scenes/levels/room2.tscn" and save.get("abilities", {}).get("shockwave", false), str(save.get("scene", "")))
+	note("J auto-saved at the start of Room 2", save.get("scene", "") == "res://scenes/levels/room2.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))
 	note("J Room 2 stub shows the coming-soon text", r2 != null and r2.get_node_or_null("ComingSoon") != null)
 	mark("J exit")
 

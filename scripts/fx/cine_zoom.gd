@@ -10,6 +10,12 @@ extends Node
 ## zoom is never touched. Letterbox bars, a soft vignette and a focus shake
 ## are drawn at native res too.
 ##
+## The close-up is opaque and full screen: it is drawn over a black
+## backdrop with blending off, so nothing of the normal frame shows
+## through, and as the zoom passes 1..fill_zoom the view grows from the
+## game's own letterboxed rect (identical to the normal frame at zoom 1)
+## to cover the whole window, whatever its aspect.
+##
 ##     var cz := CineZoom.new()
 ##     add_child(cz)
 ##     cz.target = cat
@@ -42,6 +48,8 @@ const SHADER := preload("res://shaders/cine_zoom.gdshader")
 	set(v):
 		vignette = v
 		_update()
+## The zoom at which the close-up has grown to fill the whole window.
+@export_range(1.0, 3.0, 0.01) var fill_zoom := 1.5
 ## The world node to keep in view, and an offset from it (world px). With
 ## no target the view centre is `focus` in game px.
 var target: Node2D
@@ -55,7 +63,14 @@ var _item := RID()
 var _bars := RID()
 var _fx: Array[RID] = []
 var _add_mat: CanvasItemMaterial
-var _rect := Rect2()
+var _back := RID()
+var _rect := Rect2()        # the close-up's window rect this frame
+var _drawn := Rect2()       # the rect last given to the canvas item
+var _win := Vector2(1280, 720)
+var _fit := Rect2()         # the game's own rect in the window (zoom 1)
+var _k_fit := 2.0           # window px per game px in _fit
+var _k_fill := 2.0          # window px per game px covering the window
+var _k := 2.0               # window px per game px at zoom 1, this frame
 var _src := Vector2(640, 360)
 var _c := Vector2(320, 180)
 var _shake := 0.0
@@ -91,11 +106,28 @@ func _process(delta: float) -> void:
 		var k := _shake * _shake * 6.0
 		c += Vector2(sin(_t * 31.0) * 0.6 + sin(_t * 71.0) * 0.4, sin(_t * 37.0) * 0.6 + sin(_t * 63.0) * 0.4) * k
 	_src = game.get_visible_rect().size
-	var half := _src * 0.5 / zoom
+	_place()
+	var half := (_rect.size * 0.5 / (_k * zoom)).min(_src * 0.5)
 	_c = c.clamp(half, _src - half)
 	_mat.set_shader_parameter("focus", _c)
 	_mat.set_shader_parameter("src_size", _src)
 	_draw_bars()
+
+
+## The close-up's rect and scale for this zoom: the game's own rect at
+## zoom 1, easing out to cover the window by fill_zoom.
+func _place() -> void:
+	var t := smoothstep(1.0, maxf(fill_zoom, 1.001), zoom)
+	_k = lerpf(_k_fit, _k_fill, t)
+	var pos := _fit.position.lerp(Vector2.ZERO, t).floor()
+	var size := (_fit.size.lerp(_win, t)).ceil()
+	_rect = Rect2(pos, size)
+	_mat.set_shader_parameter("out_size", _rect.size)
+	_mat.set_shader_parameter("scale", _k * zoom)
+	if _rect != _drawn and _item.is_valid():
+		_drawn = _rect
+		RenderingServer.canvas_item_clear(_item)
+		RenderingServer.canvas_item_add_rect(_item, _rect, Color.WHITE)
 
 
 ## True while the native-resolution pass exists (zoom > 1 or bars > 0).
@@ -126,13 +158,12 @@ func clip_fx(it: RID, rect: Rect2) -> void:
 
 ## A game-pixel position (the 640x360 frame) to window pixels.
 func game_to_window(p: Vector2) -> Vector2:
-	var k := _rect.size / _src
-	return _rect.position + _rect.size * 0.5 + (p - _c) * zoom * k
+	return _rect.position + _rect.size * 0.5 + (p - _c) * (_k * zoom)
 
 
 ## Window pixels per game pixel at the current zoom.
 func window_scale() -> float:
-	return zoom * _rect.size.y / _src.y
+	return _k * zoom
 
 
 func window_rect() -> Rect2:
@@ -159,8 +190,9 @@ func _update() -> void:
 	elif not want and _vp.is_valid():
 		_free()
 	if _mat:
-		_mat.set_shader_parameter("zoom", zoom)
 		_mat.set_shader_parameter("vignette", vignette)
+	if _vp.is_valid():
+		_place()
 
 
 func _create() -> void:
@@ -171,8 +203,14 @@ func _create() -> void:
 	rs.viewport_set_clear_mode(_vp, RenderingServer.VIEWPORT_CLEAR_ALWAYS)
 	_canvas = rs.canvas_create()
 	rs.viewport_attach_canvas(_vp, _canvas)
+	# An opaque black backdrop under everything: whatever the close-up does
+	# not cover is black, never the clear colour or the frame below.
+	_back = rs.canvas_item_create()
+	rs.canvas_item_set_parent(_back, _canvas)
+	rs.canvas_item_set_draw_index(_back, 0)
 	_item = rs.canvas_item_create()
 	rs.canvas_item_set_parent(_item, _canvas)
+	rs.canvas_item_set_draw_index(_item, 1)
 	rs.canvas_item_set_material(_item, _mat.get_rid())
 	_bars = rs.canvas_item_create()
 	rs.canvas_item_set_parent(_bars, _canvas)
@@ -188,14 +226,20 @@ func _layout() -> void:
 	var rs := RenderingServer
 	var win := Vector2(DisplayServer.window_get_size())
 	var src := get_viewport().get_visible_rect().size
-	var k := maxf(floorf(minf(win.x / src.x, win.y / src.y)), 1.0)
-	var rect := Rect2(((win - src * k) * 0.5).floor(), src * k)
-	_rect = rect
+	# Where the game itself sits in the window (stretch mode viewport, keep).
+	var k := minf(win.x / src.x, win.y / src.y)
+	if get_tree().root.content_scale_stretch == Window.CONTENT_SCALE_STRETCH_INTEGER:
+		k = maxf(floorf(k), 1.0)
+	_win = win
 	_src = src
-	_mat.set_shader_parameter("out_size", rect.size)
+	_k_fit = k
+	_fit = Rect2(((win - src * k) * 0.5).floor(), src * k)
+	_k_fill = maxf(win.x / src.x, win.y / src.y)
+	_drawn = Rect2()
 	rs.viewport_set_size(_vp, int(win.x), int(win.y))
-	rs.canvas_item_clear(_item)
-	rs.canvas_item_add_rect(_item, rect, Color.WHITE)
+	rs.canvas_item_clear(_back)
+	rs.canvas_item_add_rect(_back, Rect2(Vector2.ZERO, win), Color.BLACK)
+	_place()
 	rs.viewport_attach_to_screen(_vp, Rect2(Vector2.ZERO, win), DisplayServer.MAIN_WINDOW_ID)
 
 
@@ -207,6 +251,8 @@ func _free() -> void:
 	_fx.clear()
 	rs.free_rid(_bars)
 	_bars = RID()
+	rs.free_rid(_back)
+	_back = RID()
 	rs.free_rid(_item)
 	rs.free_rid(_canvas)
 	rs.free_rid(_vp)

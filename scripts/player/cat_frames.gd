@@ -22,8 +22,9 @@ const ANIMS := {
 	"sit": ["sitting", 1.0, true, []],
 	"sleep1": ["sleeping1", 1.0, true, []],
 	"sleep2": ["sleeping2", 1.0, true, []],
+	# Seated, licking a raised front paw. The leg-up groom (licking_2) read
+	# as the cat licking its crotch and is left out.
 	"lick1": ["licking_1", 6.0, false, []],
-	"lick2": ["licking_2", 6.0, false, []],
 	"itch": ["itch", 6.0, true, []],
 	"meow": ["meow", 8.0, false, []],
 	"stretch": ["stretching", 10.0, false, []],

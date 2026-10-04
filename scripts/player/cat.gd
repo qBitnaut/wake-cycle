@@ -448,11 +448,14 @@ func _idle_loop() -> void:
 		_slept = true
 		_play("sleep1" if int(_idle_t / 1.2) % 2 == 0 else "sleep2")
 	elif _idle_t >= LICK_AFTER:
-		# Easter eggs once per 4 s cycle while sitting.
-		var cycle := int((_idle_t - LICK_AFTER) / 4.0)
-		var phase := fmod(_idle_t - LICK_AFTER, 4.0)
+		# Easter eggs while sitting, each once before the cat dozes off: a
+		# paw-lick, a scratch, a meow.
+		var eggs := ["lick1", "itch", "meow"]
+		var period := (SLEEP_AFTER - LICK_AFTER) / eggs.size()
+		var cycle := int((_idle_t - LICK_AFTER) / period)
+		var phase := fmod(_idle_t - LICK_AFTER, period)
 		if phase < 1.2:
-			_play(["lick1", "lick2", "itch", "meow"][cycle % 4])
+			_play(eggs[cycle % eggs.size()])
 		else:
 			_play("sit")
 	elif _idle_t >= SIT_AFTER:

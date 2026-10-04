@@ -8,7 +8,8 @@ extends Node2D
 ## Keys: R restart, C toggle the zoom mode (magnifier / Camera2D).
 ## URL (web): ?zoom=camera  ?show=pads  ?show=anims  ?zoom_level=3  ?noloop=1
 ## Web builds publish window.__goo = {phase, pt, loops} every frame
-## (phase: walk, a..g, pads, moves, anims) for tools/Playwright captures.
+## (phase: walk, a..f, m (the awakened mind), g, pads, moves, anims) for
+## Playwright captures.
 
 const T := 32
 const G := 10                 ## floor row (y = 320)
@@ -92,7 +93,8 @@ func _run() -> void:
 		seq.zoom_mode = _zoom_mode
 		add_child(seq)
 		seq.phase_started.connect(_on_phase)
-		seq.augments_revealed.connect(_set_phase.bind("g"))
+		seq.augments_revealed.connect(_set_phase.bind("m"))
+		seq.mind_awakened.connect(_set_phase.bind("g"))
 		_mark_later("b", TransformSequence.T_STUCK)
 		seq.start()
 		await seq.finished
@@ -289,9 +291,6 @@ func _build_room() -> void:
 	pool.width = (PIT[1] - PIT[0] + 1) * T
 	pool.depth = 2 * T - 2  # covers the pit floor: it reads as deep
 	pool.z_index = 6  # over the cat's feet: it wades in the goo
-	pool.art_scale = 1  # one-pixel traces, like the veins on the cat
-	pool.light_energy = 1.0
-	pool.trace_energy = 1.1
 	add_child(pool)
 	var puddle := Puddle.new()
 	puddle.position = Vector2(150, G * T)

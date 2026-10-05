@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/world_map.gd" id="1_map"]
+[ext_resource type="PackedScene" path="res://scenes/fx/lighting_rig.tscn" id="2_rig"]
+
+[node name="WorldMap" type="Node2D" node_paths=PackedStringArray("camera")]
+script = ExtResource("1_map")
+camera = NodePath("Camera")
+
+[node name="LightingRig" parent="." instance=ExtResource("2_rig")]
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(320, 180)

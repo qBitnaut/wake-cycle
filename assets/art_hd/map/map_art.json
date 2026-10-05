@@ -1,0 +1,93 @@
+{
+  "strip_y": 284,
+  "landmarks": {
+    "warehouse": {
+      "origin": [
+        76,
+        156
+      ],
+      "size": [
+        252,
+        141
+      ],
+      "glow": true
+    },
+    "yard": {
+      "origin": [
+        418,
+        114
+      ],
+      "size": [
+        366,
+        183
+      ],
+      "glow": true
+    },
+    "stacks": {
+      "origin": [
+        858,
+        46
+      ],
+      "size": [
+        360,
+        251
+      ],
+      "glow": true
+    },
+    "water_tower": {
+      "origin": [
+        1106,
+        40
+      ],
+      "size": [
+        84,
+        98
+      ],
+      "glow": true
+    },
+    "perimeter": {
+      "origin": [
+        1280,
+        130
+      ],
+      "size": [
+        302,
+        167
+      ],
+      "glow": true
+    },
+    "signal_box": {
+      "origin": [
+        1576,
+        180
+      ],
+      "size": [
+        180,
+        117
+      ],
+      "glow": true
+    },
+    "home": {
+      "origin": [
+        1742,
+        146
+      ],
+      "size": [
+        262,
+        151
+      ],
+      "glow": true
+    },
+    "drain": {
+      "origin": [
+        758,
+        306
+      ],
+      "size": [
+        52,
+        32
+      ],
+      "glow": true
+    }
+  }
+}

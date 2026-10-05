@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "about": "World map registry (WorldMap, LevelRegistry). See docs/WORLD_MAP.md before editing.",
+  "start": "warehouse",
+  "final": "home",
+  "size": [2070, 360],
+  "levels": [
+    {
+      "id": "warehouse",
+      "name": "The Warehouse",
+      "scene": "res://scenes/levels/room1.tscn",
+      "root": "Room1",
+      "order": 1,
+      "pos": [200, 302],
+      "landmark": "warehouse",
+      "unlocks": ["yard"],
+      "collectibles": {"letters": ["C", "A", "T"], "gems": 8}
+    },
+    {
+      "id": "yard",
+      "name": "The Yard",
+      "scene": "res://scenes/levels/room2.tscn",
+      "root": "Room2",
+      "order": 2,
+      "pos": [600, 302],
+      "landmark": "yard",
+      "unlocks": ["stacks", "drain"],
+      "collectibles": {"letters": [], "gems": 30}
+    },
+    {
+      "id": "stacks",
+      "name": "The Stacks",
+      "scene": "res://scenes/levels/room3.tscn",
+      "root": "Room3",
+      "order": 3,
+      "pos": [1010, 188],
+      "landmark": "stacks",
+      "unlocks": ["perimeter", "water_tower"],
+      "collectibles": {"letters": [], "gems": 29}
+    },
+    {
+      "id": "perimeter",
+      "name": "The Perimeter",
+      "scene": "res://scenes/levels/room4.tscn",
+      "root": "Room4",
+      "order": 4,
+      "pos": [1430, 302],
+      "landmark": "perimeter",
+      "unlocks": ["home", "signal_box"],
+      "collectibles": {"letters": [], "gems": 28}
+    },
+    {
+      "id": "home",
+      "name": "Home",
+      "scene": "res://scenes/levels/home.tscn",
+      "root": "Home",
+      "order": 5,
+      "pos": [1870, 302],
+      "landmark": "home",
+      "unlocks": [],
+      "collectibles": {"letters": [], "gems": 0}
+    },
+    {
+      "id": "drain",
+      "name": "The Storm Drain",
+      "scene": "",
+      "order": 2.5,
+      "secret": true,
+      "requires": {"letters": 3},
+      "pos": [784, 336],
+      "landmark": "drain",
+      "unlocks": [],
+      "collectibles": {"letters": [], "gems": 0}
+    },
+    {
+      "id": "water_tower",
+      "name": "The Water Tower",
+      "scene": "",
+      "order": 3.5,
+      "bonus": true,
+      "pos": [1146, 136],
+      "landmark": "water_tower",
+      "unlocks": [],
+      "collectibles": {"letters": [], "gems": 0}
+    },
+    {
+      "id": "signal_box",
+      "name": "The Signal Box",
+      "scene": "",
+      "order": 4.5,
+      "bonus": true,
+      "pos": [1668, 250],
+      "landmark": "signal_box",
+      "unlocks": [],
+      "collectibles": {"letters": [], "gems": 0}
+    }
+  ],
+  "junctions": [
+    {"id": "fork_drain", "pos": [744, 302]},
+    {"id": "fork_tower", "pos": [1092, 188]},
+    {"id": "fork_signal", "pos": [1618, 302]}
+  ],
+  "paths": [
+    {"a": "warehouse", "b": "yard"},
+    {"a": "yard", "b": "fork_drain"},
+    {"a": "fork_drain", "b": "drain", "via": [[760, 336]]},
+    {"a": "fork_drain", "b": "stacks", "via": [[842, 302], [890, 254], [922, 254], [960, 216], [976, 188]]},
+    {"a": "stacks", "b": "fork_tower"},
+    {"a": "fork_tower", "b": "water_tower", "via": [[1108, 176], [1108, 136]]},
+    {"a": "fork_tower", "b": "perimeter", "via": [[1140, 188], [1180, 228], [1214, 228], [1252, 266], [1270, 302]]},
+    {"a": "perimeter", "b": "fork_signal"},
+    {"a": "fork_signal", "b": "signal_box", "via": [[1644, 276], [1652, 250]]},
+    {"a": "fork_signal", "b": "home"}
+  ]
+}

@@ -41,6 +41,11 @@ var shockwave_unlocked := false:
 var power := NanoPalette.Power.NONE
 var power_time := 0.0
 var power_duration := 0.0
+## World map progress (WorldMap, LevelRegistry): level ids finished, level ids
+## unlocked, and the node the cat stands on. Saved under "map".
+var map_completed: Array[String] = []
+var map_unlocked: Array[String] = []
+var map_node := ""
 
 
 func _process(delta: float) -> void:
@@ -59,6 +64,9 @@ func new_game() -> void:
 	intelligence = false
 	collected.clear()
 	shockwave_unlocked = false
+	map_completed.clear()
+	map_unlocked.clear()
+	map_node = ""
 	clear_power()
 	health_changed.emit(health)
 	score_changed.emit(score)
@@ -146,7 +154,24 @@ func snapshot() -> Dictionary:
 		"mind": intelligence,
 		"collected": collected.duplicate(),
 		"shockwave": shockwave_unlocked,
+		"map": map_snapshot(),
 	}
+
+
+## The world map's progress as saved: {"completed", "unlocked", "node"}.
+func map_snapshot() -> Dictionary:
+	return {"completed": map_completed.duplicate(), "unlocked": map_unlocked.duplicate(), "node": map_node}
+
+
+## Restores map progress from map_snapshot()'s shape (missing keys: empty).
+func restore_map(m: Dictionary) -> void:
+	map_completed.clear()
+	for c in m.get("completed", []):
+		map_completed.append(String(c))
+	map_unlocked.clear()
+	for u in m.get("unlocked", []):
+		map_unlocked.append(String(u))
+	map_node = String(m.get("node", ""))
 
 
 func restore(data: Dictionary) -> void:
@@ -161,6 +186,9 @@ func restore(data: Dictionary) -> void:
 	for c in data.get("collected", []):
 		collected.append(String(c))
 	shockwave_unlocked = bool(data.get("shockwave", false))
+	# Snapshots from before the world map have no "map": keep what is held.
+	if data.has("map"):
+		restore_map(data["map"])
 	clear_power()
 	health_changed.emit(health)
 	score_changed.emit(score)

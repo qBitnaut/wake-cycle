@@ -8,13 +8,34 @@ Itch.io page: _TBD_
 
 A lost house cat wakes up curled in a corner of a huge automated logistics hub
 at night. The machines are not evil, just indifferent: forklifts, sorting arms
-and drones go about their routes. Find your way out. Near the exit, the cat must
-cross pools of experimental nanotech fluid that slowly wrap it in glowing
-veins, then leave it augmented. Enhancement pads grant temporary powers (speed,
-high jump, dash, ground-pound), and the hub's robots take the cat for the new
-supervisor: some mirror its movements, so puzzles are solved by steering them
-onto floor plates. At the end the cat gets home, curls up in its spot, and
-sleeps. The game opens and closes with sleep.
+and drones go about their routes. Find your way out. At the end of the first
+level the cat falls into a pool of experimental nanotech goo, which wakes its
+mind and augments it: from there the cat thinks in words, and the hub's robots
+take it for the new supervisor. Some mirror its movements, so puzzles are solved
+by steering them onto floor plates. Enhancement pads grant temporary powers, and
+the cat gets home, curls up in a sunbeam, and sleeps. The game opens and closes
+with sleep.
+
+## The game
+
+A 2D platformer in the spirit of Apogee's Secret Agent, at 640x360 (integer-scaled
+to 1280x720 and up) with modern lighting. Five levels, joined by a world map:
+
+1. **The Warehouse.** No powers. Plain movement: run, jump, double jump, crouch,
+   stomp bots. The goo pool at the end is the transformation: it grants
+   intelligence and augments, and the cat's inner monologue begins.
+2. **The Yard.** The Surge pad (speed).
+3. **The Stacks.** The Spring pad (high jump), then the shockwave unlocked at a
+   power conduit, and a MirrorBot puzzle.
+4. **The Perimeter.** The Phase and Impact pads, and the Master Gate finale,
+   where the system accepts the cat as "supervisor". Night turns to dawn.
+5. **Home.** A sunny morning. The cat gets in, curls up in a sunbeam, and the
+   credits roll.
+
+Between levels, a **world map** (parallax, with the time of day moving from night
+to morning along the route) shows the way on. Finished levels can be revisited
+for hidden C-A-T letters and gems. Locked bonus and secret nodes mark levels
+that do not exist yet. Checkpoints and save/continue persist in the browser.
 
 ## How to play
 
@@ -23,17 +44,18 @@ Playable in the browser. Walk into things; that is the whole interface.
 | Action | Keyboard | Gamepad |
 |---|---|---|
 | Move | A / D or Left / Right | D-pad or left stick |
-| Up (doors, ladders) | W or Up | D-pad or stick up |
+| Up (doors, ladders, map nodes) | W or Up | D-pad or stick up |
 | Crouch (ground pound in mid-air) | S or Down | D-pad or stick down |
 | Jump | Space or Ctrl | A (south) |
 | Dash | Shift | X or B |
 
-Menus are rooms: walk onto the big START plate to begin. The camera follows the
-cat automatically.
+Menus are rooms: walk onto the big START plate to begin. On the world map, walk
+along the paths and press Up (or Jump) on a level to enter it. The camera
+follows the cat automatically.
 
-> Status: a 2D platformer in the HD art direction: 640x360 view (integer-scaled
-> to 1280x720 and up), 32 px tiles, night lighting. The 3D prototype lives on
-> branch `alt/3d` and tag `3d-prototype`.
+> Status: all five levels are built and playable end to end. The 3D prototype
+> that came first is kept locally under the tag `3d-prototype`; see
+> [AI_USE.md](AI_USE.md) for the design history.
 
 Enhancement pads (after the nanotech pools):
 
@@ -60,8 +82,10 @@ the power. These are not in the input map and are not part of the game.
 The jam restriction is movement input only. Every input in Wake Cycle is a
 movement: walking, jumping, dashing, crouching/sliding, and ground-pounding
 (crouching in mid-air). There are no attack, shoot or interact buttons, and no
-clickable UI: menus are walkable rooms, and pads, plates and pools trigger by
-stepping on them.
+clickable UI: menus are walkable rooms, the world map is navigated by walking,
+levels are entered with Up or Jump, and pads, plates and pools trigger by
+stepping on them. Attacks are movement too: a stomp, the double-jump shockwave,
+a dash and a ground pound. The camera takes no input.
 
 ## AI use
 
@@ -71,7 +95,7 @@ game makes no live LLM calls.
 
 ## Build from source
 
-Requirements: Godot 4.7.x (standard build, not .NET).
+Requirements: Godot 4.7.x (standard build, not .NET), Compatibility renderer.
 
 1. Clone the repo and open the project folder in Godot.
 2. The project uses the Compatibility renderer (set in project settings).
@@ -95,7 +119,7 @@ Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and
 `web_playthrough.mjs` does the same in the web export with Playwright.
 `room1_playthrough.gd` and `web_room1.mjs` play Room 1 start to finish with plain
-movement only (wake-up, platforming, the pool, the transformation stub, the exit,
+movement only (wake-up, platforming, the pool, the transformation, the exit,
 Room 2) and assert that no power was granted before the pool. `room1_tour.gd`
 renders Room 1 stop by stop for a look.
 
@@ -104,7 +128,7 @@ renders Room 1 stop by stop for a look.
 The game opens in Warehouse Room 1 (the main scene). It uses plain movement only:
 run, jump, double jump, crouch, stomping bots. A fresh game starts with nothing
 unlocked. The unavoidable dark pool at the end calls `TransformSequence.play(cat)`
-(`scripts/systems/transform_sequence.gd`, currently a timed placeholder) after
+(`scripts/systems/transform_sequence.gd`: the goo glow and the cinematic zoom) after
 emitting `nanotech_absorbed_started` (on the level and on `GameState`); when it
 finishes the level calls `GameState.awaken_mind()` (the goo grants intelligence, saved as `intelligence`, signal `mind_awakened`; no power is granted, powers arrive later via pads). `Monologue.say(text, duration)` is the hook for the cat's inner monologue. The exit fades to black
 and loads the next room, which auto-saves on arrival (`RoomExit`,

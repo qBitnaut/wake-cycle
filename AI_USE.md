@@ -22,36 +22,66 @@ a chat box bolted on.
 
 | Tool | What it did | Where in the project |
 |---|---|---|
-| Claude Code (Anthropic CLI agent), Claude Opus 5.5 | Concept brainstorming and evaluation; scope planning; fitting the design to the movement-only restriction; project scaffolding; documentation. Further use (implementation, debugging, tests, UI) will be logged below. | Whole project: design decisions, Godot project structure, `README.md`, `AI_USE.md` |
-| Art / 2D tool | No generative art. CC0 pixel packs, selected and licence-vetted by AI (`jadzia`). The HD look is made by small deterministic Pillow/numpy scripts written by AI (`davinci`, `data`): explicit palette swaps of the tile sheet and the ansimuz layers (no quantising, no model in the loop), and a Scale2x + gradient-map + outline pipeline for the cat. | `assets/art_hd/`, `assets/sprites/cat/`, `tools/art/`, `tools/recolor_cat.py`, `tools/build_tileset_hd.gd` |
-| Audio / SFX tool | TBD (not chosen yet) | TBD |
-| Music tool | TBD (not chosen yet) | TBD |
+| Claude Code (Anthropic CLI agent), Claude Opus 5.5 | Concept brainstorming and evaluation; scope planning; fitting the design to the movement-only restriction; implementation of every room, the controller and the systems; the automated audits; the lighting, FX and art tools; asset research; git hygiene; documentation. Details per agent below. | Whole project: Godot project, `scripts/`, `scenes/`, `tools/`, `README.md`, `AI_USE.md` |
+| Art / 2D tool | No generative image model. CC0 packs (bart, rubberduck, ansimuz, luizmelo), selected and licence-vetted by AI (`jadzia`). The HD look is made by small deterministic Pillow/numpy scripts written by AI (`davinci`, `data`): explicit palette rewriting of the tile sheet and the ansimuz layers (no quantising, no model in the loop), a Scale2x + outline + procedural tabby recolour pipeline for the cat, and procedural drawing (shapes, colour ramps, noise) for the Home ending and the world map. | `assets/art_hd/`, `assets/sprites/cat/`, `tools/art/`, `tools/recolor_cat.py`, `tools/build_tileset_hd.gd` |
+| 3D assets | Retired with the pivot to 2D (see Design pivots). The Kenney, Quaternius and KayKit CC0 packs chosen for the 3D prototype are not in the shipped game. | Only in the local `3d-prototype` tag |
+| Audio / SFX tool | No generative audio. CC0 packs, curated and converted to OGG: 512 Sound Effects (8-bit style), Kenney Impact Sounds, rubberduck's 30 CC0 SFX Loops, a qubodup dripping loop, and CC0 birdsong and chirps from Cinetony and isaiah658. Full list in `CREDITS.md`. | `assets/audio/sfx8bit/`, `assets/audio/sfx/`, `assets/audio/ambient/` |
+| Music tool | No generative music. Two CC0 tracks from Juhani Junkala's "4 Chiptunes (Adventure)" and "Calm6 - Innocence" from JRPG Pack 4 Calm (the ending and credits). | `assets/audio/music/` |
 
 Claude Code is configured as "Intrepid": an orchestrator agent that routes work
 to specialised sub-agents, each with its own role and instructions.
 
 ## Agent roster
 
-Agents actually used so far. Rows are added as more are used.
-
 | Agent | Role | Used for |
 |---|---|---|
-| Captain Janeway (orchestrator) | Routes work to the squad and reports to the human | Concept brainstorming and evaluation, scope cut, restriction fit; dispatching all work below |
-| `data` | Implementation and builds | Project scaffolding, web export pipeline and browser test |
-| `jadzia` | Research | Asset sourcing and license vetting |
-| `davinci` | Visual design and polish | Lighting, toon shader, VFX (moonbeams, drips, puddles, nanotech veins); in progress |
+| Captain Janeway (orchestrator) | Plans, routes work to the squad and reports to the human | Concept brainstorming and evaluation, scope cut, restriction fit, the design pivots; dispatching all work below; drafting the narrative and inner-monologue lines (these are Chris's to edit) |
+| `data` | Implementation and builds | Project scaffolding, web export pipeline; every room, the cat controller and the game systems; the audits: headless physics playthroughs that measure jump reach and prove each gap or gate needs its intended power, Playwright web runs on a real GPU, and a full-game chain test of 434 checks |
+| `davinci` | Visual design and polish | The lighting and FX kit; the palette remap tool; the HD cat pipeline (Scale2x, outline, procedural tabby recolour, derived crawl and push poses); the goo transformation with HD glow and the cinematic zoom; the Home art (`tools/art/home_art.py`, procedural, no generative image model); the world map art; the adaptive god rays |
+| `jadzia` | Research | Reference and asset research, licence vetting |
+| `miranda` | Git and GitHub | Repository, commits, and git hygiene (pre-push scans for secrets and personal paths) |
 | `doctor` | Documentation | `README.md`, `AI_USE.md` |
-| `miranda` | Git and GitHub | Repository creation and commits |
-
-Planned (not yet used): `riker` (architecture), `belanna` (debugging), `tuvok`
-(testing), `icheb` (UI iteration).
 
 ## What the human did
 
-- Chose the theme interpretation and the core concept.
+- Chose the theme interpretation, the core concept and the art direction.
 - Set the constraints: movement-only input, browser-playable, one week, solo.
-- Reviews and decides on every design and scope call the agents raise.
-- Will choose and direct the art, 3D and audio tools (see placeholders above).
+- Playtested and gave the feedback that drove each revision, for example: the
+  pivot to 2D, the art fidelity, "no powers in the first room", the
+  transformation zoom, the inner monologue, and robots not being killable by a
+  plain cat.
+- Made every approval call on design and scope that the agents raised.
+
+## Design pivots
+
+How the design changed during the build, in order. Each change was Chris's call,
+informed by agent research.
+
+1. **3D prototype.** The first build was 3D, in a chunky stylized look (Kenney,
+   Quaternius and KayKit, all CC0).
+2. **Pivot to 2D.** Chris moved the game to a 2D platformer in the Apogee style
+   (Secret Agent was the model). The 3D prototype is kept locally under the tag
+   `3d-prototype`.
+3. **Kenney art judged too low-fi.** The 2D look built from the Kenney packs did
+   not reach the intended fidelity.
+4. **Research on "HD".** `jadzia` found that the "HD" in Secret Agent HD is
+   shading and detail, not resolution.
+5. **The 640x360 blend.** The result: a 640x360 view with 32 px tiles from the
+   bart and rubberduck packs, recoloured to one palette by palette rewriting,
+   plus ansimuz back layers, with modern lighting on top.
+6. **Per-room builds.** The game was then built room by room, each with its own
+   generator script, audit and checkpoint.
+
+## Engine bugs found and worked around
+
+AI-assisted debugging, found by running the game rather than reading about it:
+
+- Godot 4.7's OpenGL renderer presents once per attached viewport. On desktop
+  this showed as a double image during the cinematic zoom.
+- A `Polygon2D` with no texture passes no UVs to its shader, so the god rays
+  never drew.
+- `CPUParticles2D` has no `amount_ratio`, so rain intensity had to be changed
+  another way.
 
 ## Build Log
 
@@ -125,3 +155,21 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
   exits into one chain, made the Room 4 laser fences solid so Phase is truly required,
   faded the Room 4 rain loop with the dawn, and wrote the full-game audit
   (`tools/audit/full_game.gd`), which plays Room 1 through the credits and back in one run.
+
+### 2026-10-05
+
+- State of the game: five levels (the Warehouse, The Yard, The Stacks, The
+  Perimeter, Home) joined by a world map, with checkpoints and save/continue in
+  the browser. Build work ran from 2026-10-02 to 2026-10-05.
+- World map: `davinci` drew the map art (parallax, time of day running from
+  night to morning) and `data` built the map, revisitable levels, hidden C-A-T
+  letters and gems, and locked bonus and secret nodes for future levels
+  (`docs/WORLD_MAP.md`).
+- Transformation: `davinci` built the goo transformation with HD glow and a
+  cinematic zoom, replacing the timed placeholder. The inner monologue starts
+  there; the lines were drafted by Janeway for Chris to edit.
+- Audits: every gap and gate is checked by headless playthroughs that measure
+  jump reach and prove the intended power is needed. `full_game.gd` plays the
+  whole chain in 434 checks; the Playwright runs use a real GPU.
+- Engine bugs (see above) were found and worked around.
+- Docs: `README.md` and this file brought up to date by `doctor`.

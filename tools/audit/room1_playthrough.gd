@@ -16,6 +16,7 @@
 extends SceneTree
 
 const T := 32.0
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const FLOOR_Y := 320.0
 
 var room: Node2D
@@ -220,6 +221,7 @@ func no_powers() -> bool:
 ## full-game chain (tools/audit/full_game.gd) the scene is already loaded and the run
 ## stops at the exit: see _setup(true) and _beats(true).
 func _main() -> void:
+	await HumanSweep.lab(self, "room1", note, "LAB ")
 	await _setup(false)
 	await _beats(false)
 	_finish()
@@ -689,6 +691,7 @@ func _beat_exit() -> void:
 	stop()
 	var hop: Dictionary = await MapHop.through(root.get_tree(), "warehouse", "yard")
 	note("J the exit fades out onto the world map, the warehouse is finished and the yard opens", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
+	note("J sound: after the exit no looping sound from the room is still playing, on the map or in the next room", hop["sound_map"].is_empty() and hop["sound_next"].is_empty(), "map %s next %s" % [str(hop["sound_map"]), str(hop["sound_next"])])
 	await ticks(exit_settle)
 	var r2 := current_scene
 	note("J the yard is entered from the map: Room 2 loads", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))

@@ -20,6 +20,7 @@
 ## the audit files stay the single source of truth.
 extends SceneTree
 
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const ROOM1 := "res://scenes/levels/room1.tscn"
 const ROOM2 := "res://scenes/levels/room2.tscn"
 const ROOM3 := "res://scenes/levels/room3.tscn"
@@ -152,6 +153,7 @@ func transition(label: String, scene: String, want_mind: bool, want_shock: bool,
 		var g := gs()
 		note("%s on the map: %s finished, %s open, the cat at %s" % [label, done_id, next_id, next_id], g.map_completed.has(done_id) and g.map_unlocked.has(next_id) and g.map_node == next_id, "completed %s unlocked %s node %s" % [str(g.map_completed), str(g.map_unlocked), g.map_node])
 		note("%s the map is in the save" % label, ss().read_save().get("map", {}).get("completed", []).has(done_id))
+	note("%s sound: no looping player from the previous scene is still playing" % label, LoopSfx.orphans(self).is_empty(), str(LoopSfx.orphans(self)))
 	note("%s the next room is %s" % [label, scene.get_file()], s != null and s.scene_file_path == scene, str(s.scene_file_path if s else "?"))
 	note("%s mind %s, shockwave %s" % [label, want_mind, want_shock], gs().intelligence == want_mind and gs().shockwave_unlocked == want_shock, "mind %s shock %s" % [gs().intelligence, gs().shockwave_unlocked])
 	note("%s no power carried through the exit (pads are the only source)" % label, gs().power == 0, "power %d" % gs().power)
@@ -238,6 +240,18 @@ func _main() -> void:
 	ss().session_snapshot = {}
 	RoomTransition.arriving = false
 	var base := "res://tools/audit/"
+
+	# ---- The human-margin sweep of every required climb and jump (tools/audit/human_sweep.gd) ----
+	if OS.get_environment("SWEEP") != "0":
+		for id in ["room1", "room2", "room3", "room4", "test_room"]:
+			await HumanSweep.lab(self, id, note, "")
+		gs().new_game()
+		mono().reset()
+		ss().delete_save()
+		ss().session_scene = ""
+		ss().session_checkpoint = ""
+		ss().session_snapshot = {}
+		RoomTransition.arriving = false
 
 	# ---- Room 3's lab first: the hop parameters its route uses (its own throwaway room) ----
 	var r3 := routine(base + "room3_playthrough.gd")
@@ -389,6 +403,7 @@ func _revisits() -> void:
 			break
 	await ticks(30)
 	var m := current_scene
+	note("REV sound: on the map no looping player from a room is still playing", LoopSfx.orphans(self).is_empty() and LoopSfx.census(self)["positional"] == 0, str(LoopSfx.playing_loops(self)))
 	note("REV the map opens without a reveal, nothing newly finished", m.scene_file_path == MAP and not m.get("auto") and same(before, keep()), str(gs().map_completed))
 	var gem_before: int = gs().collected.size()
 	# ---- Room 1 ----
@@ -467,6 +482,7 @@ func _revisits() -> void:
 func _fresh_room1() -> void:
 	var s := current_scene
 	var cat: Node2D = s.get_node_or_null("Cat")
+	note("END sound: after the credits the ending music and every loop is gone", LoopSfx.orphans(self).is_empty() and root.get_node_or_null("EndingMusic") == null, str(LoopSfx.playing_loops(self)))
 	note("END back in Room 1 after the credits", s != null and s.scene_file_path == ROOM1, str(s.scene_file_path if s else "?"))
 	note("END a fresh game: no mind, no shockwave, no power, full health, no score", not gs().intelligence and not gs().shockwave_unlocked and gs().power == 0 and gs().health == 3 and gs().score == 0 and gs().keys.is_empty() and gs().letter_mask == 0 and gs().collected.is_empty(), str(snap()))
 	note("END the credits' new game cleared the map", gs().map_completed.is_empty() and gs().map_unlocked.is_empty() and gs().map_node == "", "completed %s node %s" % [str(gs().map_completed), gs().map_node])

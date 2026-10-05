@@ -17,7 +17,9 @@
 extends SceneTree
 
 const T := 32.0
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const SURFACE := 320.0
+const ROOF := 128.0      # the guardhouse roof and the relay tower top: row 4, 6 rows (192 px) up
 const L1 := 448.0
 const L2 := 576.0
 const L3 := 704.0
@@ -317,6 +319,7 @@ func phase_run(target: float, limit := 2400) -> Dictionary:
 ## cat: _setup(true), _beats(true) (the sky and safety beat reloads the room, so it
 ## runs standalone only; the chain continues from the exit into Home).
 func _main() -> void:
+	await HumanSweep.lab(self, "room4", note, "LAB ")
 	await _setup(false)
 	await _beats(false)
 	_finish()
@@ -638,7 +641,9 @@ func _beat_phase2() -> void:
 func _roof_jump(jump_col: float, spring: bool) -> Dictionary:
 	await recover()
 	gs().clear_power()
-	await stage(jump_col - 2.5 if spring else maxf(jump_col - 1.0, 115.4))
+	# The plain cat must not touch the Spring pad on the way (it is at the foot of the wall).
+	node("PadSpring1").set("_cd", 0.0 if spring else 1e9)
+	await stage(jump_col - 2.5 if spring else maxf(jump_col - 1.0, 116.0))
 	if spring:
 		gs().grant_power(2, 10.0)
 	await ticks(2)
@@ -656,39 +661,45 @@ func _roof_jump(jump_col: float, spring: bool) -> Dictionary:
 		await ticks(1)
 		air += 1
 		best_y = minf(best_y, y())
-		if air == 27:
+		if not spring and air == 27:   # the plain cat's best: a double jump at the apex
 			hold("jump", false)
 			await ticks(1)
 			hold("jump", true)
-		if air == 40:
+		if air == (45 if spring else 40):   # Spring: one held jump, no double jump needed
 			hold("jump", false)
 		if air > 50 and cat.is_on_floor():
 			break
 	stop()
 	await ticks(20)
-	return {"on_roof": absf(y() - 96.0) < 4.0 and x() > cx(118), "x": x(), "y": y(), "apex": SURFACE - best_y}
+	node("PadSpring1").set("_cd", 0.0)
+	return {"on_roof": absf(y() - ROOF) < 4.0 and x() > cx(118), "x": x(), "y": y(), "apex": SURFACE - best_y}
 
 
 func _beat_phase3() -> void:
 	await recover()
+	var tur := node("TurretP2")
+	var beam_hi: float = tur.global_position.x + (tur.get("reach") if int(tur.get("facing")) > 0 else 0.0)
+	note("P3 the turret fires left, away from the run-up: its beam ends before the Spring pad", int(tur.get("facing")) == -1 and beam_hi < node("PadSpring1").global_position.x - 40.0, "beam reaches x=%.0f, pad at x=%.0f" % [beam_hi, node("PadSpring1").global_position.x])
 	var plain := await _roof_jump(116.0, false)
-	note("P3 the roof is 7 rows up: a plain cat (best double jump) cannot reach it", not plain["on_roof"], "plain apex %.0f px of the 224 needed, ended x=%.0f y=%.0f" % [plain["apex"], plain["x"], plain["y"]])
-	measure("roof: plain double jump", "%.0f px up; the roof is 224 px up" % plain["apex"])
+	note("P3 the roof is 6 rows up: a plain cat (best double jump) cannot reach it", not plain["on_roof"], "plain apex %.0f px of the 192 needed, ended x=%.0f y=%.0f" % [plain["apex"], plain["x"], plain["y"]])
+	measure("roof: plain double jump", "%.0f px up; the roof is 192 px up" % plain["apex"])
 	var sp := await _roof_jump(116.0, true)
-	note("P3 with Spring the same jump lands on the roof", sp["on_roof"], "Spring apex %.0f px up, landed x=%.0f y=%.0f" % [sp["apex"], sp["x"], sp["y"]])
-	measure("roof: Spring double jump", "%.0f px up, %.0f px of spare over the 224 needed" % [sp["apex"], sp["apex"] - 224.0])
-	# Sweep the take-off column: a real window to jump in.
+	note("P3 with Spring one held jump lands on the roof", sp["on_roof"], "Spring apex %.0f px up, landed x=%.0f y=%.0f" % [sp["apex"], sp["x"], sp["y"]])
+	measure("roof: Spring single jump", "%.0f px up, %.0f px of spare over the 192 needed" % [sp["apex"], sp["apex"] - 192.0])
+	# Sweep the take-off column: a real window to jump in (the pad is at col 115, the face at 118).
 	var good: Array = []
-	for c in [114.5, 115.0, 115.5, 116.0, 116.5, 117.0, 117.4]:
+	for c in [115.5, 116.0, 116.5, 117.0, 117.4]:
 		var r := await _roof_jump(c, true)
 		if r["on_roof"]:
 			good.append(c)
-	note("P3 Spring: a comfortable window of take-off columns lands on the roof", good.size() >= 4, "lands from cols %s" % str(good))
+	note("P3 Spring: every take-off column between the pad and the wall lands on the roof", good.size() == 5, "lands from cols %s" % str(good))
 	# For real from the pad: walk onto it, run, jump, double jump.
 	await recover()
 	gs().clear_power()
 	await stage(112.0)
 	await take_pad("PadSpring1", 2)
+	await wait_lines("spring_hint_roof", 1)
+	note("P3 the hint at the foot of the guardhouse plays (the green pad hums like a spring)", lines_of("spring_hint_roof") == ["That roof is too high to reach. The green pad hums like a spring."], str(lines_of("spring_hint_roof")))
 	await ticks(40)
 	note("P3 the Spring pad grants Spring (green emitters)", gs().power == 2 and close(aug_color(), Color(0.2, 1.0, 0.5)), "emitter %s" % str(aug_color()))
 	dir(1.0)
@@ -699,26 +710,22 @@ func _beat_phase3() -> void:
 	while air < 60:
 		await ticks(1)
 		air += 1
-		if air == 27:
-			hold("jump", false)
-			await ticks(1)
-			hold("jump", true)
-		if air == 40:
+		if air == 45:
 			hold("jump", false)
 	stop()
 	await ticks(30)
-	note("P3 up the guardhouse from the real pad", absf(y() - 96.0) < 4.0 and x() > cx(118), "x=%.0f y=%.0f" % [x(), y()])
+	note("P3 up the guardhouse from the real pad (one held jump)", absf(y() - ROOF) < 4.0 and x() > cx(118), "x=%.0f y=%.0f" % [x(), y()])
 	await shot("P3_spring_to_roof")
 	# On the roof: the Phase pad, then the fence under the ceiling.
 	await take_pad("PadPhase3", 3)
 	var f3 := node("FenceP3")
-	note("P3 combined: Spring up, then a Phase pad before a fence on the roof, under a ceiling", gs().power == 3 and f3.global_position.y == 96.0)
+	note("P3 combined: Spring up, then a Phase pad before a fence on the roof, under a ceiling", gs().power == 3 and f3.global_position.y == ROOF)
 	var res := await phase_run(cx(133))
 	note("P3 the dash through the roof fence (Spring then Phase)", res["reached"] and res["hp_lost"] == 0 and res["dashes"] == 1, str(res))
 	# Plain on the roof: the fence hurts, and no jump goes over it (ceiling).
 	await recover()
 	gs().clear_power()
-	await stage(124.0, 96.0)
+	await stage(124.0, ROOF)
 	var h0 := hp()
 	dir(1.0)
 	hold("jump", true)
@@ -730,7 +737,7 @@ func _beat_phase3() -> void:
 	note("P3 without Phase the roof fence hurts and cannot be jumped (ceiling at the fence top)", hp() == h0 - 1 or x() < f3.global_position.x, "hp %d x=%.0f fence %.0f" % [hp(), x(), f3.global_position.x])
 	await recover()
 	# Off the roof's end to the ground, on to checkpoint B.
-	await stage(133.0, 96.0)
+	await stage(133.0, ROOF)
 	var ok := await run_to(cx(139))
 	await ticks(20)
 	note("P3 off the roof, on to checkpoint B", ss().session_checkpoint == "cp_b" and ok, "cp %s x=%.0f" % [ss().session_checkpoint, x()])
@@ -998,11 +1005,11 @@ func _beat_relay1() -> void:
 	var fin := node("Finale")
 	note("F three relays exist and none is lit; the gate is shut and the exit is closed", fin.count == 0 and not node("MasterGate").is_open and node("RoomExit").get("enabled") == false and node("Scanner").relays_lit == 0)
 	await shot("F_plaza_relay_sign")
-	# Relay 1 sits on a tower 7 rows up: a plain double jump cannot reach it.
+	# Relay 1 sits on a tower 6 rows up: a plain double jump cannot reach it.
 	var plain := await _tower_jump(false)
-	note("R1 the tower is 7 rows up: a plain cat cannot reach the relay", not plain["on_tower"] and not node("Relay1").lit, "apex %.0f px of 224" % plain["apex"])
+	note("R1 the tower is 6 rows up: a plain cat cannot reach the relay", not plain["on_tower"] and not node("Relay1").lit, "apex %.0f px of 192" % plain["apex"])
 	var sp := await _tower_jump(true)
-	note("R1 with Spring (pad at col 217) the cat reaches the tower top", sp["on_tower"], "apex %.0f px, x=%.0f y=%.0f" % [sp["apex"], sp["x"], sp["y"]])
+	note("R1 with Spring (pad at col 220, one held jump) the cat reaches the tower top", sp["on_tower"], "apex %.0f px, x=%.0f y=%.0f" % [sp["apex"], sp["x"], sp["y"]])
 	await ticks(2)
 	# The relay lights; the finale pans to the gate and back.
 	var pans0: int = fin.pans
@@ -1038,13 +1045,13 @@ func _beat_relay1() -> void:
 func _tower_jump(spring: bool) -> Dictionary:
 	await recover()
 	gs().clear_power()
-	await stage(219.0)
+	# The pad is at the foot of the tower: the plain cat gets it made inert.
+	node("PadSpring2").set("_cd", 0.0 if spring else 1e9)
+	await stage(218.0)
 	if spring:
 		await take_pad("PadSpring2", 2)
-	await go_to(cx(219.0) + 10.0, 4.0) if not spring else await ticks(1)
 	dir(1.0)
-	var jump_col := 219.5 if not spring else 219.5
-	while x() < cx(jump_col) + 36.0:
+	while x() < cx(220.0) + 20.0:
 		await ticks(1)
 	hold("jump", true)
 	var air := 0
@@ -1053,17 +1060,18 @@ func _tower_jump(spring: bool) -> Dictionary:
 		await ticks(1)
 		air += 1
 		best_y = minf(best_y, y())
-		if air == 27:
+		if not spring and air == 27:
 			hold("jump", false)
 			await ticks(1)
 			hold("jump", true)
-		if air == 40:
+		if air == (45 if spring else 40):
 			hold("jump", false)
 		if air > 50 and cat.is_on_floor():
 			break
 	stop()
 	await ticks(20)
-	return {"on_tower": absf(y() - 96.0) < 4.0 and x() > cx(222.0), "x": x(), "y": y(), "apex": SURFACE - best_y}
+	node("PadSpring2").set("_cd", 0.0)
+	return {"on_tower": absf(y() - ROOF) < 4.0 and x() > cx(222.0), "x": x(), "y": y(), "apex": SURFACE - best_y}
 
 
 func _beat_relay2() -> void:
@@ -1250,18 +1258,22 @@ func _beat_scanner() -> void:
 	var beam_max := -9.0
 	var flared := false
 	var base_col := aug_color()
+	var scan_hum := 0
 	while scanner.mode == 2 and n < 600:
 		await ticks(1)
 		n += 1
 		beam_min = minf(beam_min, scanner.beam_pos)
 		beam_max = maxf(beam_max, scanner.beam_pos)
 		if n == 90:
+			scan_hum = LoopSfx.census(root.get_tree())["positional"]
 			await shot("S_scanner_sweeping")
 		var aug: Node = cat.get_node_or_null("Sprite/Augments")
 		flared = flared or (aug != null and aug.get("_flare") > 0.3)
 	note("S the beam sweeps the cat across the whole zone and the augments flare", beam_min < -0.95 and beam_max > 0.95 and flared, "beam %.2f..%.2f, flare %s, %.1f s" % [beam_min, beam_max, str(flared), n / 60.0])
 	note("S the screen reads SUPERVISOR CREDENTIAL ACCEPTED", scanner.mode == 3 and scanner.screen_lines == PackedStringArray(["SUPERVISOR CREDENTIAL ACCEPTED"]), str(scanner.screen_lines))
 	await shot("S_credential_accepted")
+	await ticks(90)
+	note("S the scanner's hum played during the scan and has stopped now it is over (no orphan)", scan_hum == 1 and LoopSfx.census(root.get_tree())["positional"] == 0 and LoopSfx.orphans(root.get_tree()).is_empty(), "audible during %d, now %s" % [scan_hum, str(LoopSfx.census(root.get_tree()))])
 	note("S the gate has not moved at the moment of acceptance (the scan comes first)", gate.lift < 0.05 and fin.accepted)
 	await wait_lines("credential", 3)
 	note("S the credential monologue (accepted / one of them / maybe I am)", lines_of("credential") == ["'Supervisor credential accepted.'", "They really think I'm one of them.", "...Maybe I am, a little."], str(lines_of("credential")))
@@ -1320,6 +1332,7 @@ func _beat_exit() -> void:
 	stop()
 	var hop: Dictionary = await MapHop.through(root.get_tree(), "perimeter", "home")
 	note("E the exit fades out onto the world map, the perimeter is finished and Home opens", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
+	note("E sound: after the exit no looping sound from the room is still playing, on the map or in the next room", hop["sound_map"].is_empty() and hop["sound_next"].is_empty(), "map %s next %s" % [str(hop["sound_map"]), str(hop["sound_next"])])
 	await ticks(exit_settle)
 	var home := current_scene
 	note("E Home is entered from the map: the ending loads", home != null and home.scene_file_path == "res://scenes/levels/home.tscn", str(home.scene_file_path if home else "?"))

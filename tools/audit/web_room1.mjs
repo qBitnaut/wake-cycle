@@ -13,6 +13,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { installAudioProbe, audioLoops, soundClean } from './web_audio_probe.mjs';
 
 const PW = process.env.PW_DIR
   || path.join(os.homedir(), '.local/share/mise/installs/npm-playwright/latest/node_modules/playwright');
@@ -47,6 +48,7 @@ const browser = await chromium.launch({
     '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: +((flags.find(f => f.startsWith('--dpr=')) || '--dpr=1').split('=')[1]) });
+await installAudioProbe(page);   // what the browser really plays (Godot's web audio is samples)
 const consoleErrors = [];
 page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -72,8 +74,14 @@ async function throughMap(tag, done, next, nextFile) {
   note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
   await sleep(400);
   await shot(`${tag}_map_after_${done}`);
+  M = await page.evaluate(() => window.__map || M);
+  { const c = soundClean(M.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: on the map no looping sound from the room plays (tree and browser)`, c.ok && (M.loops ? M.loops.positional === 0 : false), c.detail); }
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
   for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+  await sleep(900); await poll();
+  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: in the next room no looping sound is left from the previous one`, c.ok, c.detail); }
 }
 
 // The opening: shoot the fade from black as it happens, before any input.

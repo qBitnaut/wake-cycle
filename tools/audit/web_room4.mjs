@@ -22,6 +22,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { installAudioProbe, audioLoops, soundClean } from './web_audio_probe.mjs';
 
 const PW = process.env.PW_DIR
   || path.join(os.homedir(), '.local/share/mise/installs/npm-playwright/latest/node_modules/playwright');
@@ -64,6 +65,7 @@ const browser = await chromium.launch({
   args: [...launchArgs, '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: +((flags.find(f => f.startsWith('--dpr=')) || '--dpr=1').split('=')[1]) });
+await installAudioProbe(page);   // what the browser really plays (Godot's web audio is samples)
 const consoleErrors = [];
 page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -89,8 +91,14 @@ async function throughMap(tag, done, next, nextFile) {
   note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
   await sleep(400);
   await shot(`${tag}_map_after_${done}`);
+  M = await page.evaluate(() => window.__map || M);
+  { const c = soundClean(M.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: on the map no looping sound from the room plays (tree and browser)`, c.ok && (M.loops ? M.loops.positional === 0 : false), c.detail); }
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
   for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+  await sleep(900); await poll();
+  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: in the next room no looping sound is left from the previous one`, c.ok, c.detail); }
 }
 
 await page.goto(url);
@@ -264,7 +272,8 @@ note('P2 the turret is dodged by timing (cross right after a shot)', W.hp === hp
 // ---- P3: Phase with Spring ----------------------------------------------------------------
 await shot('P3_guardhouse_roof_spring_pad');
 await goTo(cx(112), 8);
-ok = await takePad(cx(114), 2, 3 * 32);
+await shot('P3_base_hint_pad_and_6_row_roof');
+ok = await takePad(cx(115), 2, 3 * 32);
 await sleep(700);
 note('P3 the Spring pad grants Spring', W.power === 2, `power ${W.power}`);
 await dir(1);
@@ -272,11 +281,11 @@ while (W.x < cx(116)) await frame();
 await hold('jump', true);
 for (let air = 1; air < 60; air++) {
   await frame();
-  if (air === 27) { await hold('jump', false); await frame(); await hold('jump', true); }
-  if (air === 40) await hold('jump', false);
+  if (air === 22) await shot('P3_midair_single_spring_jump');
+  if (air === 45) await hold('jump', false);
 }
 await stop(); await ticks(30);
-note('P3 Spring and a double jump: up onto the guardhouse roof', Math.abs(W.y - 96) < 4 && W.x > cx(118), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+note('P3 Spring and one held jump: up onto the guardhouse roof (6 rows)', Math.abs(W.y - 128) < 4 && W.x > cx(118), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('P3_on_the_roof');
 await takePad(cx(120), 3, 36);
 res = await phaseRun(cx(133));
@@ -366,17 +375,19 @@ await waitFor(() => lines('relays_intro') >= 1, 14000);
 note('F the relays intro line plays', lines('relays_intro') === 1);
 await shot('F_plaza_three_relays_required');
 await goTo(cx(218) - 40, 6);
-ok = await takePad(cx(217), 2, 36);
+await shot('R1_tower_base_hint_pad_and_6_row_tower');
+ok = await takePad(cx(220), 2, 36);
 await dir(1);
 while (W.x < cx(219.5) + 36) await frame();
 await hold('jump', true);
 for (let air = 1; air < 60; air++) {
   await frame();
-  if (air === 27) { await hold('jump', false); await frame(); await hold('jump', true); }
-  if (air === 40) await hold('jump', false);
+  if (air === 22) await shot('R1_midair_single_spring_jump');
+  if (air === 45) await hold('jump', false);
 }
 await stop(); await ticks(20);
-note('R1 Spring up the tower (7 rows)', Math.abs(W.y - 96) < 4 && W.x > cx(222), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+note('R1 Spring up the tower with one held jump (6 rows)', Math.abs(W.y - 128) < 4 && W.x > cx(222), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+await shot('R1_on_the_tower_top');
 await dir(1);
 for (let n = 0; n < 300 && !W.relayLit[0]; n++) await frame();
 await stop();
@@ -457,10 +468,15 @@ await stop();
 note('S walking in starts the scan and holds the cat', W.scanning && !W.can_move, `mode ${W.scanMode}`);
 await waitFor(() => lines('scanner') >= 1, 8000);
 await sleep(900);
+await poll();
+note('S sound: the scanner\'s hum is audible during the scan (distance-faded loop)', W.loops && W.loops.positional >= 1, JSON.stringify(W.loops));
 await shot('S_scanner_sweeping_the_cat');
 await waitFor(() => W.scanMode === 3, 8000);
 await sleep(300);
 note('S SUPERVISOR CREDENTIAL ACCEPTED on the screen', W.scanMode === 3 && W.scanText[0] === 'SUPERVISOR CREDENTIAL ACCEPTED', JSON.stringify(W.scanText));
+await sleep(1500); await poll();
+{ const c = soundClean(W.loops, await audioLoops(page));
+  note('S sound: the scanner hum stopped when the scan ended (no audible positional loop, no orphan)', W.loops.positional === 0 && c.ok, c.detail); }
 await shot('S_credential_accepted');
 note('S the gate is still shut at the moment of acceptance', W.gateLift < 0.05 && !W.gateOpen);
 await waitFor(() => W.gateLift > 0.4, 12000);

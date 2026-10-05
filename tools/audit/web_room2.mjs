@@ -18,6 +18,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { installAudioProbe, audioLoops, soundClean } from './web_audio_probe.mjs';
 
 const PW = process.env.PW_DIR
   || path.join(os.homedir(), '.local/share/mise/installs/npm-playwright/latest/node_modules/playwright');
@@ -51,6 +52,7 @@ const browser = await chromium.launch({
   args: [...launchArgs, '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: +((flags.find(f => f.startsWith('--dpr=')) || '--dpr=1').split('=')[1]) });
+await installAudioProbe(page);   // what the browser really plays (Godot's web audio is samples)
 const consoleErrors = [];
 page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -76,8 +78,14 @@ async function throughMap(tag, done, next, nextFile) {
   note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
   await sleep(400);
   await shot(`${tag}_map_after_${done}`);
+  M = await page.evaluate(() => window.__map || M);
+  { const c = soundClean(M.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: on the map no looping sound from the room plays (tree and browser)`, c.ok && (M.loops ? M.loops.positional === 0 : false), c.detail); }
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
   for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+  await sleep(900); await poll();
+  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: in the next room no looping sound is left from the previous one`, c.ok, c.detail); }
 }
 
 // The opening: Room 2 comes up through the deep link.
@@ -251,14 +259,20 @@ ok = await runTo(4860);
 note('D checkpoint D', W.cp === 'cp_d', W.cp);
 
 // ---- B4: combine ---------------------------------------------------------------------------
-let droneShot = false, ventShot = false, pitShot = false;
+let droneShot = false, ventShot = false, pitShot = false, droneAudible = false;
 await runTo(6300, { cf: 5770, ct: 5930, each: async () => {
+  if (W.drone === 1 && W.loops && W.loops.positional >= 1) droneAudible = true;
   if (W.drone === 1 && W.x > 5060 && !droneShot) { droneShot = true; await shot('B4_drone_searchlight_chasing'); }
   if (W.x > 5360 && W.x < 5400 && !pitShot) { pitShot = true; await shot('B4_pit_ahead_steps_behind'); }
   if (W.crouch && W.x > 5830 && !ventShot) { ventShot = true; await shot('B4_crawl_vent_cover'); }
 } });
 note('B4 combined challenge on Surge: pad, steps, pit, vent, never seen', W.x >= 6300 && !W.alarm && !W.dead, `x=${W.x.toFixed(0)} alarm ${W.alarm}`);
 note('B4 the drone was triggered and swept', W.drone !== null && W.drone >= 1, `drone state ${W.drone}`);
+note('B4 sound: the drone\'s whirr was audible (distance-faded) while it chased', droneAudible, `positional loops seen: ${droneAudible}`);
+await waitFor(() => W.drone === 3, 15000);
+await sleep(2500); await poll();
+{ const c = soundClean(W.loops, await audioLoops(page));
+  note('B4 sound: once the drone has left its whirr is gone: no audible drone loop, no orphan, nothing in the browser', W.drone === 3 && W.loops.positional === 0 && c.ok, `drone state ${W.drone}; ${c.detail}`); }
 
 // ---- E: the fence ------------------------------------------------------------------------------
 await waitFor(() => lines('exit_fence') >= 1, 12000);

@@ -9,6 +9,7 @@
 extends SceneTree
 
 const T := 32.0
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const G := 10
 const FLOOR_Y := 320.0
 
@@ -123,6 +124,7 @@ func cat_hp() -> int:
 # ---- the run --------------------------------------------------------------
 
 func _main() -> void:
+	await HumanSweep.lab(self, "test_room", note, "LAB ")
 	ss().delete_save()
 	room = load("res://scenes/levels/test_room.tscn").instantiate()
 	root.add_child(room)

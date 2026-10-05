@@ -16,6 +16,7 @@
 extends SceneTree
 
 const T := 32.0
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const FLOOR_Y := 320.0
 const GAP_EDGE := 2240.0     # last floor of the Surge gap (col 70)
 const GAP_FAR := 2528.0      # first floor beyond it (col 79)
@@ -231,6 +232,7 @@ func wait_lines(id: String, count: int, limit := 1500) -> bool:
 ## Standalone: a fresh Room 2 as Room 1 leaves the cat. In the full-game chain
 ## (tools/audit/full_game.gd) Room 2 is already loaded: _setup(true).
 func _main() -> void:
+	await HumanSweep.lab(self, "room2", note, "LAB ")
 	await _setup(false)
 	await _beats()
 	_finish()
@@ -605,11 +607,38 @@ func _beat_drone() -> void:
 	var got := await run_to(DRONE_TRIGGER - 10.0)
 	note("B4 the pad before it grants Surge", gs().power == 1 and _grants.size() >= 5, "power %d" % gs().power)
 	var t0 := _frames
+	got = await run_to(DRONE_TRIGGER + 90.0)
+	# Sound: the drone's whirr is a LoopSfx child of the drone: audible near the cat, none left on the root.
+	var hum: Node = drone2.get("hum")
+	note("S the drone's hum starts when it triggers, follows it and is audible near the cat", hum != null and hum.get_parent() == drone2 and hum.audible() and hum.gain > 0.2, "gain %.2f at %.0f px" % [hum.gain if hum else -1.0, (drone2.global_position.distance_to(cat.global_position)) if hum else -1.0])
+	note("S ...and nothing loops on the root (the old leak: a looping one-shot parented to the root)", LoopSfx.orphans(root.get_tree()).is_empty() and root.get_children().all(func(c): return not (c is AudioStreamPlayer and c.playing and LoopSfx._loops(c.stream))), str(LoopSfx.orphans(root.get_tree())))
 	got = await run_to(6300.0, VENT_FROM, VENT_TO)
 	var secs := (_frames - t0) / 60.0
 	var dx: float = x() - drone2.global_position.x
 	note("B4 combined challenge on Surge: steps, pit, crawl vent, never seen", got and not drone2.get("alarmed") and _lit_frames == 0 and not cat.dead, "%.1f s from the trigger, lit %d frames, ahead of the drone by %.0f px" % [secs, _lit_frames, dx])
 	measure("combined: Surge run", "%.1f s from the trigger line to x=6300; drone (%.0f px/s) was %.0f px behind at the end" % [secs, drone2.get("speed"), dx])
+	# The drone leaves: its hum fades out of range and the player is freed.
+	var left := 0
+	while drone2.get("state") != 3 and left < 900:
+		await ticks(1)
+		left += 1
+	await ticks(90)
+	note("S after the drone has left, its hum has stopped and been freed (no loop outlives its source)", drone2.get("state") == 3 and not is_instance_valid(hum), "state %s, hum valid %s" % [str(drone2.get("state")), str(is_instance_valid(hum))])
+	note("S ...and the census agrees: no audible positional loop, no orphan", LoopSfx.census(root.get_tree())["positional"] == 0 and LoopSfx.orphans(root.get_tree()).is_empty(), str(LoopSfx.census(root.get_tree())))
+	# Self-test of the detector (it must see the old bug): a looping player on the root, outside the scene.
+	var leak := AudioStreamPlayer.new()
+	leak.stream = preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg")
+	root.add_child(leak)
+	leak.play()
+	await ticks(2)
+	var seen := LoopSfx.orphans(root.get_tree()).size()
+	# ...and Sfx.play of a looping asset (what the drone used to do) is now a true one-shot.
+	Sfx.play(root, "laser_hum_loop", -40.0)
+	await ticks(2)
+	var after_sfx := LoopSfx.orphans(root.get_tree()).size()
+	leak.queue_free()
+	await ticks(2)
+	note("S self-test: a looping player left on the root is detected as an orphan, and Sfx.play of a loop asset is not one", seen == 1 and after_sfx == 1 and LoopSfx.orphans(root.get_tree()).is_empty(), "seen %d, with Sfx.play %d, after cleanup %d" % [seen, after_sfx, LoopSfx.orphans(root.get_tree()).size()])
 	# For the record: the same run on plain speed.
 	var old2 := room.get_instance_id()
 	cat.kill()
@@ -646,6 +675,7 @@ func _beat_exit() -> void:
 	stop()
 	var hop: Dictionary = await MapHop.through(root.get_tree(), "yard", "stacks")
 	note("E the exit fades out onto the world map, the yard is finished and the stacks open", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
+	note("E sound: after the exit no looping sound from the room is still playing, on the map or in the next room", hop["sound_map"].is_empty() and hop["sound_next"].is_empty(), "map %s next %s" % [str(hop["sound_map"]), str(hop["sound_next"])])
 	await ticks(exit_settle)
 	var r3 := current_scene
 	note("E the stacks are entered from the map: Room 3 loads", r3 != null and r3.scene_file_path == "res://scenes/levels/room3.tscn", str(r3.scene_file_path if r3 else "?"))

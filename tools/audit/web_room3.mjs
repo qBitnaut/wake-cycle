@@ -23,6 +23,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { installAudioProbe, audioLoops, soundClean } from './web_audio_probe.mjs';
 
 const PW = process.env.PW_DIR
   || path.join(os.homedir(), '.local/share/mise/installs/npm-playwright/latest/node_modules/playwright');
@@ -68,6 +69,7 @@ const browser = await chromium.launch({
   args: [...launchArgs, '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: +W_, height: +H_ }, deviceScaleFactor: +((flags.find(f => f.startsWith('--dpr=')) || '--dpr=1').split('=')[1]) });
+await installAudioProbe(page);   // what the browser really plays (Godot's web audio is samples)
 const consoleErrors = [];
 page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -93,8 +95,14 @@ async function throughMap(tag, done, next, nextFile) {
   note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
   await sleep(400);
   await shot(`${tag}_map_after_${done}`);
+  M = await page.evaluate(() => window.__map || M);
+  { const c = soundClean(M.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: on the map no looping sound from the room plays (tree and browser)`, c.ok && (M.loops ? M.loops.positional === 0 : false), c.detail); }
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
   for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+  await sleep(900); await poll();
+  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+    note(`${tag} sound: in the next room no looping sound is left from the previous one`, c.ok, c.detail); }
 }
 
 // The opening: Room 2 comes up through the deep link.
@@ -217,8 +225,8 @@ await shot('A_the_wall_and_the_pad');
 
 // ---- B1: Spring, discovery -----------------------------------------------------------------------
 await shot('B1_pad_at_the_foot_of_the_wall_ledge_above');
-await hop(1053, 12, { at: 14, fn: async () => { await shot('B1_spring_double_jump_up_the_wall'); } });
-note('B1 the pad granted Spring and the double jump climbs the 6-tile wall', landed(1100, 1700, S1) && W.grants >= 1, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)} power ${W.power}`);
+await hop(1053, -1, { at: 14, fn: async () => { await shot('B1_spring_single_jump_up_the_wall'); } });
+note('B1 the pad granted Spring and one held jump climbs the 6-tile wall', landed(1100, 1700, S1) && W.grants >= 1, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)} power ${W.power}`);
 await sleep(400);
 await shot('B1_on_the_shed_roof_emitters_green');
 await waitFor(() => lines('spring_first') >= 2, 14000);
@@ -232,10 +240,10 @@ await goTo(1328, 8); await ticks(6);
 note('B2 second pad: Spring refreshed', W.power === 2 && W.powerTime > 9, `${W.powerTime.toFixed(1)} s`);
 await shot('B2_pad_two_ledge_above');
 const tChain = W.f;
-await hop(1369, 12, { at: 14, fn: async () => { await shot('B2_chain_first_jump'); } });
+await hop(1369, -1, { at: 14, fn: async () => { await shot('B2_chain_first_jump'); } });
 const ledgeOk = landed(1450, 1625, S2);
 await shot('B2_on_the_floating_ledge');
-await hop(1609, 12);
+await hop(1680, -1);
 const roofOk = landed(1735, 2100, S3);
 note('B2 the chain: shed roof -> ledge -> long roof inside one charge', ledgeOk && roofOk && W.power === 2, `${((W.f - tChain) / 60).toFixed(1)} s, ${W.powerTime.toFixed(1)} s of Spring left`);
 await shot('B2_long_roof_reached');
@@ -335,14 +343,14 @@ note('F the cat walks on through, the plate keeps holding', ok && W.plate && W.b
 await runTo(4240); await ticks(10);
 note('G checkpoint C', W.cp === 'cp_c', W.cp);
 await shot('G_the_tower_and_its_pad');
-await hop(4381, 12, { at: 14, fn: async () => { await shot('G_spring_up_the_tower'); } });
+await hop(4381, -1, { at: 14, fn: async () => { await shot('G_spring_up_the_tower'); } });
 note('G Spring climbs the tower', landed(4430, 4660, S4), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('G_tower_top_the_gap_ahead');
 await goTo(4528, 6); await ticks(40);
 note('G the Surge pad on top replaces Spring', W.power === 1, `power ${W.power}`);
-await shot('G_surge_pad_emitters_blue_ten_tile_gap');
+await shot('G_surge_pad_emitters_blue_nine_tile_gap');
 await hop(4668, 27, { at: 22, fn: async () => { await shot('G_crossing_the_gap_mid_air'); } });
-note('G Surge double jump crosses the ten-tile gap', landed(4995, 5400, S4), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+note('G Surge double jump crosses the nine-tile gap', landed(4965, 5400, S4), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await ticks(10);
 await goTo(5056, 6); await ticks(10);
 note('G checkpoint D on the exit roof', W.cp === 'cp_d', W.cp);

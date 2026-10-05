@@ -62,7 +62,7 @@ Enhancement pads (after the nanotech pools):
 | Pad | Colour | Effect |
 |---|---|---|
 | Surge | Blue | Speed |
-| Spring | Green | High jump |
+| Spring | Green | High jump (one held jump clears 6 tiles; the air jump is a small extra) |
 | Phase | Cyan | Shift dashes through enemies and laser fences |
 | Impact | Violet | Down in mid-air ground-pounds; breaks cracked floors |
 
@@ -122,6 +122,16 @@ drives the cat through every beat of the test room in headless Godot, and
 movement only (wake-up, platforming, the pool, the transformation, the exit,
 Room 2) and assert that no power was granted before the pool. `room1_tour.gd`
 renders Room 1 stop by stop for a look.
+
+The human-margin audit (`tools/audit/margins.gd`, spots in `spots.gd`, method in
+`human_sweep.gd`; every room audit and `full_game.gd` run it too) sweeps every required
+climb and long jump with ordinary input spread (take-off position, double-jump press time,
+jump hold) and asserts the intended move lands in at least 90% of it and the unintended
+ways (no power, the wrong power, a skip) in none. Looping sounds go through `LoopSfx`
+(`scripts/systems/loop_sfx.gd`): a child of its source, volume set by hand from the
+distance to the cat (the web export plays audio as samples, where positional audio is not
+reliable), stopped out of range and freed with its source; the audits assert no looping
+player outlives its scene (`LoopSfx.orphans`, published as `window.__wake.loops`).
 
 ## Room 1 and the powers
 

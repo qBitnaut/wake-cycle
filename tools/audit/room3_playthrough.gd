@@ -13,12 +13,13 @@
 ## ledges inside one 10 s charge, the conduit (the shockwave unlocks there and
 ## only there), the crates, the patrol bot, the shock switch and shutter, the
 ## mirror bot and its plate (also walked back and forth: recoverable), the Spring
-## tower, the Surge pad, the ten-tile gap, the exit to Room 4. Asserts that
+## tower, the Surge pad, the nine-tile gap, the exit to Room 4. Asserts that
 ## only Spring and Surge are ever granted (never Phase or Impact), only from
 ## pads. Prints MEASURE lines with the clearances. Exit code 1 if any check
 ## fails. Deletes user://save.json (use --user-data-dir to keep your own).
 extends SceneTree
 
+const HumanSweep := preload("res://tools/audit/human_sweep.gd")
 const G := 1152.0       ## yard floor y (row 36)
 const S1 := 960.0       ## shed roof (row 30)
 const S2 := 768.0       ## floating ledge (row 24)
@@ -29,7 +30,7 @@ const PIT_Y := 704.0    ## the pit floor under the gap (row 22)
 const GROOF := 192.0    ## gallery roof (row 6)
 const WALL1 := 1088.0   ## face of the shed (col 34)
 const LEDGE_L := 1440.0
-const LEDGE_R := 1632.0
+const LEDGE_R := 1696.0   ## right end of the floating ledge (cols 45-52)
 const LONG_L := 1728.0  ## face of the long roof (col 54)
 const CONDUIT_X := 2224.0
 const CRATES_X := 2464.0
@@ -39,7 +40,7 @@ const BAY_L := 3264.0
 const BAY_GATE_X := 4080.0
 const TOWER_L := 4416.0
 const TAKEOFF := 4672.0 # right edge of the tower top
-const LAND_L := 4992.0
+const LAND_L := 4960.0
 
 var room: Node2D
 var cat: CharacterBody2D
@@ -352,6 +353,7 @@ func _run_lab() -> void:
 
 func _setup(chained: bool) -> void:
 	if not chained:
+		await HumanSweep.lab(self, "room3", note, "LAB ")
 		mono().line_started.connect(func(id: String, text: String): _lines.append([id, text]))
 		await _run_lab()
 		_start_room()
@@ -444,15 +446,15 @@ func _lab() -> void:
 	_hops["H3"] = h3[2]
 	var h4 := await _lab_hop("H4 roof -> tower top (6 tiles)", 4250.0, S3, 1.0, jump_list(TOWER_L, near), djs, 4430.0, 4660.0, S4, 2)
 	_hops["H4"] = h4[2]
-	var h5 := await _lab_hop("H5 ten-tile gap", 4528.0, S4, 1.0, jump_list(TAKEOFF, [-8.0, -4.0, 0.0, 4.0, 8.0]), djs, 4995.0, 5400.0, S4, 1)
+	var h5 := await _lab_hop("H5 nine-tile gap", 4528.0, S4, 1.0, jump_list(TAKEOFF, [-8.0, -4.0, 0.0, 4.0, 8.0]), djs, 4965.0, 5400.0, S4, 1)
 	_hops["H5"] = h5[2]
 	measure("wall 1 (6 tiles = 192 px)", "plain best rise %.0f px (%.0f px short), Spring %.0f px (%.0f px spare)" % [h1[0], 192.0 - h1[0], h1[1], h1[1] - 192.0])
 	measure("tower (6 tiles = 192 px)", "plain best rise %.0f px, Spring %.0f px" % [h4[0], h4[1]])
-	measure("ten-tile gap (320 px, needs 298)", "Surge lands %d of %d trials; plain and Spring none" % [h5[3], h5[4]])
+	measure("nine-tile gap (288 px, needs 266)", "Surge lands %d of %d trials; plain and Spring none" % [h5[3], h5[4]])
 	# The skips that must not exist.
 	var skip1 := await _lab_hop("S1 shed -> long roof direct (12 tiles)", 1650.0, S1, 1.0, jump_list(LONG_L, near), djs, 1735.0, 2100.0, S3, -1)
 	var skip2 := await _lab_hop("S2 long roof -> gallery roof (12 tiles)", 1950.0, S3, 1.0, jump_list(2112.0, near), djs, 2130.0, 2900.0, GROOF, -1)
-	var skip3 := await _lab_hop("S3 pit floor -> far tower (10 tiles)", 4850.0, PIT_Y, 1.0, jump_list(LAND_L, near), djs, 5000.0, 5200.0, S4, -1)
+	var skip3 := await _lab_hop("S3 pit floor -> far tower (10 tiles)", 4850.0, PIT_Y, 1.0, jump_list(LAND_L, near), djs, 4968.0, 5200.0, S4, -1)
 	note("LAB no skips: the 12-tile climbs are out of every power's reach, so is the far tower from the pit", skip1[0] == 0 and skip2[0] == 0 and skip3[0] == 0, "hits %d / %d / %d" % [skip1[0], skip2[0], skip3[0]])
 	# The pit has stairs back up on the near side: climbing them needs no power.
 	gs().clear_power()
@@ -551,9 +553,11 @@ func _beat_spring_discovery() -> void:
 	await attempt(0.0, 0.0, 1.0, p["jump_x"], p["dj"], 0, false)
 	note("B1 the pad grants Spring (a pad, nothing else); the emitters go green", power0 == 0 and _grants.size() == 1 and _grants[0] == [2, true] and close(aug_color(), Color(0.2, 1.0, 0.5), 0.1), "grants %s, emitter %s" % [str(_grants), str(aug_color())])
 	note("B1 with Spring the double jump climbs the 6-tile wall onto the shed roof", landed(1100.0, 1700.0, S1), "x=%.0f y=%.0f" % [x(), y()])
+	var charge_left: float = gs().power_time   # read before the (queued) monologue is waited out
 	await wait_lines("spring_first", 2)
+	note("B1 the hint at the foot of the wall played on the way to the pad", lines_of("spring_hint") == ["Too high to jump... that green pad hums like a spring."], str(lines_of("spring_hint")))
 	note("B1 the monologue fires on the first use", lines_of("spring_first") == ["Up! Higher than any cat should go.", "Green this time. Each pad wakes a different part of me."], str(lines_of("spring_first")))
-	note("B1 the power is timed (10 s)", absf(gs().power_duration - 10.0) < 0.01 and gs().power_time > 5.0, "%.1f s left" % gs().power_time)
+	note("B1 the power is timed (10 s)", absf(gs().power_duration - 10.0) < 0.01 and charge_left > 5.0, "%.1f s left after the climb" % charge_left)
 	mark("B1 discovery")
 
 
@@ -751,8 +755,8 @@ func _beat_combine() -> void:
 	await ticks(40)
 	note("G the Surge pad on top replaces Spring: the two powers in sequence", gs().power == 1 and _grants.size() == grants0 + 2 and _grants[-1] == [1, true] and close(aug_color(), Color(0.16, 0.42, 1.0), 0.1), "power %d, grants %s, emitter %s" % [gs().power, str(_grants.slice(grants0)), str(aug_color())])
 	var t0 := _frames
-	ok = await _hop("H5", 4995.0, 5400.0, S4)
-	note("G Surge's double jump crosses the ten-tile gap onto the exit roof", ok, "%.1f s from the pad" % ((_frames - t0) / 60.0))
+	ok = await _hop("H5", 4965.0, 5400.0, S4)
+	note("G Surge's double jump crosses the nine-tile gap onto the exit roof", ok, "%.1f s from the pad" % ((_frames - t0) / 60.0))
 	await ticks(10)
 	await go_to(5056.0, 6.0)
 	await ticks(10)
@@ -773,6 +777,7 @@ func _beat_exit() -> void:
 	stop()
 	var hop: Dictionary = await MapHop.through(root.get_tree(), "stacks", "perimeter")
 	note("H the exit fades out onto the world map, the stacks are finished and the perimeter opens", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
+	note("H sound: after the exit no looping sound from the room is still playing, on the map or in the next room", hop["sound_map"].is_empty() and hop["sound_next"].is_empty(), "map %s next %s" % [str(hop["sound_map"]), str(hop["sound_next"])])
 	await ticks(exit_settle)
 	var next := current_scene
 	note("H the perimeter is entered from the map: Room 4 loads", next != null and next.scene_file_path == "res://scenes/levels/room4.tscn", str(next.scene_file_path if next else "?"))

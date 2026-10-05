@@ -15,7 +15,8 @@ extends Level
 ## GameState.awaken_mind() (intelligence; no power).
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
-## every physics frame; window.wakeTeleport(x, y) moves the cat.
+## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2
+## jumps straight to Room 2 (see _web_start_override).
 
 signal nanotech_absorbed_started
 signal transform_finished
@@ -75,6 +76,7 @@ func _ready() -> void:
 		_start_intro()
 	if OS.has_feature("web"):
 		_setup_web()
+		_web_start_override()
 
 
 # ---- intro ----------------------------------------------------------------
@@ -199,6 +201,21 @@ func _setup_web() -> void:
 		cat.velocity = Vector2.ZERO)
 	_js_callbacks.append(cb)
 	win["wakeTeleport"] = cb
+
+
+## Web audit deep link: index.html?start=room2 skips Room 1 and arrives in Room 2
+## the way the exit would leave the cat (mind awake, no powers, auto-save).
+func _web_start_override() -> void:
+	if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''")) != "room2":
+		return
+	intro_done = true
+	GameState.new_game()
+	GameState.awaken_mind()
+	Monologue.reset()
+	SaveSystem.session_scene = ""
+	SaveSystem.session_checkpoint = ""
+	RoomTransition.arriving = true
+	get_tree().change_scene_to_file.call_deferred("res://scenes/levels/room2.tscn")
 
 
 func _flag(node_name: String, prop: String) -> Variant:

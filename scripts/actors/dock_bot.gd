@@ -13,7 +13,7 @@ const FRAME := Vector2i(96, 80)
 const HALO := preload("res://assets/fx/halo.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 ## Visor and chest eye, in frame px.
-const EYES := [Rect2(44, 23, 7, 3), Rect2(45, 35, 4, 3)]
+const EYES := [Rect2(44, 22, 7, 4), Rect2(45, 35, 4, 3)]
 const ASLEEP := Color(0.34, 0.37, 0.52)
 const AWAKE := Color(0.62, 0.66, 0.84)
 
@@ -27,6 +27,7 @@ var has_reacted := false
 
 var _cat: Cat
 var _body: Sprite2D
+var _eye_root: Node2D
 var _eyes: Array[Polygon2D] = []
 var _halo: Sprite2D
 var _light: PointLight2D
@@ -48,25 +49,31 @@ func _ready() -> void:
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	add.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	# The eyes live under a node centred on the frame, so mirroring the body mirrors them.
+	_eye_root = Node2D.new()
+	_eye_root.position = _body.position + Vector2(FRAME.x / 2.0, 0)
+	add_child(_eye_root)
+	var solid := CanvasItemMaterial.new()
+	solid.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	for r: Rect2 in EYES:
+		var q := Rect2(r.position - Vector2(FRAME.x / 2.0, 0), r.size)
 		var p := Polygon2D.new()
-		p.polygon = PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
-		p.position = _body.position
-		p.material = add
-		add_child(p)
+		p.polygon = PackedVector2Array([q.position, Vector2(q.end.x, q.position.y), q.end, Vector2(q.position.x, q.end.y)])
+		p.material = solid  # opaque, so the visor reads as the emitter colour, not a white-out
+		_eye_root.add_child(p)
 		_eyes.append(p)
 	_halo = Sprite2D.new()
 	_halo.texture = HALO
-	_halo.scale = Vector2(0.55, 0.55)
-	_halo.position = _body.position + Vector2(47.5, 24.5)
+	_halo.scale = Vector2(0.7, 0.7)
+	_halo.position = Vector2(-0.5, 24.5)
 	_halo.material = add
-	add_child(_halo)
+	_eye_root.add_child(_halo)
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
 	_light.texture_scale = 0.9
 	_light.position = _halo.position
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD
-	add_child(_light)
+	_eye_root.add_child(_light)
 	_apply(0.0, FXPalette.LASER)
 
 
@@ -92,6 +99,7 @@ func _physics_process(delta: float) -> void:
 		wake = move_toward(wake, 1.0, delta * 2.5)
 		if face_cat:
 			_body.flip_h = _cat.global_position.x < global_position.x
+			_eye_root.scale.x = -1.0 if _body.flip_h else 1.0
 	else:
 		wake = move_toward(wake, 0.0, delta * 0.8)
 	eye_color = FXPalette.LASER.lerp(_emitter_color(), clampf(wake * 1.4, 0.0, 1.0))
@@ -107,9 +115,9 @@ func _physics_process(delta: float) -> void:
 
 func _apply(level: float, c: Color) -> void:
 	for p in _eyes:
-		p.color = Color(c * (0.9 + 1.2 * level), 1.0) if level > 0.0 else Color(0, 0, 0, 0)
+		p.color = Color(c * (0.7 + 0.7 * level), 1.0) if level > 0.0 else Color(0, 0, 0, 0)
 		p.modulate.a = clampf(level, 0.0, 1.0)
-	_halo.modulate = Color(c * 0.5 * level, 1.0)
+	_halo.modulate = Color(c * 0.9 * level, 1.0)
 	_light.color = c
 	_light.energy = 0.9 * level
 

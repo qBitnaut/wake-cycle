@@ -48,7 +48,7 @@ func _ready() -> void:
 	z_index = 4
 	_body = Sprite2D.new()
 	_body.texture = DRONE
-	_body.scale = Vector2(0.75, 0.75)
+	_body.scale = Vector2(1.0, 1.0)
 	_body.self_modulate = Color(0.85, 0.85, 0.9)
 	add_child(_body)
 	_eye = Polygon2D.new()

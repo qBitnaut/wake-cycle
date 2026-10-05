@@ -648,7 +648,14 @@ func _beat_exit() -> void:
 	var save: Dictionary = ss().read_save()
 	note("J auto-saved at the start of Room 2", save.get("scene", "") == "res://scenes/levels/room2.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))
 	note("J the cat keeps its augments in Room 2 (mind flag set)", r2 != null and r2.get_node_or_null("Cat/Sprite/Augments") != null and gs().intelligence)
-	note("J Room 2 stub shows the coming-soon text", r2 != null and r2.get_node_or_null("ComingSoon") != null)
+	var r2cat: Node2D = r2.get_node("Cat") if r2 != null else null
+	note("J Room 2 (The Yard) starts: the cat at the warehouse door, control, no power, mind awake", r2cat != null and absf(r2cat.global_position.x - 112.0) < 12.0 and r2cat.can_move and gs().power == 0 and not gs().shockwave_unlocked and gs().intelligence, "x=%.0f" % (r2cat.global_position.x if r2cat else -1.0))
+	var wn := 0
+	while not _lines.any(func(l): return l[0] == "yard_arrival") and wn < 1200:  # it queues behind the exit hint
+		await ticks(1)
+		wn += 1
+	note("J Room 2 greets the cat with its first thought (Rain. Cold. Real.)", _lines.any(func(l): return l[0] == "yard_arrival" and l[1] == "Rain. Cold. Real."), str(_lines.filter(func(l): return l[0] == "yard_arrival")))
+	note("J Room 2 has four Surge pads and nothing that grants another power", r2 != null and r2.find_children("*", "PowerPad", true, false).size() == 4 and r2.find_children("*", "PowerPad", true, false).all(func(p): return p.get("power") == 1))
 	mark("J exit")
 
 

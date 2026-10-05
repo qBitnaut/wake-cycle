@@ -13,7 +13,8 @@ extends Level
 ## power or the shockwave. `power_grants` and `power_violations` are audit hooks.
 ##
 ## Web debug hooks for tools/audit/web_room2.mjs: window.__wake is published
-## every physics frame; window.wakeTeleport(x, y) moves the cat.
+## every physics frame; window.wakeTeleport(x, y) moves the cat and
+## window.wakeStrike() fires a lightning strike.
 
 ## Rain is a moving window of RainFX that follows the camera.
 const RAIN_NODES := ["RainFar", "RainNear"]
@@ -89,11 +90,21 @@ func _setup_web() -> void:
 		cat.velocity = Vector2.ZERO)
 	_js_callbacks.append(cb)
 	win["wakeTeleport"] = cb
+	var strike := JavaScriptBridge.create_callback(func(_a):
+		if _lightning:
+			_lightning.strike(1.0))
+	_js_callbacks.append(strike)
+	win["wakeStrike"] = strike
 
 
 func _flag(node_name: String, prop: String) -> Variant:
 	var n := get_node_or_null(node_name)
 	return n.get(prop) if n else null
+
+
+func _probe(from: Vector2, to: Vector2) -> bool:
+	var q := PhysicsRayQueryParameters2D.create(from, to, 1)
+	return not cat.get_world_2d().direct_space_state.intersect_ray(q).is_empty()
 
 
 func _publish() -> void:
@@ -117,7 +128,11 @@ func _publish() -> void:
 		"drone": _flag("SearchDrone", "state"), "droneX": _flag("SearchDrone", "global_position"),
 		"lit": _flag("SearchDrone", "lit"), "alarm": _flag("SearchDrone", "alarmed"),
 		"dock": _flag("DockBot", "wake"), "dockReacted": _flag("DockBot", "has_reacted"),
-		"thunders": thunders,
+		"thunders": thunders, "flash": _lightning._level if _lightning else 0.0,
+		# Probes for the audit's reactive runner: a wall 34 px ahead, floor within 80 px below, bots.
+		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),
+		"groundBelow": _probe(cat.global_position + Vector2(0, -2), cat.global_position + Vector2(0, 80)),
+		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y]),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 	}
 	var dp = d["droneX"]

@@ -216,11 +216,23 @@ func no_powers() -> bool:
 
 # ---- the run --------------------------------------------------------------
 
+## Standalone: a fresh Room 1, every beat, the checkpoint and respawn beats. In the
+## full-game chain (tools/audit/full_game.gd) the scene is already loaded and the run
+## stops at the exit: see _setup(true) and _beats(true).
 func _main() -> void:
-	ss().delete_save()
-	room = load("res://scenes/levels/room1.tscn").instantiate()
-	root.add_child(room)
-	current_scene = room
+	await _setup(false)
+	await _beats(false)
+	_finish()
+
+
+func _setup(chained: bool) -> void:
+	if not chained:
+		ss().delete_save()
+		room = load("res://scenes/levels/room1.tscn").instantiate()
+		root.add_child(room)
+		current_scene = room
+	else:
+		room = current_scene
 	await ticks(4)
 	cat = room.get_node("Cat")
 	cat.hurt_taken.connect(func(_hp): _hurt += 1)
@@ -235,24 +247,57 @@ func _main() -> void:
 	if OS.get_environment("STUB_ANIMS") != "":
 		_stub_anims()
 
+
+## Ticks to wait after a room exit loads the next room before checking it. The
+## full-game chain sets it small, so the next routine meets the room as its own
+## standalone run does (patrols and drones in the same phase).
+var exit_settle := 100
+
+
+## Full-game chain hook: called as beat_hook.call(self, "<beat>") after each beat
+## (tools/audit/full_game.gd uses it for the continue-from-save checks).
+var beat_hook := Callable()
+
+
+func _after(beat_name: String) -> void:
+	if beat_hook.is_valid():
+		await beat_hook.call(self, beat_name)
+
+
+func _beats(chained: bool) -> void:
 	await _beat_intro()
+	await _after("intro")
 	await _beat_b()
+	await _after("b")
 	await _beat_c()
+	await _after("c")
 	await _beat_d()
+	await _after("d")
 	await _beat_e()
+	await _after("e")
 	await _beat_f()
+	await _after("f")
 	await _beat_g()
+	await _after("g")
 	await _beat_h()
+	await _after("h")
 	await _beat_pool()
+	await _after("pool")
 	await _beat_exit()
-	await _beat_continue()
-	await _beat_respawn()
+	await _after("exit")
+	if not chained:
+		await _beat_continue()
+		await _after("continue")
+		await _beat_respawn()
+		await _after("respawn")
 	var headless_win: bool = DisplayServer.window_get_size() == Vector2i.ZERO
 	if headless_win:  # --headless has a 0x0 window: the window-space check lives in web_room1.mjs
 		_sub_cine = [999, 0, 0, "(headless: no window; web_room1.mjs checks this in window pixels)", 0.0]
 	note("I subtitles sit at the window bottom and never lie on the zoomed cat during the close-up", _sub_cine[0] > 20 and _sub_cine[1] == 0 and _sub_cine[2] == 0 and _sub_cine[4] <= 16.0, "%d frames sampled, %d overlap, %d off-window, at most %.0f game px above the window bottom %s" % [_sub_cine[0], _sub_cine[1], _sub_cine[2], _sub_cine[4], _sub_cine[3]])
 	note("J subtitles never cover the cat or the crate in normal play (right after the close-up too), and stay on screen", _sub_play[0] > 200 and _sub_play[1] == 0 and _sub_play[2] == 0, "%d frames sampled, %d overlap, %d off-screen %s" % [_sub_play[0], _sub_play[1], _sub_play[2], _sub_play[3]])
 
+
+func _finish() -> void:
 	var ok_all := true
 	for r in results:
 		ok_all = ok_all and r[1]
@@ -642,7 +687,7 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
-	await ticks(90)
+	await ticks(exit_settle)
 	var r2 := current_scene
 	note("J exit fades out and loads Room 2", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))
 	var save: Dictionary = ss().read_save()

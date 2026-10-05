@@ -121,3 +121,7 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
   birdsong and the ending music. Headless and web playthroughs check the
   walk, the flap, the sleep, every line, the credits and the return to the
   start (`tools/audit/home_playthrough.gd`, `tools/audit/web_home.mjs`).
+- Integration: `data` merged the three finished branches (Room 3 and 4, Home), wired the
+  exits into one chain, made the Room 4 laser fences solid so Phase is truly required,
+  faded the Room 4 rain loop with the dawn, and wrote the full-game audit
+  (`tools/audit/full_game.gd`), which plays Room 1 through the credits and back in one run.

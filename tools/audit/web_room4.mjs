@@ -471,11 +471,11 @@ await shot('E_dawn_exit_road_to_the_suburbs');
 await dir(1);
 for (let n = 0; W.scene.endsWith('room4.tscn') && n < 900; n++) { await frame(); if (n === 60) await shot('E_exit_fade'); }
 await stop();
-for (let i = 0; i < 100 && !W.scene.endsWith('after_room4.tscn'); i++) { await sleep(50); await poll(); }
+for (let i = 0; i < 100 && !W.scene.endsWith('home.tscn'); i++) { await sleep(50); await poll(); }
 await sleep(1800); await poll();
-note('E the exit leads to the Home stub', W.scene.endsWith('stubs/after_room4.tscn'), W.scene);
+note('E the exit leads to Home', W.scene.endsWith('home.tscn'), W.scene);
 note('E auto-saved with the mind and the shockwave', W.save && W.mind && W.shock);
-await shot('E_home_coming_soon');
+await shot('E_home_arrival');
 
 console.log('[fps summary]', JSON.stringify(fps));
 const failed = results.filter(r => !r[1]);

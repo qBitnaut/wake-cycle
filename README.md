@@ -87,7 +87,9 @@ Regenerating generated content (all optional; the results are committed):
   see each script's docstring.
 - TileSet: `godot --headless --path . --script res://tools/build_tileset_hd.gd`
 - Test room: `godot --headless --path . --script res://tools/build_test_room.gd`
-- Room 1 and the Room 2 stub: `godot --headless --path . --script res://tools/build_room1.gd`
+- Rooms: `godot --headless --path . --script res://tools/build_room1.gd` (also Room 2), then
+  `build_room3.gd`, `build_room4.gd` and `build_home.gd` the same way. Each room's exit
+  is set in its builder, so a rebuild keeps the chain.
 
 Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and
@@ -107,6 +109,23 @@ emitting `nanotech_absorbed_started` (on the level and on `GameState`); when it
 finishes the level calls `GameState.awaken_mind()` (the goo grants intelligence, saved as `intelligence`, signal `mind_awakened`; no power is granted, powers arrive later via pads). `Monologue.say(text, duration)` is the hook for the cat's inner monologue. The exit fades to black
 and loads the next room, which auto-saves on arrival (`RoomExit`,
 `RoomTransition`). Pass `-- --skip-intro` to Godot to start Room 1 awake.
+
+## The chain
+
+Room 1 (the warehouse, the pool: the mind awakens) -> Room 2 "The Yard" (Surge) ->
+Room 3 "The Stacks" (Spring, the conduit that unlocks the shockwave, the mirror bot) ->
+Room 4 "The Perimeter" (Phase, Impact, the Master Gate, the dawn) -> Home -> the credits ->
+a fresh Room 1. Every exit is a `RoomExit` that fades out and auto-saves the next room on
+arrival; `GameState` (mind, shockwave, score, keys, letters, pickups, health) carries across.
+Powers come only from pads and never survive an exit. In Room 4 the laser fences are solid
+while they are on (`LaserFence.solid_when_on`): only a dashing Phase cat gets through, and a
+Phase pad sits between any two fences. The Room 4 rain loop fades with the dawn.
+
+`tools/audit/full_game.gd` plays the whole chain in one headless run, reusing every room's
+playthrough routine, with continuity checks at each transition and continue-from-save checks
+from a Room 3 and a Room 4 checkpoint.
+
+Web deep links for audits: `index.html?start=room2` (or `room3`, `room4`, `home`).
 
 ## Home, the ending
 

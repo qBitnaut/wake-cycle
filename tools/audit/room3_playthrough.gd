@@ -13,7 +13,7 @@
 ## ledges inside one 10 s charge, the conduit (the shockwave unlocks there and
 ## only there), the crates, the patrol bot, the shock switch and shutter, the
 ## mirror bot and its plate (also walked back and forth: recoverable), the Spring
-## tower, the Surge pad, the ten-tile gap, the exit to the stub. Asserts that
+## tower, the Surge pad, the ten-tile gap, the exit to Room 4. Asserts that
 ## only Spring and Surge are ever granted (never Phase or Impact), only from
 ## pads. Prints MEASURE lines with the clearances. Exit code 1 if any check
 ## fails. Deletes user://save.json (use --user-data-dir to keep your own).
@@ -329,9 +329,18 @@ func _start_room() -> void:
 	current_scene = room
 
 
+## Standalone: the lab (where each power is required), then a fresh Room 3 as Room 2
+## leaves the cat. In the full-game chain (tools/audit/full_game.gd) Room 3 is already
+## loaded and the lab is skipped: _setup(true).
 func _main() -> void:
-	mono().line_started.connect(func(id: String, text: String): _lines.append([id, text]))
-	# ---- LAB ----
+	await _setup(false)
+	await _beats()
+	_finish()
+
+
+## The lab: where each power is required, and the hop parameters the route uses
+## (its own Room 3, discarded afterwards). The full-game chain runs it first.
+func _run_lab() -> void:
 	_start_room()
 	await ticks(4)
 	refresh()
@@ -339,30 +348,72 @@ func _main() -> void:
 	await _lab()
 	room.queue_free()
 	await ticks(4)
-	# ---- PLAY ----
-	_start_room()
-	_lines.clear()
+
+
+func _setup(chained: bool) -> void:
+	if not chained:
+		mono().line_started.connect(func(id: String, text: String): _lines.append([id, text]))
+		await _run_lab()
+		_start_room()
+		_lines.clear()
+	else:
+		room = current_scene
+		_lines = mono().history.duplicate()  # the arrival lines began before this routine took over
+		mono().line_started.connect(func(id: String, text: String): _lines.append([id, text]))
 	await ticks(4)
 	refresh()
 	gs().power_changed.connect(func(p: int, _d: float):
 		if p != 0:
 			_grants.append([p, on_pad()]))
 	_beat_start = _frames
+
+
+## Ticks to wait after a room exit loads the next room before checking it. The
+## full-game chain sets it small, so the next routine meets the room as its own
+## standalone run does (patrols and drones in the same phase).
+var exit_settle := 100
+## Hook counts of a room instance the chain reloaded (a Continue): carried into the Z checks.
+var _prior_unlocks: Array = []
+var _prior_violations := 0
+
+
+## Full-game chain hook: called as beat_hook.call(self, "<beat>") after each beat
+## (tools/audit/full_game.gd uses it for the continue-from-save checks).
+var beat_hook := Callable()
+
+
+func _after(beat_name: String) -> void:
+	if beat_hook.is_valid():
+		await beat_hook.call(self, beat_name)
+
+
+func _beats() -> void:
 	await _beat_arrival()
+	await _after("arrival")
 	await _beat_spring_discovery()
+	await _after("spring_discovery")
 	await _beat_spring_use()
+	await _after("spring_use")
 	await _beat_conduit()
+	await _after("conduit")
 	await _beat_shockwave()
+	await _after("shockwave")
 	await _beat_mirror()
+	await _after("mirror")
 	await _beat_combine()
-	var violations: int = room.get("power_violations")
-	var unlocks: Array = room.get("shock_unlocks")
+	await _after("combine")
+	var violations: int = int(room.get("power_violations")) + _prior_violations
+	var unlocks: Array = _prior_unlocks + room.get("shock_unlocks")
 	await _beat_exit()
+	await _after("exit")
 
 	note("Z only Spring and Surge were ever granted, each from a pad, never Phase or Impact", _grants.size() >= 4 and _grants.all(func(g): return (g[0] == 1 or g[0] == 2) and g[1]), "%d grants: %s" % [_grants.size(), str(_grants)])
 	note("Z Room3 audit hooks agree: no power violation", violations == 0, "violations %d" % violations)
 	note("Z the shockwave unlocked exactly once, at the conduit", unlocks.size() == 1 and unlocks[0][2], str(unlocks))
 	note("Z no deaths in the scripted run", _died == 0, "died %d, hurt %d, hop retries %d" % [_died, _hurt, _retries])
+
+
+func _finish() -> void:
 	var ok_all := true
 	for r in results:
 		ok_all = ok_all and r[1]
@@ -720,10 +771,9 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
-	await ticks(100)
+	await ticks(exit_settle)
 	var next := current_scene
-	note("H the exit leads to the stub after Room 3", next != null and next.scene_file_path == "res://scenes/levels/stubs/after_room3.tscn", str(next.scene_file_path if next else "?"))
-	note("H the stub says Room 4 is coming soon", next != null and next.get_node_or_null("ComingSoon") != null and next.get_node("ComingSoon").text == "Room 4 - coming soon")
+	note("H the exit leads to Room 4", next != null and next.scene_file_path == "res://scenes/levels/room4.tscn", str(next.scene_file_path if next else "?"))
 	var save: Dictionary = ss().read_save()
-	note("H auto-saved in the stub with the mind and the shockwave", save.get("scene", "") == "res://scenes/levels/stubs/after_room3.tscn" and save.get("abilities", {}).get("mind", false) and save.get("abilities", {}).get("shockwave", false), str(save.get("abilities", {})))
+	note("H auto-saved in Room 4 with the mind and the shockwave", save.get("scene", "") == "res://scenes/levels/room4.tscn" and save.get("abilities", {}).get("mind", false) and save.get("abilities", {}).get("shockwave", false), str(save.get("abilities", {})))
 	mark("H exit")

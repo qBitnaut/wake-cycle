@@ -311,22 +311,36 @@ func phase_run(target: float, limit := 2400) -> Dictionary:
 
 # ---- the run --------------------------------------------------------------
 
+## Standalone: a fresh Room 4 on a bare GameState (the room's own safety net is tested
+## too), the whole route, then the sky and the safety nets. In the full-game chain
+## (tools/audit/full_game.gd) Room 4 is already loaded, as Room 3's exit leaves the
+## cat: _setup(true), _beats(true) (the sky and safety beat reloads the room, so it
+## runs standalone only; the chain continues from the exit into Home).
 func _main() -> void:
+	await _setup(false)
+	await _beats(false)
+	_finish()
+
+
+func _setup(chained: bool) -> void:
 	_shots = OS.get_environment("SHOTS")
 	if _shots != "":
 		DirAccess.make_dir_recursive_absolute(_shots)
-	ss().delete_save()
-	gs().new_game()
-	mono().reset()
-	# As Room 3 leaves the cat: mind awake, shockwave unlocked, no power. The room's own safety net
-	# is tested too (BEAT A starts from a bare GameState on purpose).
+	if chained:
+		_lines = mono().history.duplicate()  # the arrival lines began before this routine took over
 	mono().line_started.connect(func(id: String, text: String): _lines.append([id, text]))
-	ss().session_scene = ""
-	ss().session_checkpoint = ""
-	RoomTransition.arriving = true
-	room = load("res://scenes/levels/room4.tscn").instantiate()
-	root.add_child(room)
-	current_scene = room
+	if not chained:
+		ss().delete_save()
+		gs().new_game()
+		mono().reset()
+		ss().session_scene = ""
+		ss().session_checkpoint = ""
+		RoomTransition.arriving = true
+		room = load("res://scenes/levels/room4.tscn").instantiate()
+		root.add_child(room)
+		current_scene = room
+	else:
+		room = current_scene
 	await ticks(4)
 	refresh()
 	gs().power_changed.connect(func(p: int, _d: float):
@@ -334,21 +348,58 @@ func _main() -> void:
 			_grants.append([p, on_pad()]))
 	process_frame.connect(_sample_drone)
 
-	await _beat_arrival()
-	await _beat_phase1()
-	await _beat_phase2()
-	await _beat_phase3()
-	await _beat_impact1()
-	await _beat_impact2()
-	await _beat_impact3()
-	await _beat_relay1()
-	await _beat_relay2()
-	await _beat_gate_locked()
-	await _beat_relay3()
-	await _beat_scanner()
-	await _beat_exit()
-	await _beat_sky_and_safety()
 
+## Ticks to wait after a room exit loads the next room before checking it. The
+## full-game chain sets it small, so the next routine meets the room as its own
+## standalone run does (patrols and drones in the same phase).
+var exit_settle := 100
+
+
+## Full-game chain hook: called as beat_hook.call(self, "<beat>") after each beat
+## (tools/audit/full_game.gd uses it for the continue-from-save checks).
+var beat_hook := Callable()
+
+
+func _after(beat_name: String) -> void:
+	if beat_hook.is_valid():
+		await beat_hook.call(self, beat_name)
+
+
+func _beats(chained: bool) -> void:
+	await _beat_arrival()
+	await _after("arrival")
+	await _beat_phase1()
+	await _after("phase1")
+	await _beat_phase2()
+	await _after("phase2")
+	await _beat_phase3()
+	await _after("phase3")
+	await _beat_fences_solid()
+	await _after("fences_solid")
+	await _beat_impact1()
+	await _after("impact1")
+	await _beat_impact2()
+	await _after("impact2")
+	await _beat_impact3()
+	await _after("impact3")
+	await _beat_relay1()
+	await _after("relay1")
+	await _beat_relay2()
+	await _after("relay2")
+	await _beat_gate_locked()
+	await _after("gate_locked")
+	await _beat_relay3()
+	await _after("relay3")
+	await _beat_scanner()
+	await _after("scanner")
+	await _beat_exit()
+	await _after("exit")
+	if not chained:
+		await _beat_sky_and_safety()
+		await _after("sky_and_safety")
+
+
+func _finish() -> void:
 	var ok_all := true
 	for r in results:
 		ok_all = ok_all and r[1]
@@ -388,6 +439,7 @@ func _beat_arrival() -> void:
 	note("A HUD shown", (node("Hud") as CanvasLayer).visible)
 	note("A rain, a lightning rig, the backdrop, guard towers, signs", node("RainNear") != null and node("Lightning") != null and node("Exterior") != null and room.find_children("*", "GuardTower", true, false).size() >= 6 and room.find_children("*", "SignBoard", true, false).size() >= 10)
 	note("A the dash is a little longer in this room (0.2 s)", is_equal_approx(cat.get("dash_time"), 0.2), "dash_time %.2f" % cat.get("dash_time"))
+	note("A the rain loop is playing at the start", node("Ambience").rain_playing() and node("Ambience").get("rain_level") > 0.9, "level %.2f" % node("Ambience").get("rain_level"))
 	await wait_lines("perimeter_arrival", 2)
 	note("A arrival monologue, two lines", lines_of("perimeter_arrival") == ["Fences. Lasers. Lights that watch.", "'Authorised units only.' ...Am I a unit now?"], str(lines_of("perimeter_arrival")))
 	await shot("A_arrival")
@@ -514,6 +566,7 @@ func _beat_phase2() -> void:
 	await ticks(4)
 	cat.set_physics_process(true)
 	note("P2 touching a guard drone costs a hit", hp() == 2, "hp %d" % hp())
+	teleport(drone.global_position.x - 220.0)  # recover well clear of the drone (it bobs low at some phases)
 	await recover()
 	teleport(drone.global_position.x, drone.global_position.y + 10.0)
 	cat.dash_left = 0.2
@@ -682,6 +735,65 @@ func _beat_phase3() -> void:
 	await ticks(20)
 	note("P3 off the roof, on to checkpoint B", ss().session_checkpoint == "cp_b" and ok, "cp %s x=%.0f" % [ss().session_checkpoint, x()])
 	mark("P3 phase+spring")
+
+
+
+# ---- the fences are solid: Phase is required ------------------------------------------
+
+## Without Phase every fence blocks the cat (hurt, never through: tanking it does not skip
+## the lesson), even with a double jump and a run; a Phase dash still goes through.
+func _beat_fences_solid() -> void:
+	var all := fences()
+	var blocked := 0
+	var details: Array = []
+	for f in all:
+		if not f.get("solid_when_on"):
+			continue
+		var fx: float = f.global_position.x
+		var fy: float = f.global_position.y
+		var best := -1e9
+		for trial in 2:
+			await recover()
+			gs().clear_power()
+			teleport(fx - 90.0, fy)
+			await ticks(20)
+			dir(1.0)
+			var n := 0
+			while n < 150:
+				if trial == 1 and n == 40:
+					hold("jump", true)
+				if trial == 1 and n == 41:
+					hold("jump", false)
+				if trial == 1 and n == 52:
+					hold("jump", true)
+				if trial == 1 and n == 53:
+					hold("jump", false)
+				if n % 20 == 0:
+					gs().set_health(3)
+				await ticks(1)
+				n += 1
+			stop()
+			best = maxf(best, x())
+		if best < fx - 3.0:
+			blocked += 1
+		details.append("%s %.0f/%.0f" % [f.name, best, fx])
+	note("F every Phase fence is solid: a plain cat running (and double jumping) at it never gets past, health topped up", blocked == fences().filter(func(f): return f.get("solid_when_on")).size() and blocked >= 9, "%d blocked: %s" % [blocked, ", ".join(details)])
+	# A pad sits between any two fences with no other pad: nobody is ever trapped without Phase.
+	var pads := room.find_children("*", "PowerPad", true, false).filter(func(p): return p.get("power") == 3).map(func(p): return p.global_position.x)
+	var sorted_f: Array = all.duplicate()
+	sorted_f.sort_custom(func(p, q): return p.global_position.x < q.global_position.x)
+	pads.sort()
+	var trapped: Array = []
+	for k in range(sorted_f.size() - 1):
+		var f0: Node2D = sorted_f[k]
+		var f1: Node2D = sorted_f[k + 1]
+		if absf(f0.global_position.y - f1.global_position.y) > 1.0 or f1.global_position.x - f0.global_position.x > 20.0 * T:
+			continue
+		if pads.filter(func(px): return px > f0.global_position.x and px < f1.global_position.x).is_empty():
+			trapped.append([f0.name, f1.name])
+	note("F between two fences there is always a Phase pad (never trapped without Phase)", trapped.is_empty(), str(trapped))
+	await recover()
+	mark("F fences solid")
 
 
 # ---- I1: Impact, discovery ----------------------------------------------------------
@@ -1189,6 +1301,9 @@ func _beat_exit() -> void:
 	await ticks(200)
 	note("E the dawn: the sky is at full pre-dawn and the sunrise has come", sp.progress > 0.99 and sp.dawn > 0.95, "progress %.2f dawn %.2f" % [sp.progress, sp.dawn])
 	await shot("E_dawn_exit_road")
+	var amb := node("Ambience")
+	await ticks(240)
+	note("E the rain loop has faded out with the rain: silent at sunrise", amb != null and not amb.rain_playing() and amb.get("_rain_gain") < 0.01, "level %.2f gain %.2f" % [amb.get("rain_level"), amb.get("_rain_gain")])
 	# A death on the road reloads with the gate open (saved with checkpoint J), the exit open, the sunrise in.
 	var old_room := room.get_instance_id()
 	cat.kill()
@@ -1203,12 +1318,11 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
-	await ticks(100)
-	var stub := current_scene
-	note("E the exit leads to the Home stub", stub != null and stub.scene_file_path == "res://scenes/levels/stubs/after_room4.tscn", str(stub.scene_file_path if stub else "?"))
-	note("E the stub says 'Home - coming soon'", stub != null and stub.get_node_or_null("ComingSoon") != null and stub.get_node("ComingSoon").text == "Home - coming soon")
+	await ticks(exit_settle)
+	var home := current_scene
+	note("E the exit leads to Home", home != null and home.scene_file_path == "res://scenes/levels/home.tscn", str(home.scene_file_path if home else "?"))
 	var save2: Dictionary = ss().read_save()
-	note("E auto-saved in the stub with the mind and the shockwave", save2.get("scene", "") == "res://scenes/levels/stubs/after_room4.tscn" and save2.get("abilities", {}).get("mind", false) and save2.get("abilities", {}).get("shockwave", false), str(save2.get("abilities", {})))
+	note("E auto-saved in Home with the mind and the shockwave", save2.get("scene", "") == "res://scenes/levels/home.tscn" and save2.get("abilities", {}).get("mind", false) and save2.get("abilities", {}).get("shockwave", false), str(save2.get("abilities", {})))
 	mark("E exit")
 
 

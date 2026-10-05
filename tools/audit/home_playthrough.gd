@@ -97,25 +97,36 @@ func wait_until(cond: Callable, limit := 3600) -> bool:
 	return n < limit
 
 
+## Standalone: Home as Room 4 leaves the cat. In the full-game chain
+## (tools/audit/full_game.gd) Home is already loaded: _setup(true).
 func _main() -> void:
-	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://complete.json"))
-	ss().delete_save()
-	# As Room 4 leaves it: the mind awake, the shockwave, arriving through an exit.
-	gs().new_game()
-	gs().awaken_mind()
-	gs().unlock_shockwave()
-	mono().reset()
-	load("res://scripts/systems/room_transition.gd").set("arriving", true)
-	change_scene_to_file(HOME)
-	await ticks(10)
+	await _setup(false)
+	await _beats()
+	_report()
+
+
+func _setup(chained: bool) -> void:
+	if not chained:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://complete.json"))
+		ss().delete_save()
+		# As Room 4 leaves it: the mind awake, the shockwave, arriving through an exit.
+		gs().new_game()
+		gs().awaken_mind()
+		gs().unlock_shockwave()
+		mono().reset()
+		load("res://scripts/systems/room_transition.gd").set("arriving", true)
+		change_scene_to_file(HOME)
+		await ticks(10)
 	room = current_scene
 	cat = room.get_node("Cat")
+
+
+func _beats() -> void:
 	await _arrival()
 	await _walk()
 	await _flap()
 	await _settle()
 	await _credits()
-	_report()
 
 
 func _arrival() -> void:

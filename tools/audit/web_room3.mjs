@@ -2,7 +2,7 @@
 // (Playwright + system Chromium): the Spring discovery wall, the chained ledges,
 // the conduit (the shockwave), the crates, the patrol bot, the shock switch,
 // the mirror bot and its plate, the Spring tower, the Surge gap and the exit to
-// the stub after Room 3, at the default capped frame rate. Starts through the
+// Room 4, at the default capped frame rate. Starts through the
 // debug deep link index.html?start=room3 (Room1 _web_start_override: the cat
 // arrives as Room 2 leaves it). Reads the state Room 3 publishes in window.__wake
 // every physics frame, takes a screenshot at every beat and records console
@@ -341,11 +341,11 @@ note('G only Spring and Surge were granted, no violations', W.violations === 0, 
 await dir(1);
 for (let n = 0; W.scene.endsWith('room3.tscn') && n < 900; n++) { await frame(); if (n === 40) await shot('H_exit_fade'); }
 await stop();
-for (let i = 0; i < 100 && !W.scene.endsWith('after_room3.tscn'); i++) { await sleep(50); await poll(); }
+for (let i = 0; i < 100 && !W.scene.endsWith('room4.tscn'); i++) { await sleep(50); await poll(); }
 await sleep(1800); await poll();
-note('H exit leads to the stub after Room 3', W.scene.endsWith('after_room3.tscn'), W.scene);
+note('H exit leads to Room 4', W.scene.endsWith('room4.tscn'), W.scene);
 note('H the shockwave and the mind carried over, saved', W.save && W.mind && W.shock, `power ${W.power}`);
-await shot('H_after_room3_coming_soon');
+await shot('H_room4_arrival');
 
 const failed = results.filter(r => !r[1]);
 console.log(`== ${results.length} checks, ${failed.length ? failed.length + ' FAILED' : 'ALL PASS'}; console errors: ${consoleErrors.length}`);

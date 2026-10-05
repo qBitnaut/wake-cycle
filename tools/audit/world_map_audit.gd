@@ -187,6 +187,12 @@ func check_fresh_game() -> void:
 	var at := await walk("move_right", 1.5)
 	note("fresh game: walking right goes nowhere (the yard is locked)", at == "warehouse", at)
 	note("fresh game: the yard cannot be entered", not map.call("enter_level", "yard"))
+	# Jumping ahead (a deep link, an old save): the route behind is completed
+	# quietly; only the level ahead is news for the reveal.
+	gs().new_game()
+	var fresh: Array = REG.call("complete", "stacks")
+	note("jumping ahead: only the next level is news", fresh == ["perimeter"], str(fresh))
+	note("jumping ahead: the route behind is completed", gs().map_completed.has("warehouse") and gs().map_completed.has("yard"))
 
 
 # ---- after each level ------------------------------------------------------------------

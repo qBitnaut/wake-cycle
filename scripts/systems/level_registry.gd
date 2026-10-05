@@ -303,24 +303,27 @@ static func complete(id: String) -> Array:
 	if gs == null or not has(id) or is_junction(id):
 		return []
 	ensure_start()
-	var before := open_levels()
-	var todo: Array = [id]
+	# The route behind the cat first, quietly: it is not news.
 	for other in level_ids():
 		if is_main(other) and order_of(other) < order_of(id) and not is_completed(other):
-			todo.push_front(other)
-	for lv in todo:
-		if not gs.map_completed.has(lv):
-			gs.map_completed.append(lv)
-		if not gs.map_unlocked.has(lv):
-			gs.map_unlocked.append(lv)
-		for u in get_level(lv).get("unlocks", []):
-			if not gs.map_unlocked.has(String(u)):
-				gs.map_unlocked.append(String(u))
+			_mark_completed(gs, other)
+	var before := open_levels()
+	_mark_completed(gs, id)
 	var fresh: Array = []
 	for lv in open_levels():
 		if not before.has(lv) and lv != id:
 			fresh.append(lv)
 	return fresh
+
+
+static func _mark_completed(gs: Node, lv: String) -> void:
+	if not gs.map_completed.has(lv):
+		gs.map_completed.append(lv)
+	if not gs.map_unlocked.has(lv):
+		gs.map_unlocked.append(lv)
+	for u in get_level(lv).get("unlocks", []):
+		if not gs.map_unlocked.has(String(u)):
+			gs.map_unlocked.append(String(u))
 
 
 ## Shortest walkable route from `from` to `to` over open nodes, as node ids

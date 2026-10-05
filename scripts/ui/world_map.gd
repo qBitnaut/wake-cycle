@@ -96,6 +96,16 @@ const BACK_TINT := [
 	[0.94, Color(1.00, 0.98, 0.95)],
 	[1.00, Color(1.00, 1.00, 0.98)],
 ]
+## Clouds: a dark storm deck at night, white fair-weather clouds by morning
+## (the cloud art is Home's, painted for daylight).
+const CLOUD_TINT := [
+	[0.00, Color(0.25, 0.28, 0.42)],
+	[0.45, Color(0.29, 0.32, 0.47)],
+	[0.66, Color(0.55, 0.50, 0.68)],
+	[0.80, Color(0.92, 0.80, 0.82)],
+	[0.92, Color(1.00, 0.98, 0.97)],
+	[1.00, Color(1.00, 1.00, 1.00)],
+]
 ## Rim light on landmark top edges: silver moonlight, then warm sunrise, then
 ## a faint sun.
 const RIM_KEYS := [
@@ -321,7 +331,7 @@ func _build() -> void:
 	var back := _lut(BACK_TINT)
 	_rim_lut = _lut(RIM_KEYS)
 	_build_sky()
-	_build_clouds(back)
+	_build_clouds(_lut(CLOUD_TINT))
 	_band("Far", "res://assets/art_hd/bg/towers.png", FAR_SCROLL, FAR_BOTTOM, true, back, Vector2(-1, -1), Vector2(0.6, 0.84), 0.85)
 	_band("Hills", "res://assets/art_hd/home/hills.png", FAR_SCROLL + 0.02, HILLS_BOTTOM, true, back, Vector2(0.6, 0.84), Vector2(2, 3), 1.0)
 	_band("Mid", ART + "mid.png", MID_SCROLL, MID_BOTTOM, false, back, Vector2(-1, -1), Vector2(2, 3), 1.0)
@@ -443,7 +453,7 @@ func _build_clouds(lut: Texture2D) -> void:
 	var holder := Node2D.new()
 	holder.name = "Clouds"
 	add_child(holder)
-	var mat := _layer_mat(lut, Vector2(-1, -1), Vector2(2, 3), 0.62)
+	var mat := _layer_mat(lut)
 	var defs := [
 		# texture, layer x, y, gone by p (camera)
 		["cloud_c", 30.0, 36.0, 0.62], ["cloud_a", 250.0, 18.0, 0.58], ["cloud_b", 470.0, 54.0, 0.66],
@@ -1102,7 +1112,11 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 	_label_id = ""
 	# Everything that just opened starts undrawn.
 	var order := fresh.duplicate()
-	order.sort_custom(func(a, b): return int(LevelRegistry.is_main(a)) < int(LevelRegistry.is_main(b)))
+	# Extras first, the next story level last (the cat walks to that one).
+	order.sort_custom(func(a, b):
+		var ka := Vector2(int(LevelRegistry.is_main(a)), LevelRegistry.order_of(a))
+		var kb := Vector2(int(LevelRegistry.is_main(b)), LevelRegistry.order_of(b))
+		return ka < kb)
 	var routes := {}
 	for id in order:
 		var r := LevelRegistry.route(done, id)

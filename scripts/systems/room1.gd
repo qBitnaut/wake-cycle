@@ -16,7 +16,8 @@ extends Level
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
 ## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2 /
-## room3 / room4 / home jumps straight to that room (see _web_start_override).
+## room3 / room4 / home (and test, the test room) jumps straight to that room (see
+## _web_start_override).
 
 signal nanotech_absorbed_started
 signal transform_finished
@@ -212,6 +213,7 @@ const WEB_STARTS := {
 	"room3": "res://scenes/levels/room3.tscn",
 	"room4": "res://scenes/levels/room4.tscn",
 	"home": "res://scenes/levels/home.tscn",
+	"test": "res://scenes/levels/test_room.tscn",  # tools/audit/web_playthrough.mjs: a bare game, no mind
 }
 
 
@@ -229,13 +231,14 @@ func _web_start_override() -> void:
 		return
 	intro_done = true
 	GameState.new_game()
-	GameState.awaken_mind()
+	if start != "test":
+		GameState.awaken_mind()
 	if start == "room4" or start == "home":
 		GameState.unlock_shockwave()
 	Monologue.reset()
 	SaveSystem.session_scene = ""
 	SaveSystem.session_checkpoint = ""
-	RoomTransition.arriving = true
+	RoomTransition.arriving = start != "test"
 	get_tree().change_scene_to_file.call_deferred(WEB_STARTS[start])
 
 

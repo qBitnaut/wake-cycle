@@ -34,7 +34,7 @@ const server = http.createServer((q, r) => {
   });
 });
 await new Promise(res => server.listen(0, res));
-const url = `http://127.0.0.1:${server.address().port}/index.html`;
+const url = `http://127.0.0.1:${server.address().port}/index.html?start=test`;  // Room 1's deep link to the test room (the main scene is Room 1)
 
 const launchArgs = gpu === 'swiftshader'
   ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']

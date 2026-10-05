@@ -650,7 +650,7 @@ size = Vector2(48, 96)
 [node name="RoomExit" type="Area2D" parent="." unique_id=291266056]
 position = Vector2(4912, 320)
 script = ExtResource("44_8qmr0")
-next_scene = "res://scenes/levels/room2.tscn"
+next_scene = "res://scenes/ui/world_map.tscn"
 size = Vector2(24, 96)
 enabled = true
 

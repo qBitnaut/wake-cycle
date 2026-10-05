@@ -197,6 +197,30 @@ await sleep(900);
 await shot('entered_room2');
 note('F the yard loads room2.tscn', !!inRoom, inRoom ? inRoom.scene : 'no room');
 
+// ---- revisit the warehouse from the map: Room 1 starts awake -------------------------
+await openMap('perimeter');
+await until(m => !m.auto, 30000);
+await page.keyboard.down(CODE.left);
+await until(m => m.node === 'warehouse', 40000, 20);
+await page.keyboard.up(CODE.left);
+await poll();
+note('G Left walks all the way back to the warehouse', M.node === 'warehouse', M.node);
+await tap('up');
+const rev = await (async () => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < 30000) {
+    const w = await page.evaluate(() => window.__wake || null);
+    if (w && w.scene && w.scene.endsWith('room1.tscn') && w.f > 5) return w;
+    await sleep(60);
+  }
+  return null;
+})();
+await sleep(1500);
+const rw = await page.evaluate(() => window.__wake || null);
+await shot('revisit_room1_awake');
+note('G the warehouse revisit loads Room 1', !!rev, rev ? rev.scene : 'no room');
+note('G Room 1 starts awake: FREE beat, control, no title, the pool inert', !!rw && rw.beat === 4 && rw.can_move && !rw.title && rw.inert && rw.mind, rw ? `beat ${rw.beat} inert ${rw.inert} can_move ${rw.can_move}` : 'none');
+
 note('Z no console errors', consoleErrors.length === 0, consoleErrors.slice(0, 5).join(' | '));
 console.log('MEASURE fps on the map (capped):', fpsSeen.join(', '));
 console.log('MEASURE renderer:', renderer);

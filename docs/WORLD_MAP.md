@@ -136,37 +136,20 @@ Map size, the start and the final level are `size`, `start` and `final` at
 the top of `levels.json`. The time of day runs from the start node's x (night)
 to the final node's x (morning).
 
-## Wiring the rooms to the map (for integration)
+## Wiring the rooms to the map (done on feat/map)
 
-Nothing in the rooms, their exits or `RoomTransition` was changed. To route the
-game through the map:
-
-1. **Point every room exit at the map.** Either set `next_scene` (zero code):
-
-   | Scene and builder | `next_scene` now | Set it to |
-   |---|---|---|
-   | `room1.tscn`, `tools/build_room1.gd` | `room2.tscn` | `res://scenes/ui/world_map.tscn` |
-   | `room2.tscn`, `tools/build_room2.gd` | `room3.tscn` | `res://scenes/ui/world_map.tscn` |
-   | `room3.tscn`, `tools/build_room3.gd` | `stubs/after_room3.tscn` | `res://scenes/ui/world_map.tscn` |
-   | `room4.tscn`, `tools/build_room4.gd` | `stubs/after_room4.tscn` | `res://scenes/ui/world_map.tscn` |
-
-   or, where a room ends in code (a finale), call `WorldMap.open("<level id>")`
-   instead of `RoomTransition.go(...)`. The ids are `warehouse`, `yard`,
-   `stacks`, `perimeter`, `home`. The `after_room3` / `after_room4` stubs are
-   then unused.
-2. **Room 1 revisits.** The map lets the cat go back into the warehouse.
-   Room 1 must then start awake: when `RoomTransition.arriving` is true and
-   `GameState.intelligence` is set, skip the intro, do not call
-   `GameState.new_game()` (today it does whenever `intro_done` is false, which
-   after a Continue would wipe the run, map progress included), start in the
-   FREE beat with the pool inert, and keep the pool trigger off.
-3. **Home** needs nothing: it arrives through `RoomTransition` as before. After
-   the credits the run restarts in Room 1 with `new_game()`, which clears the
-   map.
-4. **Deep link** `index.html?start=map&completed=<id>[&letters=3]` already
-   works (`SaveSystem._ready` calls `WorldMap.web_deep_link()`). It can move
-   into `Room1._web_start_override` later if preferred (`if start == "map":
-   WorldMap.web_deep_link(); return`); the call is guarded to run once.
-5. **Check** with the audit above and `node tools/audit/web_map.mjs <export>
-   <out>`; on the integrated branch every story scene exists, so all five
-   plates can be entered and the gem totals are checked against the rooms.
+- Every room exit (`room1` to `room4` in the .tscn and in `tools/build_room*.gd`)
+  has `next_scene = res://scenes/ui/world_map.tscn`; Room 4's exit, after the
+  Master Gate, too. The map enters Home as the last node.
+- **Revisits.** `Room1._ready` starts awake whenever `GameState.intelligence`
+  is set (a revisit from the map, or a respawn after the pool): no intro, FREE
+  beat, pool inert, pool trigger off, and no `new_game()`. Room 3's conduit only
+  sparks once the shockwave is unlocked. Room 4's relays latch as collected and
+  the gate opens instantly, so a revisit finds them lit and open (the exit door
+  is enabled).
+- **Deep link.** `?start=map` is handled by `Room1._web_start_override` with the
+  other `?start=` links (once per page load); `WorldMap.web_deep_link()` also
+  has its own guard.
+- **Audits.** `tools/audit/map_hop.gd` (`MapHop.through`) takes an exit through
+  the map into the next room; `full_game.gd` asserts the map state at every
+  step, revisits Room 1 and Room 3 and continues from a map save.

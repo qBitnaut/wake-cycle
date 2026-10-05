@@ -687,9 +687,11 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
+	var hop: Dictionary = await MapHop.through(root.get_tree(), "warehouse", "yard")
+	note("J the exit fades out onto the world map, the warehouse is finished and the yard opens", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
 	await ticks(exit_settle)
 	var r2 := current_scene
-	note("J exit fades out and loads Room 2", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))
+	note("J the yard is entered from the map: Room 2 loads", r2 != null and r2.scene_file_path == "res://scenes/levels/room2.tscn", str(r2.scene_file_path if r2 else "?"))
 	var save: Dictionary = ss().read_save()
 	note("J auto-saved at the start of Room 2", save.get("scene", "") == "res://scenes/levels/room2.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))
 	note("J the cat keeps its augments in Room 2 (mind flag set)", r2 != null and r2.get_node_or_null("Cat/Sprite/Augments") != null and gs().intelligence)
@@ -708,6 +710,7 @@ func _beat_continue() -> void:
 	# A save from checkpoint A: a fresh Room 1 shows the CONTINUE pad a few tiles
 	# from the wake spot, and stepping on it loads the checkpoint.
 	ss().delete_save()
+	gs().new_game()  # a pre-pool checkpoint: the mind is not awake yet
 	ss().save_checkpoint("cp_a", "res://scenes/levels/room1.tscn")
 	ss().session_scene = ""
 	ss().session_checkpoint = ""

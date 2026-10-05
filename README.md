@@ -125,7 +125,19 @@ Phase pad sits between any two fences. The Room 4 rain loop fades with the dawn.
 playthrough routine, with continuity checks at each transition and continue-from-save checks
 from a Room 3 and a Room 4 checkpoint.
 
-Web deep links for audits: `index.html?start=room2` (or `room3`, `room4`, `home`).
+Web deep links for audits: `index.html?start=room2` (or `room3`, `room4`, `home`),
+and `index.html?start=map&completed=<level id>[&letters=3]` for the world map (all
+handled once per page load in `Room1._web_start_override`).
+
+## The world map
+
+Every room exit leads to the world map (`scenes/ui/world_map.tscn`, see
+`docs/WORLD_MAP.md`): the finished level is stamped, the route to the next one
+draws itself and the cat walks there; Up on a plate goes in. Finished levels can be
+revisited for hidden collectibles: Room 1 then starts awake (no intro, the pool
+inert), Room 3's conduit only sparks and Room 4's relays stay lit and its gate open.
+Home is the last node and plays the ending. Continue returns to the map when the
+save was made there.
 
 ## Home, the ending
 

@@ -925,7 +925,7 @@ splash = false
 [node name="RoomExit" type="Area2D" parent="." unique_id=197497239]
 position = Vector2(5360, 384)
 script = ExtResource("28_tl0rd")
-next_scene = "res://scenes/levels/room4.tscn"
+next_scene = "res://scenes/ui/world_map.tscn"
 
 [node name="Cat" type="CharacterBody2D" parent="." unique_id=1362536992 instance=ExtResource("29_hglvn")]
 z_index = 5

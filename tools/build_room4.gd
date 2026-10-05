@@ -59,7 +59,7 @@ const SCANNER_COL := 330
 const EXIT_COL := 368
 
 const SCENE_ROOM := "res://scenes/levels/room4.tscn"
-const SCENE_HOME := "res://scenes/levels/home.tscn"
+const SCENE_MAP := "res://scenes/ui/world_map.tscn"
 
 var room: Node2D
 var tiles: TileMapLayer
@@ -234,7 +234,7 @@ func _build_room4() -> void:
 
 	var exit_area: Area2D = load("res://scripts/systems/room_exit.gd").new()
 	exit_area.name = "RoomExit"
-	exit_area.set("next_scene", SCENE_HOME)
+	exit_area.set("next_scene", SCENE_MAP)
 	exit_area.set("enabled", false)
 	exit_area.position = _p(EXIT_COL, G)
 	_own(exit_area)

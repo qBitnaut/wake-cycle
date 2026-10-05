@@ -13,17 +13,6 @@ var session_snapshot := {}
 var _respawning := false
 
 
-func _ready() -> void:
-	# Web audit deep link: index.html?start=map&completed=<level id> opens the
-	# world map as that level's exit would (see WorldMap.web_deep_link).
-	if OS.has_feature("web"):
-		_web_map_link.call_deferred()
-
-
-func _web_map_link() -> void:
-	WorldMap.web_deep_link()
-
-
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) and not read_save().is_empty()
 

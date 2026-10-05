@@ -25,7 +25,8 @@
       "pos": [600, 302],
       "landmark": "yard",
       "unlocks": ["stacks", "drain"],
-      "collectibles": {"letters": [], "gems": 30}
+      "collectibles": {"letters": [], "gems": 30},
+      "map_line": "map_yard"
     },
     {
       "id": "stacks",
@@ -36,7 +37,8 @@
       "pos": [1010, 188],
       "landmark": "stacks",
       "unlocks": ["perimeter", "water_tower"],
-      "collectibles": {"letters": [], "gems": 29}
+      "collectibles": {"letters": [], "gems": 29},
+      "map_line": "map_stacks"
     },
     {
       "id": "perimeter",
@@ -47,7 +49,8 @@
       "pos": [1430, 302],
       "landmark": "perimeter",
       "unlocks": ["home", "signal_box"],
-      "collectibles": {"letters": [], "gems": 28}
+      "collectibles": {"letters": [], "gems": 28},
+      "map_line": "map_perimeter"
     },
     {
       "id": "home",
@@ -58,7 +61,8 @@
       "pos": [1870, 302],
       "landmark": "home",
       "unlocks": [],
-      "collectibles": {"letters": [], "gems": 0}
+      "collectibles": {"letters": [], "gems": 0},
+      "map_line": "map_home"
     },
     {
       "id": "drain",

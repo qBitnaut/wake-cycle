@@ -60,6 +60,22 @@ function note(name, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(50)} ${detail}`);
 }
 
+// The room stops publishing once the map takes over (frame() then stalls: the exit wait catches it).
+// The exit lands on the world map (the level finishes, the next one opens and the cat
+// walks to it); the next room is entered from the map with Up, as the player does it.
+async function throughMap(tag, done, next, nextFile) {
+  let M = null;
+  for (let i = 0; i < 400 && !(M && M.scene === 'map'); i++) { await sleep(50); M = await page.evaluate(() => window.__map || null); }
+  note(`${tag} the exit fades out onto the world map`, !!M && M.scene === 'map', M ? M.scene : 'no map');
+  if (!M) return;
+  for (let i = 0; i < 1500 && !(M.node === next && !M.auto); i++) { await sleep(50); M = await page.evaluate(() => window.__map || M); }
+  note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
+  await sleep(400);
+  await shot(`${tag}_map_after_${done}`);
+  await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
+  for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+}
+
 // The opening: shoot the fade from black as it happens, before any input.
 await page.goto(url);
 const renderer = await page.evaluate(() => {
@@ -420,9 +436,9 @@ await goTo(4872, 6); await ticks(6);
 await sleep(300); await shot('J_crate_label_cat_in_front');
 note('J the exit hint plays once the container was read', W.hint);
 await dir(1);
-for (let n = 0; W.scene.endsWith('room1.tscn') && n < 600; n++) { await frame(); if (n === 40) await shot('J_exit_fade'); }
+for (let n = 0; W.scene.endsWith('room1.tscn') && n < 600; n++) { try { await frame(); } catch { break; }  if (n === 40) await shot('J_exit_fade'); }
 await stop();
-for (let i = 0; i < 100 && !W.scene.endsWith('room2.tscn'); i++) await sleep(50);
+await throughMap('J', 'warehouse', 'yard', 'room2.tscn');
 await sleep(1500); await poll();
 note('J exit fades out and loads Room 2', W.scene.endsWith('room2.tscn'), W.scene);
 note('J Room 2 auto-saved, mind awake, still no shockwave', W.save && W.mind && !W.shock && W.power === 0, `save ${W.save}`);

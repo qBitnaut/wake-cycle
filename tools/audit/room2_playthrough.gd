@@ -644,9 +644,11 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
+	var hop: Dictionary = await MapHop.through(root.get_tree(), "yard", "stacks")
+	note("E the exit fades out onto the world map, the yard is finished and the stacks open", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
 	await ticks(exit_settle)
 	var r3 := current_scene
-	note("E the exit leads to Room 3", r3 != null and r3.scene_file_path == "res://scenes/levels/room3.tscn", str(r3.scene_file_path if r3 else "?"))
+	note("E the stacks are entered from the map: Room 3 loads", r3 != null and r3.scene_file_path == "res://scenes/levels/room3.tscn", str(r3.scene_file_path if r3 else "?"))
 	note("E Room 3 is the real room (The Stacks): the conduit and the Spring pad are there", r3 != null and r3.get_node_or_null("Conduit") != null and r3.get_node_or_null("PadSpring1") != null)
 	var save: Dictionary = ss().read_save()
 	note("E auto-saved at the start of Room 3 with the mind, no shockwave", save.get("scene", "") == "res://scenes/levels/room3.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))

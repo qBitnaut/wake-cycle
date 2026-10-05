@@ -4,7 +4,11 @@
 ## own playthrough routine (room1_playthrough.gd ... home_playthrough.gd: their
 ## _setup(true) and beats, with the scenes entered through the real exits), and adds
 ## continuity assertions at every transition plus continue-from-save checks from a
-## Room 3 and a Room 4 checkpoint.
+## Room 3 and a Room 4 checkpoint. Every room exit now lands on the world map and the
+## next room is entered from it: each transition asserts the map state (the level
+## finished, the next one open, the cat's node), the Room 1 and Room 3 revisits from the
+## map check that nothing is replayed or wiped, and a Continue from a save made on the
+## map returns to the map at that node.
 ##   godot --headless --path . --fixed-fps 60 --script res://tools/audit/full_game.gd
 ## FROM=room2|room3|room4|home starts the chain at that room as the previous exit leaves
 ## the cat (for iterating; the full run is the one that counts).
@@ -21,6 +25,10 @@ const ROOM2 := "res://scenes/levels/room2.tscn"
 const ROOM3 := "res://scenes/levels/room3.tscn"
 const ROOM4 := "res://scenes/levels/room4.tscn"
 const HOME := "res://scenes/levels/home.tscn"
+const MAP := "res://scenes/ui/world_map.tscn"
+## Loaded at run time: world_map.gd names the SaveSystem autoload, which is not yet
+## known while this script compiles.
+const MAP_SCRIPT := "res://scripts/ui/world_map.gd"
 
 const SHIM := """
 var root: Window:
@@ -138,8 +146,12 @@ func _aug_shown() -> bool:
 
 
 ## Continuity at a room-to-room transition. `scene` is where the cat now is.
-func transition(label: String, scene: String, want_mind: bool, want_shock: bool, augments := true) -> void:
+func transition(label: String, scene: String, want_mind: bool, want_shock: bool, done_id := "", next_id := "", augments := true) -> void:
 	var s := current_scene
+	if done_id != "":
+		var g := gs()
+		note("%s on the map: %s finished, %s open, the cat at %s" % [label, done_id, next_id, next_id], g.map_completed.has(done_id) and g.map_unlocked.has(next_id) and g.map_node == next_id, "completed %s unlocked %s node %s" % [str(g.map_completed), str(g.map_unlocked), g.map_node])
+		note("%s the map is in the save" % label, ss().read_save().get("map", {}).get("completed", []).has(done_id))
 	note("%s the next room is %s" % [label, scene.get_file()], s != null and s.scene_file_path == scene, str(s.scene_file_path if s else "?"))
 	note("%s mind %s, shockwave %s" % [label, want_mind, want_shock], gs().intelligence == want_mind and gs().shockwave_unlocked == want_shock, "mind %s shock %s" % [gs().intelligence, gs().shockwave_unlocked])
 	note("%s no power carried through the exit (pads are the only source)" % label, gs().power == 0, "power %d" % gs().power)
@@ -262,7 +274,7 @@ func _main() -> void:
 		await r1._setup(true)
 		await r1._beats(true)
 		done("room1", r1)
-		await transition("R1>R2", ROOM2, true, false)
+		await transition("R1>R2", ROOM2, true, false, "warehouse", "yard")
 
 	# ---- Room 2 ----
 	if start <= 1:
@@ -272,7 +284,7 @@ func _main() -> void:
 		await r2._setup(true)
 		await r2._beats()
 		done("room2", r2)
-		await transition("R2>R3", ROOM3, true, false)
+		await transition("R2>R3", ROOM3, true, false, "yard", "stacks")
 
 	# ---- Room 3 ----
 	if start <= 2:
@@ -286,7 +298,8 @@ func _main() -> void:
 		await r3._setup(true)
 		await r3._beats()
 		done("room3", r3)
-		await transition("R3>R4", ROOM4, true, true)
+		await transition("R3>R4", ROOM4, true, true, "stacks", "perimeter")
+		await _revisits()
 
 	# ---- Room 4 ----
 	if start <= 3:
@@ -300,7 +313,7 @@ func _main() -> void:
 		await r4._setup(true)
 		await r4._beats(true)
 		done("room4", r4)
-		await transition("R4>HOME", HOME, true, true)
+		await transition("R4>HOME", HOME, true, true, "perimeter", "home")
 
 	# ---- Home, the credits, a fresh Room 1 ----
 	var rh := routine(base + "home_playthrough.gd")
@@ -312,12 +325,151 @@ func _main() -> void:
 	_report()
 
 
+## What a revisit must not touch: score, keys, letters, pickups, abilities, the map.
+func keep() -> Dictionary:
+	var k := snap()
+	k["map_completed"] = gs().map_completed.duplicate()
+	k["map_unlocked"] = gs().map_unlocked.duplicate()
+	return k
+
+
+func same(a: Dictionary, b: Dictionary) -> bool:
+	var sorted_eq := func(x: Array, y: Array) -> bool:
+		var xs := x.duplicate()
+		var ys := y.duplicate()
+		xs.sort()
+		ys.sort()
+		return xs == ys
+	return a["score"] == b["score"] and a["letter_mask"] == b["letter_mask"] and a["mind"] == b["mind"] and a["shock"] == b["shock"] \
+		and sorted_eq.call(a["keys"], b["keys"]) and sorted_eq.call(a["collected"], b["collected"]) \
+		and sorted_eq.call(a["map_completed"], b["map_completed"]) and sorted_eq.call(a["map_unlocked"], b["map_unlocked"])
+
+
+## The cat walks out of the room it is in by its RoomExit (the exit's own handler).
+func leave_by_exit() -> void:
+	var s := current_scene
+	var ex: Node = s.get_node("RoomExit")
+	ex.call("_on_body", s.get_node("Cat"))
+	var n := 0
+	while (current_scene == s or current_scene == null) and n < 600:
+		await ticks(1)
+		n += 1
+
+
+## Waits for the map's reveal (none on a revisit) and goes in.
+func enter_from_map(id: String) -> bool:
+	var m := current_scene
+	var n := 0
+	while m.get("auto") and n < 4000:
+		await ticks(1)
+		n += 1
+	var ok: bool = m.enter_level(id)
+	n = 0
+	var want: String = LevelRegistry.scene_of(id)
+	while (current_scene == m or current_scene == null or current_scene.scene_file_path != want or current_scene.get_node_or_null("Cat") == null) and n < 1200:
+		await ticks(1)
+		n += 1
+	await ticks(60)
+	return ok
+
+
+## The warehouse and the stacks, revisited from the map (hidden collectibles live
+## there): awake and quiet, nothing replayed, nothing wiped. Arrives from Room 4's entry.
+func _revisits() -> void:
+	var before := keep()
+	# Back to the map without finishing anything: with no scene on record the map
+	# does not infer a completed level (a RoomExit's own arrival would finish Room 4).
+	ss().session_scene = ""
+	load(MAP_SCRIPT).open("")
+	var n := 0
+	while current_scene == null or current_scene.scene_file_path != MAP:
+		await ticks(1)
+		n += 1
+		if n > 600:
+			break
+	await ticks(30)
+	var m := current_scene
+	note("REV the map opens without a reveal, nothing newly finished", m.scene_file_path == MAP and not m.get("auto") and same(before, keep()), str(gs().map_completed))
+	var gem_before: int = gs().collected.size()
+	# ---- Room 1 ----
+	var ok := await enter_from_map("warehouse")
+	var r1 := current_scene
+	var cat: Node2D = r1.get_node("Cat")
+	var transformed := [false]
+	gs().nanotech_absorbed_started.connect(func(): transformed[0] = true)
+	var pool = r1.get("pool")
+	note("REV1 the warehouse is entered from the map", ok and r1.scene_file_path == ROOM1, str(r1.scene_file_path))
+	note("REV1 Room 1 starts awake: FREE beat, control, HUD, no intro, no title", r1.get("beat") == 4 and cat.can_move and r1.get_node("Hud").visible and r1.get_node_or_null("TitleOverlay") == null and not str(cat.forced_anim).begins_with("sleep"), "beat %s anim %s" % [str(r1.get("beat")), cat.forced_anim])
+	note("REV1 the pool is inert from the first frame", r1.get("_inert") == true and pool != null and absf(pool.depth - 28.0) < 0.5, "depth %.1f" % (pool.depth if pool else -1.0))
+	note("REV1 nothing was wiped: mind, shockwave, score, pickups, map progress", same(before, keep()) and gs().intelligence, str(gs().map_completed))
+	note("REV1 the augments show on the cat", _aug_shown())
+	# Walk the cat over the pool trigger: no second transformation.
+	cat.global_position = Vector2(float(r1.get("pool_trigger_x")) + 60.0, 290.0)
+	cat.velocity = Vector2.ZERO
+	await ticks(180)
+	note("REV1 standing past the pool trigger starts no second transformation", not transformed[0] and r1.get("beat") == 4 and cat.can_move and gs().intelligence, "beat %s transformed %s" % [str(r1.get("beat")), str(transformed[0])])
+	note("REV1 the intro did not run again and the run is intact", same(before, keep()) and gs().health >= 1)
+	# A death in the revisit respawns awake too.
+	cat.kill()
+	await ticks(120)
+	r1 = current_scene
+	note("REV1 a death in the revisit respawns awake (no intro, no transformation)", r1.get("beat") == 4 and r1.get_node("Cat").can_move and same(before, keep()), "beat %s" % str(r1.get("beat")))
+	await leave_by_exit()
+	await ticks(60)
+	m = current_scene
+	note("REV1 the exit returns to the map, warehouse still finished, node kept", m.scene_file_path == MAP and same(before, keep()) and gs().map_node == "warehouse", "node %s" % gs().map_node)
+	# ---- Room 3 ----
+	var shock_events := [0]
+	var on_unlock := func(on: bool): shock_events[0] += 1
+	gs().shockwave_unlock_changed.connect(on_unlock)
+	ok = await enter_from_map("stacks")
+	var r3 := current_scene
+	note("REV3 the stacks are entered from the map", ok and r3.scene_file_path == ROOM3, str(r3.scene_file_path))
+	var conduit := r3.get_node("Conduit")
+	var c3: Node2D = r3.get_node("Cat")
+	c3.global_position = Vector2(conduit.global_position.x, conduit.global_position.y - 20.0)
+	c3.velocity = Vector2.ZERO
+	await ticks(120)
+	note("REV3 the conduit only sparks: it does not fire again or re-unlock", not conduit.has_fired and shock_events[0] == 0 and gs().shockwave_unlocked and c3.can_move, "fired %s unlock events %d" % [str(conduit.has_fired), shock_events[0]])
+	note("REV3 nothing was wiped: mind, shockwave, score, pickups, map progress", same(before, keep()) and gs().intelligence)
+	note("REV3 the augments show and the cat has control", _aug_shown() and c3.can_move)
+	await leave_by_exit()
+	await ticks(60)
+	m = current_scene
+	gs().shockwave_unlock_changed.disconnect(on_unlock)
+	note("REV3 the exit returns to the map, nothing newly finished", m.scene_file_path == MAP and same(before, keep()) and gs().map_node == "stacks", "node %s" % gs().map_node)
+	# ---- Continue from a save made on the map ----
+	var save: Dictionary = ss().read_save()
+	note("CONT the map saved itself: the save's scene is the map, with the node", save.get("scene", "") == MAP and save.get("map", {}).get("node", "") == "stacks", str(save.get("map", {})))
+	gs().new_game()
+	mono().reset()
+	ss().session_scene = ""
+	ss().session_checkpoint = ""
+	ss().session_snapshot = {}
+	var old := current_scene
+	var cok: bool = ss().continue_game()
+	n = 0
+	while (current_scene == old or current_scene == null) and n < 600:
+		await ticks(1)
+		n += 1
+	await ticks(40)
+	m = current_scene
+	note("CONT a Continue from the map save returns to the map at that node", cok and m.scene_file_path == MAP and m.get("at_node") == "stacks" and gs().map_node == "stacks", "scene %s at %s" % [m.scene_file_path, str(m.get("at_node"))])
+	var after := keep()
+	note("CONT the run is restored with it (mind, shockwave, pickups, map progress)", same(before, after) and gem_before == gs().collected.size(), str(gs().map_completed))
+	await shot("map_after_continue")
+	# On to the perimeter, for real.
+	ok = await enter_from_map("perimeter")
+	note("REV the perimeter is entered from the map after the revisits", ok and current_scene.scene_file_path == ROOM4, str(current_scene.scene_file_path))
+
+
 ## After the credits: a brand-new game in Room 1.
 func _fresh_room1() -> void:
 	var s := current_scene
 	var cat: Node2D = s.get_node_or_null("Cat")
 	note("END back in Room 1 after the credits", s != null and s.scene_file_path == ROOM1, str(s.scene_file_path if s else "?"))
 	note("END a fresh game: no mind, no shockwave, no power, full health, no score", not gs().intelligence and not gs().shockwave_unlocked and gs().power == 0 and gs().health == 3 and gs().score == 0 and gs().keys.is_empty() and gs().letter_mask == 0 and gs().collected.is_empty(), str(snap()))
+	note("END the credits' new game cleared the map", gs().map_completed.is_empty() and gs().map_unlocked.is_empty() and gs().map_node == "", "completed %s node %s" % [str(gs().map_completed), gs().map_node])
 	note("END no checkpoint, no ContinuePad, the game marked complete", not ss().has_save() and ss().session_checkpoint == "" and ss().is_complete() and not s.get_node("ContinuePad").visible)
 	note("END the cat has no augments again, and starts asleep", cat != null and cat.get_node_or_null("Sprite/Augments") == null and not cat.can_move and cat.forced_anim.begins_with("sleep"), "anim %s" % (cat.forced_anim if cat else "?"))
 	note("END the monologue starts over", mono().history.is_empty())

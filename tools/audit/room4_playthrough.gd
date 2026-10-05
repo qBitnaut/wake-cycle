@@ -1318,9 +1318,11 @@ func _beat_exit() -> void:
 		await ticks(1)
 		n += 1
 	stop()
+	var hop: Dictionary = await MapHop.through(root.get_tree(), "perimeter", "home")
+	note("E the exit fades out onto the world map, the perimeter is finished and Home opens", hop["on_map"] and hop["completed"] and hop["unlocked"], str(hop))
 	await ticks(exit_settle)
 	var home := current_scene
-	note("E the exit leads to Home", home != null and home.scene_file_path == "res://scenes/levels/home.tscn", str(home.scene_file_path if home else "?"))
+	note("E Home is entered from the map: the ending loads", home != null and home.scene_file_path == "res://scenes/levels/home.tscn", str(home.scene_file_path if home else "?"))
 	var save2: Dictionary = ss().read_save()
 	note("E auto-saved in Home with the mind and the shockwave", save2.get("scene", "") == "res://scenes/levels/home.tscn" and save2.get("abilities", {}).get("mind", false) and save2.get("abilities", {}).get("shockwave", false), str(save2.get("abilities", {})))
 	mark("E exit")

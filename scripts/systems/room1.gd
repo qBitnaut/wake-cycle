@@ -16,7 +16,7 @@ extends Level
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
 ## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2 /
-## room3 / room4 / home (and test, the test room) jumps straight to that room (see
+## room3 / room4 / home (and test, the test room; map, the world map) jumps straight to that room (see
 ## _web_start_override).
 
 signal nanotech_absorbed_started
@@ -69,7 +69,13 @@ func _ready() -> void:
 	# Audit tools pass `-- --skip-intro` to start awake.
 	if OS.get_cmdline_user_args().has("--skip-intro"):
 		intro_done = true
-	if _checkpoint_id == "" and not intro_done:
+	if GameState.intelligence:
+		# A revisit (back from the world map, or a respawn after the pool): the
+		# mind is already awake, so no intro, no second transformation and no
+		# new_game() (it would wipe the run and the map progress).
+		intro_done = true
+		_start_awake()
+	elif _checkpoint_id == "" and not intro_done:
 		# A fresh game: nothing unlocked, nothing carried over.
 		GameState.new_game()
 		Monologue.reset()
@@ -78,6 +84,24 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		_setup_web()
 		_web_start_override()
+
+
+# ---- revisit ----------------------------------------------------------------
+
+var _revisit := false
+
+
+## Awake from the first frame: the FREE beat, the pool already inert (drained,
+## dark) and the pool trigger off (_physics_process only springs it in PLAY).
+func _start_awake() -> void:
+	_revisit = true
+	beat = Beat.FREE
+	_inert = true
+	if pool:
+		pool.depth = 28.0
+		pool.position.y += 8.0
+	if _hud:
+		_hud.visible = true
 
 
 # ---- intro ----------------------------------------------------------------
@@ -144,7 +168,7 @@ func _physics_process(delta: float) -> void:
 ## The close-up that follows must pan its focus to the cat; starting nearer the
 ## middle makes that pan about half as long, instead of one hard drop.
 func _ease_pool_framing() -> void:
-	if beat != Beat.PLAY or cat.dead:
+	if (beat != Beat.PLAY and not _revisit) or cat.dead:
 		return
 	var k := smoothstep(pool_trigger_x - 420.0, pool_trigger_x - 60.0, cat.global_position.x)
 	var want := limits.end.y + int(roundf(POOL_FRAMING_DROP * k))
@@ -227,6 +251,10 @@ func _web_start_override() -> void:
 		return
 	_web_start_used = true
 	var start := str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''"))
+	if start == "map":
+		# ?start=map&completed=<id>[&letters=n]: the world map as an exit opens it.
+		WorldMap.web_deep_link()
+		return
 	if not WEB_STARTS.has(start):
 		return
 	intro_done = true

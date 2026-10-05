@@ -930,7 +930,7 @@ splash_rate_scale = 0.35
 [node name="RoomExit" type="Area2D" parent="." unique_id=252687173]
 position = Vector2(6544, 320)
 script = ExtResource("25_kqd06")
-next_scene = "res://scenes/levels/room3.tscn"
+next_scene = "res://scenes/ui/world_map.tscn"
 
 [node name="Cat" type="CharacterBody2D" parent="." unique_id=77022011 instance=ExtResource("26_bgfua")]
 z_index = 5

@@ -161,7 +161,7 @@ func _build_room1() -> void:
 
 	var exit_area := RoomExit.new()
 	exit_area.name = "RoomExit"
-	exit_area.next_scene = "res://scenes/levels/room2.tscn"
+	exit_area.next_scene = "res://scenes/ui/world_map.tscn"
 	exit_area.position = _p(EXIT_COL, G)
 	_own(exit_area)
 

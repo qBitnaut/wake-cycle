@@ -271,7 +271,7 @@ func _build_room3() -> void:
 
 	var exit_area: Area2D = load("res://scripts/systems/room_exit.gd").new()
 	exit_area.name = "RoomExit"
-	exit_area.set("next_scene", "res://scenes/levels/room4.tscn")
+	exit_area.set("next_scene", "res://scenes/ui/world_map.tscn")
 	exit_area.position = _p(EXIT_COL, S4)
 	_own(exit_area)
 

@@ -229,7 +229,7 @@ func _build_room2() -> void:
 	# (Loaded by path: RoomExit reaches the autoloads, which a --script run lacks at compile time.)
 	var exit_area: Area2D = load("res://scripts/systems/room_exit.gd").new()
 	exit_area.name = "RoomExit"
-	exit_area.set("next_scene", "res://scenes/levels/room3.tscn")
+	exit_area.set("next_scene", "res://scenes/ui/world_map.tscn")
 	exit_area.position = _p(EXIT_COL, G)
 	_own(exit_area)
 

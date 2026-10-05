@@ -77,6 +77,22 @@ function note(name, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(62)} ${detail}`);
 }
 
+// The room stops publishing once the map takes over (frame() then stalls: the exit wait catches it).
+// The exit lands on the world map (the level finishes, the next one opens and the cat
+// walks to it); the next room is entered from the map with Up, as the player does it.
+async function throughMap(tag, done, next, nextFile) {
+  let M = null;
+  for (let i = 0; i < 400 && !(M && M.scene === 'map'); i++) { await sleep(50); M = await page.evaluate(() => window.__map || null); }
+  note(`${tag} the exit fades out onto the world map`, !!M && M.scene === 'map', M ? M.scene : 'no map');
+  if (!M) return;
+  for (let i = 0; i < 1500 && !(M.node === next && !M.auto); i++) { await sleep(50); M = await page.evaluate(() => window.__map || M); }
+  note(`${tag} ${done} is finished, ${next} is open and the cat stands on it`, M.completed.includes(done) && M.open.includes(next) && M.node === next, `completed ${M.completed} node ${M.node}`);
+  await sleep(400);
+  await shot(`${tag}_map_after_${done}`);
+  await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
+  for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
+}
+
 await page.goto(url);
 const renderer = await page.evaluate(() => {
   const c = document.createElement('canvas').getContext('webgl2');
@@ -469,9 +485,9 @@ const lumEnd = lum(W.tint);
 note('E the sky lightened with progress: night -> pre-dawn -> sunrise', lum0 < lumMid && lumMid < lumEnd && lumEnd - lum0 > 0.3, `tint luminance ${lum0.toFixed(2)} -> ${lumMid.toFixed(2)} -> ${lumEnd.toFixed(2)}`);
 await shot('E_dawn_exit_road_to_the_suburbs');
 await dir(1);
-for (let n = 0; W.scene.endsWith('room4.tscn') && n < 900; n++) { await frame(); if (n === 60) await shot('E_exit_fade'); }
+for (let n = 0; W.scene.endsWith('room4.tscn') && n < 900; n++) { try { await frame(); } catch { break; }  if (n === 60) await shot('E_exit_fade'); }
 await stop();
-for (let i = 0; i < 100 && !W.scene.endsWith('home.tscn'); i++) { await sleep(50); await poll(); }
+await throughMap('E', 'perimeter', 'home', 'home.tscn');
 await sleep(1800); await poll();
 note('E the exit leads to Home', W.scene.endsWith('home.tscn'), W.scene);
 note('E auto-saved with the mind and the shockwave', W.save && W.mind && W.shock);

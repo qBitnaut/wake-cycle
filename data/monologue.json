@@ -88,6 +88,18 @@
 		"The rain's stopping. The sky's getting light.",
 		"Almost home."
 	],
+	"map_yard": [
+		"Outside. The whole district laid out like a map in my head. Since when do I think in maps?"
+	],
+	"map_stacks": [
+		"Up. Everything out here climbs. So will I."
+	],
+	"map_perimeter": [
+		"The fence. Beyond it... the hills where the sun comes up."
+	],
+	"map_home": [
+		"There. That street. I know it. I know it."
+	],
 	"home_arrival": [
 		"The sun. I forgot how warm it is.",
 		"This street. That fence. I know this place."

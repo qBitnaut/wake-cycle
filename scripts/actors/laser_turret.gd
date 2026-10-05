@@ -4,18 +4,19 @@ extends Node2D
 ## telegraphed and always dodgeable: it idles, then draws a thin flickering aim
 ## line for `warn_time` (blinking faster as it arms), then fires the full beam
 ## for `fire_time`, then cools down. The beam runs `reach` px at `beam_y` above
-## the floor, so a plain jump clears it (and a dash goes through it). Phasing
+## the floor: a standing cat is hit, a crouched one slips under, and a dash goes
+## through it. The safe window each cycle is the idle and warn time. Phasing
 ## passes through. Origin = the turret's foot on the floor; `facing` -1 fires
 ## to the left, +1 to the right.
 
 enum State { IDLE, WARN, FIRE }
 
-const SPRITE := preload("res://assets/art_hd/robots/turret_1.png")
+const SPRITE := preload("res://assets/art_hd/robots/turret_5.png")
 const BEAM_H := 6.0
 
 @export var facing := -1
 @export var reach := 288.0
-@export var beam_y := 12.0
+@export var beam_y := 24.0
 @export var idle_time := 1.6
 @export var warn_time := 1.0
 @export var fire_time := 0.5
@@ -36,9 +37,9 @@ func _ready() -> void:
 	z_index = 2
 	_body = Sprite2D.new()
 	_body.texture = SPRITE
-	_body.scale = Vector2(1.6, 1.6)
-	_body.flip_h = facing > 0
-	_body.position = Vector2(0, -SPRITE.get_height() * 0.8 - 2.0)
+	_body.scale = Vector2(1.5, 1.5)
+	_body.flip_h = facing < 0  # the art faces right
+	_body.position = Vector2(0, -SPRITE.get_height() * 0.75)
 	_body.self_modulate = Color(0.85, 0.85, 0.92)
 	add_child(_body)
 	_aim = LaserBeam.new()

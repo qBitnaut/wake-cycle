@@ -561,17 +561,21 @@ func _beat_phase2() -> void:
 		hit = hp() < 3
 	note("P2 standing in the telegraphed beam gets hit", hit, "hit after %.1f s" % (t_wait / 60.0))
 	await recover()
-	# A jump over the low beam while it fires: no hit.
+	# Crouched, the cat slips under the beam (it sits 24 px up): the other way to dodge it.
 	await stage(108.0)
+	hold("move_down", true)
+	await ticks(10)
+	var h3 := hp()
 	w = 0
 	while tur.get("state") != 2 and w < 900:
 		await ticks(1)
 		w += 1
-	hold("jump", true)
-	await ticks(18)
-	hold("jump", false)
-	await ticks(60)
-	note("P2 a jump clears the low beam (hit only when standing)", true, "state after: %d, hp %d" % [tur.get("state"), hp()])
+	var fired := 0
+	while tur.get("state") == 2 and fired < 120:
+		await ticks(1)
+		fired += 1
+	hold("move_down", false)
+	note("P2 a crouched cat slips under the firing beam", hp() == h3 and fired > 20, "fired %.2f s, hp %d" % [fired / 60.0, hp()])
 	await recover()
 	mark("P2 phase")
 
@@ -951,6 +955,13 @@ func _tower_jump(spring: bool) -> Dictionary:
 
 
 func _beat_relay2() -> void:
+	# A death at checkpoint G brings the cat back with relay 1 still lit (saved with the checkpoint).
+	await recover()
+	var old_room := room.get_instance_id()
+	cat.kill()
+	var back := await await_reload(old_room)
+	var fin2 := node("Finale")
+	note("R2 after a death the checkpoint restores relay 1 (lit, scanner 1/3) and the broken hatches stay broken", back and node("Relay1").lit and node("Relay1").restored and fin2.count == 1 and node("Scanner").relays_lit == 1 and hatches(H1) < 3 and absf(x() - cx(233.0)) < 14.0, "relays %d, x=%.0f" % [fin2.count, x()])
 	# The searchlight drone between the tower and the maze.
 	await recover()
 	gs().clear_power()
@@ -1159,6 +1170,13 @@ func _beat_exit() -> void:
 	await ticks(200)
 	note("E the dawn: the sky is at full pre-dawn and the sunrise has come", sp.progress > 0.99 and sp.dawn > 0.95, "progress %.2f dawn %.2f" % [sp.progress, sp.dawn])
 	await shot("E_dawn_exit_road")
+	# A death on the road reloads with the gate open (saved with checkpoint J), the exit open, the sunrise in.
+	var old_room := room.get_instance_id()
+	cat.kill()
+	var back := await await_reload(old_room)
+	await ticks(30)
+	note("E a reload at checkpoint J keeps the gate open, the scanner accepted, the exit open and the sunrise", back and node("MasterGate").is_open and node("Scanner").mode == 3 and node("RoomExit").get("enabled") == true and node("SkyProgress").dawn > 0.99 and node("Finale").count == 3, "gate open %s" % str(node("MasterGate").is_open))
+	ok = await run_to(cx(359.0))
 	var old := room
 	dir(1.0)
 	var n := 0
@@ -1219,6 +1237,31 @@ func _beat_sky_and_safety() -> void:
 	await ticks(3)
 	var density_end: int = near.get_node("Drops").amount
 	note("Z the rain thins towards the gate", density_end < density_start * 0.6, "drops %d -> %d" % [density_start, density_end])
+	# All three relays are required: with any two lit the scanner denies and the gate stays shut.
+	for missing in [1, 2, 3]:
+		ss().delete_save()
+		gs().new_game()
+		gs().awaken_mind()
+		gs().unlock_shockwave()
+		mono().reset()
+		for i in [1, 2, 3]:
+			if i != missing:
+				gs().mark_collected("r4_relay%d" % i)
+		ss().session_scene = ""
+		ss().session_checkpoint = ""
+		var prev := current_scene
+		room = load("res://scenes/levels/room4.tscn").instantiate()
+		root.add_child(room)
+		current_scene = room
+		if prev:
+			prev.queue_free()
+		await ticks(6)
+		refresh()
+		teleport(cx(329.0))
+		await ticks(90)
+		var sc := node("Scanner")
+		var fn := node("Finale")
+		note("Z relay %d missing: the scanner denies (POWER 2/3), no scan, the gate stays shut and the exit closed" % missing, fn.count == 2 and sc.mode == 0 and not fn.scanning and not node("MasterGate").is_open and node("RoomExit").get("enabled") == false, str(sc.screen_lines))
 	# Powers are introduced one at a time, in order: the first Phase pad is before the first Impact pad.
 	var first_phase := 1e9
 	var first_impact := 1e9

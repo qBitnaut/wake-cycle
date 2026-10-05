@@ -318,7 +318,6 @@ func _back_decor() -> void:
 	var defs := [
 		[8, 14, 1, TEAL], [24, 30, 2, RUST], [54, 57, 1, MAROON], [103, 111, 1, TEAL], [136, 140, 2, RUST],
 		[209, 215, 2, TEAL], [230, 238, 1, MAROON], [286, 292, 2, RUST], [318, 326, 1, TEAL],
-		[349, 353, 1, MAROON],
 	]
 	for d in defs:
 		for k in range(d[2]):
@@ -419,16 +418,16 @@ func _signs() -> void:
 	_sign(board, "SignGateway", 29, G, PackedStringArray(["CHECKPOINT 7", "PRESENT CREDENTIAL"]), amber, 18.0)
 	_sign(board, "PlacardPhase", 34, G, PackedStringArray(["PHASE", "SHIFT: DASH THROUGH BEAMS"]), FXPalette.PHASE, 18.0)
 	_sign(board, "PlacardPhase2", 62, G, PackedStringArray(["BEAMS AHEAD", "DASH, DO NOT WALK"]), amber, 18.0)
-	_sign(board, "PlacardSpring", 112, G, PackedStringArray(["GUARDHOUSE ROOF", "NO GROUND ROUTE"]), amber, 18.0)
-	_sign(board, "PlacardImpact", 139, G, PackedStringArray(["IMPACT", "DOWN IN MID-AIR: GROUND POUND"]), FXPalette.IMPACT, 18.0)
-	_sign(board, "SignGateClosed", 150, G, PackedStringArray(["GATE CLOSED", "CRACKED FLOOR: SERVICE DUCT"]), amber, 18.0)
+	_sign(board, "PlacardSpring", 116, G, PackedStringArray(["GUARDHOUSE ROOF", "NO GROUND ROUTE"]), amber, 18.0)
+	_sign(board, "PlacardImpact", 135, G, PackedStringArray(["IMPACT", "DOWN IN MID-AIR: GROUND POUND"]), FXPalette.IMPACT, 18.0)
+	_sign(board, "SignGateClosed", 149, G, PackedStringArray(["GATE CLOSED", "SERVICE DUCT BELOW"]), amber, 18.0)
 	_sign(board, "PlacardArmour", 156, 14, PackedStringArray(["ARMOURED UNIT", "STUN FROM ABOVE"]), amber, 10.0)
 	_sign(board, "PlacardShield", 169, 18, PackedStringArray(["SHIELD", "DOUBLE JUMP BURST"]), FXPalette.SHOCKWAVE, 8.0)
 	_sign(board, "SignRelays", 213, G, PackedStringArray(["MASTER GATE", "3 RELAYS REQUIRED"]), amber, 22.0)
 	_sign(board, "SignRelay1", 218, G, PackedStringArray(["RELAY 1: TOWER"]), aqua, 18.0)
 	_sign(board, "SignRelay2", 240, G, PackedStringArray(["RELAY 2: LASER MAZE"]), aqua, 18.0)
 	_sign(board, "SignRelay3", 296, G, PackedStringArray(["RELAY 3: LOWER VAULT"]), aqua, 18.0)
-	_sign(board, "SignScanner", 325, G, PackedStringArray(["SUPERVISORS ONLY", "SCAN ON APPROACH"]), amber, 18.0)
+	_sign(board, "SignScanner", 337, G, PackedStringArray(["SUPERVISORS ONLY", "SCAN ON APPROACH"]), amber, 18.0)
 	_sign(board, "SignRoad", 352, G, PackedStringArray(["SUBURBAN DISTRICT", "2 KM"]), aqua, 22.0)
 
 

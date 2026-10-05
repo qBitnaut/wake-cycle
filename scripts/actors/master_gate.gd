@@ -118,5 +118,17 @@ func _draw() -> void:
 			x += 8.0
 			k += 1
 		if shown > 100.0:
-			draw_rect(Rect2(-30, top + 40, 60, 16), INK)
-			draw_string(preload("res://assets/fonts/monogram.ttf"), Vector2(-30, top + 53), "MASTER GATE", HORIZONTAL_ALIGNMENT_CENTER, 60.0, 16, Color(FXPalette.SODIUM, 0.9))
+			var font := preload("res://assets/fonts/monogram.ttf")
+			draw_rect(Rect2(-26, top + 28, 52, 34), INK)
+			draw_rect(Rect2(-25, top + 29, 50, 32), Color("354655"))
+			draw_rect(Rect2(-23, top + 31, 46, 28), INK)
+			draw_string(font, Vector2(-23, top + 44), "MASTER", HORIZONTAL_ALIGNMENT_CENTER, 46.0, 16, Color(FXPalette.SODIUM, 0.95))
+			draw_string(font, Vector2(-23, top + 57), "GATE", HORIZONTAL_ALIGNMENT_CENTER, 46.0, 16, Color(FXPalette.SODIUM, 0.95))
+			# Chevron warning bands across the door.
+			var cy := top + 90.0
+			while cy < top + shown - 24.0:
+				var xx := -w / 2.0 + 4.0
+				while xx < w / 2.0 - 8.0:
+					draw_line(Vector2(xx, cy + 8), Vector2(xx + 8, cy), Color("d07a26"), 2.0)
+					xx += 10.0
+				cy += 40.0

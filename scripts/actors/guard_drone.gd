@@ -34,7 +34,7 @@ func _ready() -> void:
 	add_child(cs)
 	_body = Sprite2D.new()
 	_body.texture = DRONE
-	_body.self_modulate = Color(0.85, 0.85, 0.92)
+	_body.self_modulate = Color(1.25, 0.78, 0.72)  # warm: hostile
 	add_child(_body)
 	_glow = PointLight2D.new()
 	_glow.texture = LIGHT_TEX

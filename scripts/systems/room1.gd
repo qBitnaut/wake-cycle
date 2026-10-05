@@ -203,19 +203,29 @@ func _setup_web() -> void:
 	win["wakeTeleport"] = cb
 
 
-## Web audit deep link: index.html?start=room2 skips Room 1 and arrives in Room 2
-## the way the exit would leave the cat (mind awake, no powers, auto-save).
+## Web audit deep links: index.html?start=room2 skips Room 1 and arrives in Room 2
+## the way the exit would leave the cat (mind awake, no powers, auto-save);
+## ?start=room4 arrives in Room 4 the way Room 3 leaves it (the shockwave unlocked too).
+const WEB_STARTS := {
+	"room2": "res://scenes/levels/room2.tscn",
+	"room4": "res://scenes/levels/room4.tscn",
+}
+
+
 func _web_start_override() -> void:
-	if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''")) != "room2":
+	var start := str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''"))
+	if not WEB_STARTS.has(start):
 		return
 	intro_done = true
 	GameState.new_game()
 	GameState.awaken_mind()
+	if start == "room4":
+		GameState.unlock_shockwave()
 	Monologue.reset()
 	SaveSystem.session_scene = ""
 	SaveSystem.session_checkpoint = ""
 	RoomTransition.arriving = true
-	get_tree().change_scene_to_file.call_deferred("res://scenes/levels/room2.tscn")
+	get_tree().change_scene_to_file.call_deferred(WEB_STARTS[start])
 
 
 func _flag(node_name: String, prop: String) -> Variant:

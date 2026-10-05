@@ -1,0 +1,873 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/home.gd" id="1_o77ht"]
+[ext_resource type="Script" path="res://scripts/fx/day_backdrop.gd" id="2_cru1d"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/house_dusty.png" id="3_2h5s3"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/house_sage.png" id="4_tqlpg"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/house_butter.png" id="5_jh1sd"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/house_rose.png" id="6_vvuf7"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/lawn.png" id="7_7i3p8"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/tree_big.png" id="8_im6mn"]
+[ext_resource type="Script" path="res://scripts/fx/moon_shaft.gd" id="9_sr871"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/tree_small.png" id="10_d8cbg"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/flowers_a.png" id="11_jovxt"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/bush_a.png" id="12_hn1sp"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/flowers_b.png" id="13_3cak2"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/bush_b.png" id="14_tof5d"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/bush_c.png" id="15_eajer"]
+[ext_resource type="Script" path="res://scripts/fx/power_lines.gd" id="16_paugk"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/fence.png" id="17_nkxmh"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/fence_post.png" id="18_ksfy1"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/hedge.png" id="19_p67w3"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/gate.png" id="20_nc8kt"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/street_sign.png" id="21_l0x3w"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/mailbox.png" id="22_fbkl6"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/lamp_post.png" id="23_sc1vd"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/pot_a.png" id="24_bjrbr"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/pot_b.png" id="25_ft7qu"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/ground.png" id="26_yjdcj"]
+[ext_resource type="Script" path="res://scripts/fx/puddle.gd" id="27_fipxo"]
+[ext_resource type="Script" path="res://scripts/fx/puddle_zone.gd" id="28_pbl80"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/home_inside.png" id="29_vy13k"]
+[ext_resource type="Texture2D" path="res://assets/fx/light_soft.png" id="30_e5a8v"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/cushion_back.png" id="31_3c278"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/cushion_front.png" id="32_gd300"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/steps.png" id="33_5x8a3"]
+[ext_resource type="Shader" path="res://shaders/dither_fade.gdshader" id="34_206yk"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/home_front.png" id="35_oysdv"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/flap.png" id="36_cmms6"]
+[ext_resource type="Script" path="res://scripts/actors/monologue_trigger.gd" id="37_j8wby"]
+[ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="38_qrwn3"]
+[ext_resource type="Script" path="res://scripts/player/cat.gd" id="39_ma2p6"]
+[ext_resource type="Script" path="res://scripts/fx/wet_glints.gd" id="40_o6w7u"]
+[ext_resource type="Script" path="res://scripts/fx/birds.gd" id="41_n1vah"]
+[ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="42_ttfeu"]
+[ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="43_ne3ss"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambient/birdsong.ogg" id="44_lkycy"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambient/drip_loop.ogg" id="45_eu1pf"]
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_cy0wv"]
+polygon = PackedVector2Array(68, 0, 61.265884, 22.900383, 42.39731, 41.265064, 15.131424, 51.456696, -15.131424, 51.456696, -42.39731, 41.265064, -61.265884, 22.900383, -68, 6.463686e-15, -61.265884, -22.900383, -42.39731, -41.265064, -15.131424, -51.456696, 15.131424, -51.456696, 42.39731, -41.265064, 61.265884, -22.900383)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_8asek"]
+polygon = PackedVector2Array(36, 0, 32.43488, 14.092544, 22.445633, 25.393887, 8.010754, 31.665659, -8.010754, 31.665659, -22.445633, 25.393887, -32.43488, 14.092544, -36, 3.9776527e-15, -32.43488, -14.092544, -22.445633, -25.393887, -8.010754, -31.665659, 8.010754, -31.665659, 22.445633, -25.393887, 32.43488, -14.092544)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_xj5vb"]
+polygon = PackedVector2Array(34, 0, 30.632942, 13.21176, 21.198654, 23.806768, 7.565712, 29.686556, -7.565712, 29.686556, -21.198654, 23.806768, -30.632942, 13.21176, -34, 3.7290494e-15, -30.632942, -13.21176, -21.198654, -23.806768, -7.565712, -29.686556, 7.565712, -29.686556, 21.198654, -23.806768, 30.632942, -13.21176)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_hrmky"]
+polygon = PackedVector2Array(40, 0, 36.038754, 10.569407, 24.939592, 19.045414, 8.900837, 23.749245, -8.900837, 23.749245, -24.939592, 19.045414, -36.038754, 10.569407, -40, 2.9832397e-15, -36.038754, -10.569407, -24.939592, -19.045414, -8.900837, -23.749245, 8.900837, -23.749245, 24.939592, -19.045414, 36.038754, -10.569407)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_n7v0u"]
+polygon = PackedVector2Array(40.8, 0, 36.75953, 14.766799, 25.438383, 26.608852, 9.078855, 33.1807, -9.078855, 33.1807, -25.438383, 26.608852, -36.75953, 14.766799, -40.8, 4.167963e-15, -36.75953, -14.766799, -25.438383, -26.608852, -9.078855, -33.1807, 9.078855, -33.1807, 25.438383, -26.608852, 36.75953, -14.766799)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_kyvrv"]
+polygon = PackedVector2Array(21.6, 0, 19.460928, 9.087261, 13.46738, 16.374678, 4.8064523, 20.41889, -4.8064523, 20.41889, -13.46738, 16.374678, -19.460928, 9.087261, -21.6, 2.5649003e-15, -19.460928, -9.087261, -13.46738, -16.374678, -4.8064523, -20.41889, 4.8064523, -20.41889, 13.46738, -16.374678, 19.460928, -9.087261)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_hxowp"]
+polygon = PackedVector2Array(20.4, 0, 18.379765, 8.519307, 12.719192, 15.351261, 4.5394273, 19.14271, -4.5394273, 19.14271, -12.719192, 15.351261, -18.379765, 8.519307, -20.4, 2.404594e-15, -18.379765, -8.519307, -12.719192, -15.351261, -4.5394273, -19.14271, 4.5394273, -19.14271, 12.719192, -15.351261, 18.379765, -8.519307)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_bvf3x"]
+polygon = PackedVector2Array(24, 0, 21.623253, 6.815446, 14.963756, 12.281009, 5.3405023, 15.314168, -5.3405023, 15.314168, -14.963756, 12.281009, -21.623253, 6.815446, -24, 1.9236751e-15, -21.623253, -6.815446, -14.963756, -12.281009, -5.3405023, -15.314168, 5.3405023, -15.314168, 14.963756, -12.281009, 21.623253, -6.815446)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_d33kb"]
+polygon = PackedVector2Array(68, 0, 61.265884, 22.900383, 42.39731, 41.265064, 15.131424, 51.456696, -15.131424, 51.456696, -42.39731, 41.265064, -61.265884, 22.900383, -68, 6.463686e-15, -61.265884, -22.900383, -42.39731, -41.265064, -15.131424, -51.456696, 15.131424, -51.456696, 42.39731, -41.265064, 61.265884, -22.900383)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_f1h7b"]
+polygon = PackedVector2Array(36, 0, 32.43488, 14.092544, 22.445633, 25.393887, 8.010754, 31.665659, -8.010754, 31.665659, -22.445633, 25.393887, -32.43488, 14.092544, -36, 3.9776527e-15, -32.43488, -14.092544, -22.445633, -25.393887, -8.010754, -31.665659, 8.010754, -31.665659, 22.445633, -25.393887, 32.43488, -14.092544)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_e5hyi"]
+polygon = PackedVector2Array(34, 0, 30.632942, 13.21176, 21.198654, 23.806768, 7.565712, 29.686556, -7.565712, 29.686556, -21.198654, 23.806768, -30.632942, 13.21176, -34, 3.7290494e-15, -30.632942, -13.21176, -21.198654, -23.806768, -7.565712, -29.686556, 7.565712, -29.686556, 21.198654, -23.806768, 30.632942, -13.21176)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_sce05"]
+polygon = PackedVector2Array(40, 0, 36.038754, 10.569407, 24.939592, 19.045414, 8.900837, 23.749245, -8.900837, 23.749245, -24.939592, 19.045414, -36.038754, 10.569407, -40, 2.9832397e-15, -36.038754, -10.569407, -24.939592, -19.045414, -8.900837, -23.749245, 8.900837, -23.749245, 24.939592, -19.045414, 36.038754, -10.569407)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_0u1ww"]
+polygon = PackedVector2Array(68, 0, 61.265884, 22.900383, 42.39731, 41.265064, 15.131424, 51.456696, -15.131424, 51.456696, -42.39731, 41.265064, -61.265884, 22.900383, -68, 6.463686e-15, -61.265884, -22.900383, -42.39731, -41.265064, -15.131424, -51.456696, 15.131424, -51.456696, 42.39731, -41.265064, 61.265884, -22.900383)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_s2xn4"]
+polygon = PackedVector2Array(36, 0, 32.43488, 14.092544, 22.445633, 25.393887, 8.010754, 31.665659, -8.010754, 31.665659, -22.445633, 25.393887, -32.43488, 14.092544, -36, 3.9776527e-15, -32.43488, -14.092544, -22.445633, -25.393887, -8.010754, -31.665659, 8.010754, -31.665659, 22.445633, -25.393887, 32.43488, -14.092544)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_wr8hh"]
+polygon = PackedVector2Array(34, 0, 30.632942, 13.21176, 21.198654, 23.806768, 7.565712, 29.686556, -7.565712, 29.686556, -21.198654, 23.806768, -30.632942, 13.21176, -34, 3.7290494e-15, -30.632942, -13.21176, -21.198654, -23.806768, -7.565712, -29.686556, 7.565712, -29.686556, 21.198654, -23.806768, 30.632942, -13.21176)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_pl33k"]
+polygon = PackedVector2Array(40, 0, 36.038754, 10.569407, 24.939592, 19.045414, 8.900837, 23.749245, -8.900837, 23.749245, -24.939592, 19.045414, -36.038754, 10.569407, -40, 2.9832397e-15, -36.038754, -10.569407, -24.939592, -19.045414, -8.900837, -23.749245, 8.900837, -23.749245, 24.939592, -19.045414, 36.038754, -10.569407)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_dwxcc"]
+polygon = PackedVector2Array(3156, 202, 3344, 202, 3344, 216, 3156, 216)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_4jbe8"]
+light_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8tp4q"]
+shader = ExtResource("34_206yk")
+shader_parameter/amount = 1.0
+shader_parameter/sweep_dir = Vector2(-1.2, 0.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_r0yee"]
+size = Vector2(10, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6agvw"]
+size = Vector2(16, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1my6q"]
+size = Vector2(8, 420)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a8rw7"]
+size = Vector2(8, 420)
+
+[node name="Home" type="Node2D" unique_id=914795556]
+script = ExtResource("1_o77ht")
+spot_x = 3520.0
+limits = Rect2i(0, 24, 3692, 360)
+
+[node name="Backdrop" type="Node2D" parent="." unique_id=40894909]
+z_index = -20
+position = Vector2(0, 300)
+script = ExtResource("2_cru1d")
+
+[node name="Shade" type="Node2D" parent="." unique_id=430174040]
+
+[node name="TreeAShade0" type="LightOccluder2D" parent="Shade" unique_id=1877762873]
+position = Vector2(226, 128.5)
+occluder = SubResource("OccluderPolygon2D_cy0wv")
+
+[node name="TreeAShade1" type="LightOccluder2D" parent="Shade" unique_id=1691213770]
+position = Vector2(186, 137.2)
+occluder = SubResource("OccluderPolygon2D_8asek")
+
+[node name="TreeAShade2" type="LightOccluder2D" parent="Shade" unique_id=81887700]
+position = Vector2(268, 134.3)
+occluder = SubResource("OccluderPolygon2D_xj5vb")
+
+[node name="TreeAShade3" type="LightOccluder2D" parent="Shade" unique_id=907576363]
+position = Vector2(230, 108.2)
+occluder = SubResource("OccluderPolygon2D_hrmky")
+
+[node name="TreeBShade0" type="LightOccluder2D" parent="Shade" unique_id=802950753]
+position = Vector2(1326, 182.75)
+occluder = SubResource("OccluderPolygon2D_n7v0u")
+
+[node name="TreeBShade1" type="LightOccluder2D" parent="Shade" unique_id=521751452]
+position = Vector2(1302, 188.36)
+occluder = SubResource("OccluderPolygon2D_kyvrv")
+
+[node name="TreeBShade2" type="LightOccluder2D" parent="Shade" unique_id=585165573]
+position = Vector2(1351.2, 186.49)
+occluder = SubResource("OccluderPolygon2D_hxowp")
+
+[node name="TreeBShade3" type="LightOccluder2D" parent="Shade" unique_id=1625743870]
+position = Vector2(1328.4, 169.66)
+occluder = SubResource("OccluderPolygon2D_bvf3x")
+
+[node name="TreeCShade0" type="LightOccluder2D" parent="Shade" unique_id=244164460]
+position = Vector2(1880, 128.5)
+occluder = SubResource("OccluderPolygon2D_d33kb")
+
+[node name="TreeCShade1" type="LightOccluder2D" parent="Shade" unique_id=378921572]
+position = Vector2(1840, 137.2)
+occluder = SubResource("OccluderPolygon2D_f1h7b")
+
+[node name="TreeCShade2" type="LightOccluder2D" parent="Shade" unique_id=23357835]
+position = Vector2(1922, 134.3)
+occluder = SubResource("OccluderPolygon2D_e5hyi")
+
+[node name="TreeCShade3" type="LightOccluder2D" parent="Shade" unique_id=720780635]
+position = Vector2(1884, 108.2)
+occluder = SubResource("OccluderPolygon2D_sce05")
+
+[node name="TreeHomeShade0" type="LightOccluder2D" parent="Shade" unique_id=1199381444]
+position = Vector2(2790, 128.5)
+occluder = SubResource("OccluderPolygon2D_0u1ww")
+
+[node name="TreeHomeShade1" type="LightOccluder2D" parent="Shade" unique_id=798384057]
+position = Vector2(2750, 137.2)
+occluder = SubResource("OccluderPolygon2D_s2xn4")
+
+[node name="TreeHomeShade2" type="LightOccluder2D" parent="Shade" unique_id=736219728]
+position = Vector2(2832, 134.3)
+occluder = SubResource("OccluderPolygon2D_wr8hh")
+
+[node name="TreeHomeShade3" type="LightOccluder2D" parent="Shade" unique_id=1497619667]
+position = Vector2(2794, 108.2)
+occluder = SubResource("OccluderPolygon2D_pl33k")
+
+[node name="PorchShade" type="LightOccluder2D" parent="Shade" unique_id=1884064967]
+occluder = SubResource("OccluderPolygon2D_dwxcc")
+
+[node name="HouseDusty" type="Sprite2D" parent="." unique_id=1497634438]
+z_index = -10
+position = Vector2(260, 52)
+texture = ExtResource("3_2h5s3")
+centered = false
+
+[node name="HouseSage" type="Sprite2D" parent="." unique_id=1845502294]
+z_index = -10
+position = Vector2(900, 56)
+texture = ExtResource("4_tqlpg")
+centered = false
+
+[node name="HouseButter" type="Sprite2D" parent="." unique_id=1822458592]
+z_index = -10
+position = Vector2(1400, 64)
+texture = ExtResource("5_jh1sd")
+centered = false
+
+[node name="HouseRose" type="Sprite2D" parent="." unique_id=472770307]
+z_index = -10
+position = Vector2(2090, 60)
+texture = ExtResource("6_vvuf7")
+centered = false
+
+[node name="Lawn" type="Sprite2D" parent="." unique_id=223687672]
+z_index = -9
+texture_repeat = 2
+position = Vector2(-64, 290)
+texture = ExtResource("7_7i3p8")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 3264, 22)
+
+[node name="TreeA" type="Sprite2D" parent="." unique_id=242855764]
+z_index = -8
+position = Vector2(126, 56)
+texture = ExtResource("8_im6mn")
+centered = false
+
+[node name="TreeARays" type="Node2D" parent="." unique_id=1824937322]
+z_index = -7
+position = Vector2(250, 145.9)
+script = ExtResource("9_sr871")
+length = 174.1
+top_width = 44.0
+bottom_width = 100.0
+angle = -30.0
+color = Color(1, 0.82, 0.5, 1)
+ray_intensity = 0.1
+floor_glow = 0.0
+light_energy = 0.22
+dust_amount = 14
+dust_color = Color(1.5, 1.35, 0.95, 1)
+
+[node name="TreeB" type="Sprite2D" parent="." unique_id=373718451]
+z_index = -8
+position = Vector2(1266, 136)
+texture = ExtResource("10_d8cbg")
+centered = false
+
+[node name="TreeBRays" type="Node2D" parent="." unique_id=140541868]
+z_index = -7
+position = Vector2(1340.4, 193.97)
+script = ExtResource("9_sr871")
+length = 126.03
+top_width = 26.4
+bottom_width = 60.0
+angle = -30.0
+color = Color(1, 0.82, 0.5, 1)
+ray_intensity = 0.1
+floor_glow = 0.0
+light_energy = 0.22
+dust_amount = 8
+dust_color = Color(1.5, 1.35, 0.95, 1)
+
+[node name="TreeC" type="Sprite2D" parent="." unique_id=1693136064]
+z_index = -8
+position = Vector2(1780, 56)
+texture = ExtResource("8_im6mn")
+centered = false
+
+[node name="TreeCRays" type="Node2D" parent="." unique_id=1218569027]
+z_index = -7
+position = Vector2(1904, 145.9)
+script = ExtResource("9_sr871")
+length = 174.1
+top_width = 44.0
+bottom_width = 100.0
+angle = -30.0
+color = Color(1, 0.82, 0.5, 1)
+ray_intensity = 0.1
+floor_glow = 0.0
+light_energy = 0.22
+dust_amount = 14
+dust_color = Color(1.5, 1.35, 0.95, 1)
+
+[node name="TreeHome" type="Sprite2D" parent="." unique_id=1635766949]
+z_index = -8
+position = Vector2(2690, 56)
+texture = ExtResource("8_im6mn")
+centered = false
+
+[node name="TreeHomeRays" type="Node2D" parent="." unique_id=16306236]
+z_index = -7
+position = Vector2(2814, 145.9)
+script = ExtResource("9_sr871")
+length = 174.1
+top_width = 44.0
+bottom_width = 100.0
+angle = -30.0
+color = Color(1, 0.82, 0.5, 1)
+ray_intensity = 0.1
+floor_glow = 0.0
+light_energy = 0.22
+dust_amount = 14
+dust_color = Color(1.5, 1.35, 0.95, 1)
+
+[node name="BedA" type="Sprite2D" parent="." unique_id=945317150]
+z_index = -8
+position = Vector2(422, 286)
+texture = ExtResource("11_jovxt")
+centered = false
+
+[node name="BushA" type="Sprite2D" parent="." unique_id=140229965]
+z_index = -8
+position = Vector2(582, 276)
+texture = ExtResource("12_hn1sp")
+centered = false
+
+[node name="BedB" type="Sprite2D" parent="." unique_id=2141821483]
+z_index = -8
+position = Vector2(1448, 286)
+texture = ExtResource("13_3cak2")
+centered = false
+
+[node name="BushB" type="Sprite2D" parent="." unique_id=912234173]
+z_index = -8
+position = Vector2(1680, 284)
+texture = ExtResource("14_tof5d")
+centered = false
+
+[node name="BushC" type="Sprite2D" parent="." unique_id=1310189310]
+z_index = -8
+position = Vector2(2408, 272)
+texture = ExtResource("15_eajer")
+centered = false
+
+[node name="BedC" type="Sprite2D" parent="." unique_id=972911589]
+z_index = -8
+position = Vector2(2162, 286)
+texture = ExtResource("11_jovxt")
+centered = false
+flip_h = true
+
+[node name="BedHome1" type="Sprite2D" parent="." unique_id=481826155]
+z_index = -8
+position = Vector2(2958, 286)
+texture = ExtResource("13_3cak2")
+centered = false
+
+[node name="BedHome2" type="Sprite2D" parent="." unique_id=436695411]
+z_index = -8
+position = Vector2(3032, 286)
+texture = ExtResource("11_jovxt")
+centered = false
+flip_h = true
+
+[node name="BushHome" type="Sprite2D" parent="." unique_id=279809462]
+z_index = -8
+position = Vector2(2592, 276)
+texture = ExtResource("12_hn1sp")
+centered = false
+flip_h = true
+
+[node name="PowerLines" type="Node2D" parent="." unique_id=2124538567]
+z_index = -8
+script = ExtResource("16_paugk")
+poles = Array[float]([760.0, 1960.0, 3060.0])
+foot_y = 314.0
+pole_height = 214.0
+sag = 26.0
+drop_to = Vector2(3320, 114)
+
+[node name="FenceA" type="Sprite2D" parent="." unique_id=2137592697]
+z_index = -6
+texture_repeat = 2
+position = Vector2(120, 268)
+texture = ExtResource("17_nkxmh")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 560, 46)
+
+[node name="FenceAPost0" type="Sprite2D" parent="." unique_id=1806889515]
+z_index = -6
+position = Vector2(115, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost1" type="Sprite2D" parent="." unique_id=1797152908]
+z_index = -6
+position = Vector2(195, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost2" type="Sprite2D" parent="." unique_id=1422942353]
+z_index = -6
+position = Vector2(275, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost3" type="Sprite2D" parent="." unique_id=1494992959]
+z_index = -6
+position = Vector2(355, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost4" type="Sprite2D" parent="." unique_id=1492787594]
+z_index = -6
+position = Vector2(435, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost5" type="Sprite2D" parent="." unique_id=1301376382]
+z_index = -6
+position = Vector2(515, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost6" type="Sprite2D" parent="." unique_id=1799269064]
+z_index = -6
+position = Vector2(595, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceAPost7" type="Sprite2D" parent="." unique_id=1168685849]
+z_index = -6
+position = Vector2(675, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="HedgeB" type="Sprite2D" parent="." unique_id=1978894454]
+z_index = -6
+texture_repeat = 2
+position = Vector2(880, 274)
+texture = ExtResource("19_p67w3")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 480, 40)
+
+[node name="FenceC" type="Sprite2D" parent="." unique_id=1020211906]
+z_index = -6
+texture_repeat = 2
+position = Vector2(1380, 268)
+texture = ExtResource("17_nkxmh")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 400, 46)
+
+[node name="FenceCPost0" type="Sprite2D" parent="." unique_id=1077450739]
+z_index = -6
+position = Vector2(1375, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceCPost1" type="Sprite2D" parent="." unique_id=2072130000]
+z_index = -6
+position = Vector2(1455, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceCPost2" type="Sprite2D" parent="." unique_id=657528266]
+z_index = -6
+position = Vector2(1535, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceCPost3" type="Sprite2D" parent="." unique_id=1637371857]
+z_index = -6
+position = Vector2(1615, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceCPost4" type="Sprite2D" parent="." unique_id=1752223818]
+z_index = -6
+position = Vector2(1695, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceCPost5" type="Sprite2D" parent="." unique_id=231260138]
+z_index = -6
+position = Vector2(1775, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceD" type="Sprite2D" parent="." unique_id=343964523]
+z_index = -6
+texture_repeat = 2
+position = Vector2(2080, 268)
+texture = ExtResource("17_nkxmh")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 400, 46)
+
+[node name="FenceDPost0" type="Sprite2D" parent="." unique_id=1920870021]
+z_index = -6
+position = Vector2(2075, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceDPost1" type="Sprite2D" parent="." unique_id=1104180695]
+z_index = -6
+position = Vector2(2155, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceDPost2" type="Sprite2D" parent="." unique_id=387702871]
+z_index = -6
+position = Vector2(2235, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceDPost3" type="Sprite2D" parent="." unique_id=1377225622]
+z_index = -6
+position = Vector2(2315, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceDPost4" type="Sprite2D" parent="." unique_id=204233063]
+z_index = -6
+position = Vector2(2395, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceDPost5" type="Sprite2D" parent="." unique_id=298483567]
+z_index = -6
+position = Vector2(2475, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHome" type="Sprite2D" parent="." unique_id=1244746955]
+z_index = -6
+texture_repeat = 2
+position = Vector2(2520, 268)
+texture = ExtResource("17_nkxmh")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 400, 46)
+
+[node name="FenceHomePost0" type="Sprite2D" parent="." unique_id=1479317284]
+z_index = -6
+position = Vector2(2515, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHomePost1" type="Sprite2D" parent="." unique_id=1145625952]
+z_index = -6
+position = Vector2(2595, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHomePost2" type="Sprite2D" parent="." unique_id=666511759]
+z_index = -6
+position = Vector2(2675, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHomePost3" type="Sprite2D" parent="." unique_id=1612619358]
+z_index = -6
+position = Vector2(2755, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHomePost4" type="Sprite2D" parent="." unique_id=1307916913]
+z_index = -6
+position = Vector2(2835, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="FenceHomePost5" type="Sprite2D" parent="." unique_id=1402647966]
+z_index = -6
+position = Vector2(2915, 264)
+texture = ExtResource("18_ksfy1")
+centered = false
+
+[node name="Gate" type="Sprite2D" parent="." unique_id=688094279]
+z_index = -6
+position = Vector2(2922, 266)
+texture = ExtResource("20_nc8kt")
+centered = false
+
+[node name="StreetSign" type="Sprite2D" parent="." unique_id=515924428]
+z_index = -5
+position = Vector2(5, 196)
+texture = ExtResource("21_l0x3w")
+centered = false
+
+[node name="Mailbox" type="Sprite2D" parent="." unique_id=1272422813]
+z_index = -5
+position = Vector2(689, 272)
+texture = ExtResource("22_fbkl6")
+centered = false
+
+[node name="LampPost" type="Sprite2D" parent="." unique_id=390045656]
+z_index = -5
+position = Vector2(1987, 166)
+texture = ExtResource("23_sc1vd")
+centered = false
+
+[node name="PotA" type="Sprite2D" parent="." unique_id=702835220]
+z_index = -3
+position = Vector2(3101, 290)
+texture = ExtResource("24_bjrbr")
+centered = false
+
+[node name="PotB" type="Sprite2D" parent="." unique_id=1930416237]
+z_index = -3
+position = Vector2(3125, 290)
+texture = ExtResource("25_ft7qu")
+centered = false
+
+[node name="Street" type="Sprite2D" parent="." unique_id=1233377135]
+z_index = -4
+texture_repeat = 2
+position = Vector2(-64, 312)
+texture = ExtResource("26_yjdcj")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 3820, 72)
+
+[node name="WetRoad" type="ColorRect" parent="." unique_id=1982237934]
+z_index = 6
+offset_left = -64.0
+offset_top = 337.0
+offset_right = 3756.0
+offset_bottom = 385.0
+script = ExtResource("27_fipxo")
+water_tint = Color(0.3, 0.32, 0.42, 1)
+reflectivity = 0.32
+wave_amp = 0.25
+edge_fade = 0.0
+reflect_scale = 3.2
+highlight = Color(0.55, 0.5, 0.42, 1)
+
+[node name="Puddle1" type="Area2D" parent="." unique_id=1563796406]
+position = Vector2(352, 320)
+script = ExtResource("28_pbl80")
+width = 72.0
+
+[node name="Puddle2" type="Area2D" parent="." unique_id=22277139]
+position = Vector2(880, 320)
+script = ExtResource("28_pbl80")
+width = 120.0
+
+[node name="Puddle3" type="Area2D" parent="." unique_id=1313981960]
+position = Vector2(1606, 320)
+script = ExtResource("28_pbl80")
+width = 150.0
+
+[node name="Puddle4" type="Area2D" parent="." unique_id=1012657245]
+position = Vector2(2064, 320)
+script = ExtResource("28_pbl80")
+width = 64.0
+
+[node name="Puddle5" type="Area2D" parent="." unique_id=614582446]
+position = Vector2(2566, 320)
+script = ExtResource("28_pbl80")
+
+[node name="Interior" type="Sprite2D" parent="." unique_id=1325691162]
+light_mask = 8
+z_index = -3
+position = Vector2(3148, 44)
+texture = ExtResource("29_vy13k")
+centered = false
+
+[node name="Pane0" type="ColorRect" parent="." unique_id=2125489872]
+z_index = -4
+material = SubResource("CanvasItemMaterial_4jbe8")
+offset_left = 3556.0
+offset_top = 194.0
+offset_right = 3584.0
+offset_bottom = 221.0
+mouse_filter = 2
+color = Color(1.32, 1.2, 0.92, 1)
+
+[node name="Pane1" type="ColorRect" parent="." unique_id=278396297]
+z_index = -4
+material = SubResource("CanvasItemMaterial_4jbe8")
+offset_left = 3587.0
+offset_top = 194.0
+offset_right = 3614.0
+offset_bottom = 221.0
+mouse_filter = 2
+color = Color(1.32, 1.2, 0.92, 1)
+
+[node name="Pane2" type="ColorRect" parent="." unique_id=1849427987]
+z_index = -4
+material = SubResource("CanvasItemMaterial_4jbe8")
+offset_left = 3556.0
+offset_top = 224.0
+offset_right = 3584.0
+offset_bottom = 250.0
+mouse_filter = 2
+color = Color(1.25, 1.08, 0.78, 1)
+
+[node name="Pane3" type="ColorRect" parent="." unique_id=2085721422]
+z_index = -4
+material = SubResource("CanvasItemMaterial_4jbe8")
+offset_left = 3587.0
+offset_top = 224.0
+offset_right = 3614.0
+offset_bottom = 250.0
+mouse_filter = 2
+color = Color(1.25, 1.08, 0.78, 1)
+
+[node name="Sunbeam" type="Node2D" parent="." unique_id=1849015656]
+z_index = 4
+position = Vector2(3585, 208)
+script = ExtResource("9_sr871")
+length = 96.0
+top_width = 52.0
+bottom_width = 78.0
+angle = -36.0
+color = Color(1, 0.84, 0.52, 1)
+ray_intensity = 0.42
+floor_glow = 0.55
+light_energy = 0.6
+dust_amount = 34
+dust_color = Color(1.7, 1.5, 1.05, 1)
+
+[node name="BeamLight" type="PointLight2D" parent="." unique_id=1774867960]
+position = Vector2(3524, 290)
+color = Color(1, 0.82, 0.55, 1)
+energy = 0.32
+range_item_cull_mask = 8
+texture = ExtResource("30_e5a8v")
+texture_scale = 1.3
+
+[node name="RoomLight" type="PointLight2D" parent="." unique_id=947140383]
+position = Vector2(3464, 234)
+color = Color(1, 0.78, 0.55, 1)
+energy = 0.16
+range_item_cull_mask = 8
+texture = ExtResource("30_e5a8v")
+texture_scale = 6.0
+
+[node name="CushionBack" type="Sprite2D" parent="." unique_id=2070020027]
+light_mask = 8
+z_index = -2
+position = Vector2(3496, 290)
+texture = ExtResource("31_3c278")
+centered = false
+
+[node name="CushionFront" type="Sprite2D" parent="." unique_id=446458449]
+light_mask = 8
+z_index = 6
+position = Vector2(3496, 290)
+texture = ExtResource("32_gd300")
+centered = false
+
+[node name="Steps" type="Sprite2D" parent="." unique_id=158207161]
+z_index = -2
+position = Vector2(3156, 302)
+texture = ExtResource("33_5x8a3")
+centered = false
+
+[node name="Facade" type="Node2D" parent="." unique_id=1700423163]
+z_index = 2
+
+[node name="Front" type="Sprite2D" parent="Facade" unique_id=2048342365]
+material = SubResource("ShaderMaterial_8tp4q")
+position = Vector2(3148, 44)
+texture = ExtResource("35_oysdv")
+centered = false
+
+[node name="Flap" type="Sprite2D" parent="Facade" unique_id=465794978]
+material = SubResource("ShaderMaterial_8tp4q")
+position = Vector2(3260, 283)
+texture = ExtResource("36_cmms6")
+centered = false
+
+[node name="FlapTrigger" type="Area2D" parent="." unique_id=979127719]
+position = Vector2(3266, 304)
+collision_layer = 0
+collision_mask = 2
+
+[node name="Shape" type="CollisionShape2D" parent="FlapTrigger" unique_id=1247876462]
+position = Vector2(0, -20)
+shape = SubResource("RectangleShape2D_r0yee")
+
+[node name="SpotTrigger" type="Area2D" parent="." unique_id=49950760]
+position = Vector2(3498, 304)
+collision_layer = 0
+collision_mask = 2
+
+[node name="Shape" type="CollisionShape2D" parent="SpotTrigger" unique_id=2097695808]
+position = Vector2(0, -20)
+shape = SubResource("RectangleShape2D_6agvw")
+
+[node name="Ground" type="StaticBody2D" parent="." unique_id=569646159]
+collision_mask = 0
+
+[node name="Shape" type="CollisionPolygon2D" parent="Ground" unique_id=1227312394]
+polygon = PackedVector2Array(-120, 320, 3154, 320, 3192, 304, 3732, 304, 3732, 400, -120, 400)
+
+[node name="WallLeft" type="CollisionShape2D" parent="Ground" unique_id=883618239]
+position = Vector2(-12, 160)
+shape = SubResource("RectangleShape2D_1my6q")
+
+[node name="WallRight" type="CollisionShape2D" parent="Ground" unique_id=1016833170]
+position = Vector2(3676, 160)
+shape = SubResource("RectangleShape2D_a8rw7")
+
+[node name="PlayerStart" type="Marker2D" parent="." unique_id=1858162099]
+position = Vector2(56, 320)
+
+[node name="ArrivalTalk" type="Area2D" parent="." unique_id=813456703]
+position = Vector2(150, 320)
+script = ExtResource("37_j8wby")
+line_id = "home_arrival"
+size = Vector2(48, 96)
+
+[node name="FlapTalk" type="Area2D" parent="." unique_id=1682724406]
+position = Vector2(3112, 320)
+script = ExtResource("37_j8wby")
+line_id = "home_flap"
+size = Vector2(40, 96)
+
+[node name="Cat" type="CharacterBody2D" parent="." unique_id=1767015887 instance=ExtResource("38_qrwn3")]
+z_index = 5
+collision_layer = 2
+collision_mask = 17
+floor_snap_length = 7.0
+script = ExtResource("39_ma2p6")
+
+[node name="GlintsBack" type="Node2D" parent="." unique_id=178820572]
+z_index = -7
+script = ExtResource("40_o6w7u")
+areas = Array[Rect2]([Rect2(440, 132, 162, 26), Rect2(1070, 136, 153, 26), Rect2(1560, 144, 144, 26), Rect2(2260, 140, 153, 26), Rect2(-64, 293, 3264, 6), Rect2(206, 62, 90, 87), Rect2(1314, 142, 54, 56.1), Rect2(1860, 62, 90, 87), Rect2(2770, 62, 90, 87)])
+glint_rate = 1.6
+drip_lines = Array[Vector4]([Vector4(270, 610, 164, 300), Vector4(910, 1230, 168, 300), Vector4(1410, 1710, 176, 300), Vector4(2100, 2420, 172, 300), Vector4(156, 296, 179.25, 308), Vector4(1284, 1368, 215.475, 308), Vector4(1810, 1950, 179.25, 308), Vector4(2720, 2860, 179.25, 308)])
+drip_rate = 0.16
+
+[node name="Glints" type="Node2D" parent="." unique_id=1707218672]
+z_index = 7
+script = ExtResource("40_o6w7u")
+areas = Array[Rect2]([Rect2(120, 272, 560, 2), Rect2(880, 276, 480, 4), Rect2(1380, 272, 400, 2), Rect2(2080, 272, 400, 2), Rect2(2520, 272, 400, 2), Rect2(-64, 339, 3820, 10), Rect2(322, 321, 60, 5), Rect2(826, 321, 108, 5), Rect2(1537, 321, 138, 5), Rect2(2038, 321, 52, 5), Rect2(2524, 321, 84, 5), Rect2(3390, 188, 64, 30), Rect2(3530, 188, 64, 30)])
+glint_rate = 2.6
+drip_lines = Array[Vector4]([Vector4(120, 680, 284, 318), Vector4(1380, 1780, 284, 318), Vector4(2080, 2480, 284, 318), Vector4(2520, 2920, 284, 318), Vector4(3156, 3338, 217, 304), Vector4(3194, 3686, 156, 304)])
+drip_rate = 0.2
+
+[node name="Birds" type="Node2D" parent="." unique_id=1383628630]
+z_index = -5
+script = ExtResource("41_n1vah")
+perches = Array[Vector2]([Vector2(330, 273), Vector2(352, 273), Vector2(1470, 273), Vector2(1494, 273), Vector2(1560, 273), Vector2(1180, 141.66), Vector2(1214, 142.46051), Vector2(2700, 273)])
+
+[node name="LightingRig" type="Node2D" parent="." unique_id=1546761933]
+script = ExtResource("42_ttfeu")
+night_tint = Color(0.78, 0.79, 0.9, 1)
+moon_color = Color(1, 0.86, 0.62, 1)
+moon_energy = 0.33
+moon_angle = -52.0
+moon_shadow_filter = 2
+moon_shadow_smooth = 2.0
+moon_lights_motes = false
+glow_intensity = 0.55
+glow_threshold = 1.12
+vignette = 0.12
+
+[node name="Ambience" type="Node" parent="." unique_id=31808082]
+script = ExtResource("43_ne3ss")
+rain_stream = ExtResource("44_lkycy")
+hum_stream = ExtResource("45_eu1pf")
+rain_db = -13.0
+hum_db = -27.0
+step_db = -24.0

@@ -17,7 +17,9 @@ as a courtesy.
 The ansimuz packs ship a `public-license.pdf` stating CC0; copies are in
 `assets/art_hd/`. The warning lamp (`lamp_base.png`, `lamp_glass.png`) is cut from the
 bart/rubberduck hazard sheet; the pad plate is drawn by `tools/art/make_pad_hd.py`
-in the steel ramp.
+in the steel ramp. The Home ending's street, houses, interior, sky and credits
+room (`assets/art_hd/home/`) are drawn by `tools/art/home_art.py`, with no
+third-party source.
 
 ## Font
 
@@ -34,5 +36,8 @@ in the steel ramp.
 | 30 CC0 SFX Loops (machine, pump, rolling, rain, water and ambient loops) | rubberduck | https://opengameart.org/content/30-cc0-sfx-loops | CC0 1.0 | `assets/audio/ambient/` |
 | Dripping water loop (converted from FLAC to OGG) | qubodup | https://opengameart.org/content/dripping-water-loop | CC0 1.0 | `assets/audio/ambient/drip_loop.ogg` |
 | Impact Sounds 1.0 (footsteps and metal impacts) | Kenney | https://kenney.nl/assets/impact-sounds | CC0 1.0 | `assets/audio/sfx/` |
+| Blackbird singing in garden with rustling trees (trimmed to a 35 s loop, and one chirp cut from it) | Cinetony | https://freesound.org/people/Cinetony/sounds/565058/ | CC0 1.0 | `assets/audio/ambient/birdsong.ogg`, `assets/audio/sfx/bird_chirp_1.ogg` |
+| Ambient Bird Sounds (one chirp cut from it) | isaiah658 | https://opengameart.org/content/ambient-bird-sounds | CC0 1.0 | `assets/audio/sfx/bird_chirp_2.ogg` |
+| JRPG Pack 4 Calm ("Calm6 - Innocence"), the ending and credits music | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/jrpg-pack-4-calm | CC0 1.0 | `assets/audio/music/calm_innocence.ogg` |
 
 License text: https://creativecommons.org/publicdomain/zero/1.0/

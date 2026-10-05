@@ -110,25 +110,12 @@ func _ready() -> void:
 		pu.highlight = Color(1.0, 0.95, 0.82)
 		if glints:
 			glints.puddles.append(pu)
-	for shaft in find_children("*", "MoonShaft", true, false):
-		Home.give_ray_uvs(shaft)
 	# The window's beam lights the room and its dust, never the facade outside.
 	var beam_light := get_node_or_null("Sunbeam/Light") as Light2D
 	if beam_light:
 		beam_light.range_item_cull_mask = MASK_INTERIOR | LightingRig.MASK_MOTES
 	if OS.has_feature("web"):
 		_setup_web()
-
-
-## Polygon2D hands its UVs to the shader only when it has a texture (Godot
-## 4.7), and MoonShaft's god-ray shader needs them, so its ray drew nothing.
-## A 1x1 white texture brings the ray back without touching MoonShaft.
-static func give_ray_uvs(shaft: Node) -> void:
-	var ray := shaft.get_node_or_null("Ray") as Polygon2D
-	if ray and ray.texture == null:
-		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
-		img.fill(Color.WHITE)
-		ray.texture = ImageTexture.create_from_image(img)
 
 
 func _process(delta: float) -> void:

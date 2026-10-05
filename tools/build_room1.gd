@@ -241,7 +241,11 @@ func _shaft(sk: Rect2) -> void:
 	shaft.length = float(G * T) - 40.0
 	shaft.top_width = sk.size.x - 4.0
 	shaft.bottom_width = sk.size.x * 1.7
-	shaft.ray_intensity = 0.30 if sk.size.x > T else 0.42
+	# The lit air is a soft lift over the wall the cone light already shapes:
+	# translucent, so the dust stays the sparkle. The nook's narrow shaft (the
+	# opening shot) a touch stronger. The haze starts under the two-row roof.
+	shaft.ray_intensity = 0.10 if sk.size.x > T else 0.13
+	shaft.ray_start = 2.0 * T - shaft.position.y
 	shaft.light_energy = 1.0
 	shaft.floor_glow = 0.30
 	shaft.dust_amount = 60 if sk.size.x > T else 30

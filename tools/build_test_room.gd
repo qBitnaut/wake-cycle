@@ -188,7 +188,8 @@ func _shaft(sk: Rect2) -> void:
 	shaft.length = float(G * T) - 40.0
 	shaft.top_width = sk.size.x - 4.0
 	shaft.bottom_width = sk.size.x * 1.7
-	shaft.ray_intensity = 0.30
+	shaft.ray_intensity = 0.10  # as Room 1: a soft lift, the dust stays the sparkle
+	shaft.ray_start = 2.0 * T - shaft.position.y  # under the two-row roof
 	shaft.light_energy = 1.0
 	shaft.floor_glow = 0.30
 	shaft.dust_amount = 60

@@ -139,7 +139,8 @@ func _tree(file: String, node_name: String, x: float, big: bool) -> void:
 	shaft.top_width = sz.x * 0.22
 	shaft.bottom_width = sz.x * 0.5
 	shaft.color = Color(1.0, 0.82, 0.5)
-	shaft.ray_intensity = 0.1
+	shaft.setting = MoonShaft.Setting.OUTDOOR
+	shaft.ray_intensity = 0.1 if big else 0.13  # a narrow shaft loses more to its soft edges
 	shaft.floor_glow = 0.0
 	shaft.light_energy = 0.22
 	shaft.dust_amount = 14 if big else 8

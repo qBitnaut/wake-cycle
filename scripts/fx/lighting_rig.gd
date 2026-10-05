@@ -102,6 +102,12 @@ const MASK_BACKDROP := 4
 ## 18 px tiles, 5 px on 32 px tiles).
 @export_range(-1, 16) var occluder_inset_px := -1
 
+## The lighting as authored, recorded in _ready before SkyProgress or
+## lightning move it: adaptive effects (MoonShaft) measure the live lighting
+## against it.
+var design_tint := Color.WHITE
+var design_key_strength := 0.0
+
 var _modulate: CanvasModulate
 var _moon: DirectionalLight2D
 var _env: WorldEnvironment
@@ -111,6 +117,8 @@ const VIGNETTE_SHADER := preload("res://shaders/vignette.gdshader")
 
 
 func _ready() -> void:
+	design_tint = night_tint
+	design_key_strength = key_strength()
 	_modulate = CanvasModulate.new()
 	_modulate.name = "NightTint"
 	_modulate.color = night_tint
@@ -154,6 +162,14 @@ func _ready() -> void:
 ## viewport height (612 at 320x180), so it follows the resolution.
 static func shadow_reach(node: Node) -> float:
 	return FXScale.factor(node) * FXScale.REFERENCE_HEIGHT * 3.4
+
+
+## The key light's live strength (the moon, or the sun in a day rig): its
+## energy times the luminance of its colour, 0 when it is off.
+func key_strength() -> float:
+	if not moon_enabled:
+		return 0.0
+	return moon_energy * (moon_color.r * 0.2126 + moon_color.g * 0.7152 + moon_color.b * 0.0722)
 
 
 func get_canvas_modulate() -> CanvasModulate:

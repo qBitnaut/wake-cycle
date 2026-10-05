@@ -107,7 +107,6 @@ func _build_room() -> void:
 	shaft.dust_amount = 36
 	shaft.dust_color = Color(1.6, 1.4, 1.0)
 	add_child(shaft)
-	Home.give_ray_uvs(shaft)
 	var back := Sprite2D.new()
 	back.name = "CushionBack"
 	back.texture = load(ART + "cushion_back.png")

@@ -87,6 +87,10 @@ func set_intensity(k: float) -> void:
 	_apply()
 
 
+func get_intensity() -> float:
+	return _intensity
+
+
 func _apply() -> void:
 	if _drops == null:
 		return

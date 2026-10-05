@@ -260,7 +260,8 @@ func _build_room() -> void:
 	shaft.length = G * T - 40.0
 	shaft.top_width = skylight.size.x - 4.0
 	shaft.bottom_width = skylight.size.x * 1.7
-	shaft.ray_intensity = 0.30
+	shaft.ray_intensity = 0.10  # as Room 1
+	shaft.ray_start = 2.0 * T - 40.0  # under the two-row roof
 	shaft.light_energy = 0.6  # the cat stands in it: keep the tabby warm
 	shaft.floor_glow = 0.30
 	shaft.dust_amount = 50

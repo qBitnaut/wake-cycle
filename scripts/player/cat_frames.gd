@@ -28,6 +28,8 @@ const ANIMS := {
 	"itch": ["itch", 6.0, true, []],
 	"meow": ["meow", 8.0, false, []],
 	"stretch": ["stretching", 10.0, false, []],
+	# The ending: from sitting down to the loaf (the laying sheet's last frames).
+	"lie_down": ["laying", 5.0, false, [2, 3, 4, 5, 6, 7]],
 }
 
 

@@ -108,6 +108,24 @@ finishes the level calls `GameState.awaken_mind()` (the goo grants intelligence,
 and loads the next room, which auto-saves on arrival (`RoomExit`,
 `RoomTransition`). Pass `-- --skip-intro` to Godot to start Room 1 awake.
 
+## Home, the ending
+
+`scenes/levels/home.tscn` (built by `tools/build_home.gd`, art by
+`tools/art/home_art.py`): the morning after the storm. A short, gentle walk
+down a sunny, rain-washed street (puddles, glints, birds, no challenge) to the
+cat's own house. Walking into the door takes the cat through the flap and the
+front wall dissolves; walking into the sunbeam on its cushion locks input, and
+the cat curls up and sleeps while the last lines play. Then the credits
+(`scenes/ui/credits.tscn`, lines in `data/credits.json`): the title card, the
+roll (holding any movement speeds it up), "The End", and a movement press
+returns to Room 1 from the beginning. Finishing marks the game complete
+(`user://complete.json`) and clears the checkpoint.
+
+Audits: `tools/audit/home_playthrough.gd` plays it headless from the arrival
+to the return to Room 1; `tools/audit/web_home.mjs` does the same in the web
+export through the debug deep link `index.html?start=home`, with a screenshot
+at every moment; `tools/audit/home_tour.gd` renders the street stop by stop.
+
 ## Credits
 
 - Design, direction and development: Chris ([qBitnaut](https://github.com/qBitnaut))

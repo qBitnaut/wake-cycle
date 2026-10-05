@@ -9,7 +9,9 @@ extends CanvasLayer
 ## the crate label) is there it moves to the top band, or sideways.
 ##
 ## The words live in res://data/monologue.json, keyed by id. A line is either a
-## string or {"text": "...", "hold": seconds}. Edit the file; no code changes.
+## string or {"text": "...", "hold": seconds, "after": seconds}; "after" is a
+## silence held once the line has faded, before the next one. Edit the file;
+## no code changes.
 ##   Monologue.play("awakening")        queue every line of a set
 ##   Monologue.play_once("exit_hint")   same, but only the first time
 ##   Monologue.say("Hmm.", 2.5)         one ad-hoc line (hold < 0 = by length)
@@ -58,7 +60,7 @@ var history: Array = []
 
 var _sets := {}
 var _played := {}
-var _queue: Array = []  # [id, text, hold, last_of_set]
+var _queue: Array = []  # [id, text, hold, last_of_set, after]
 var _busy := false
 var _root: Control
 var _plate: Panel
@@ -121,7 +123,8 @@ func play(id: String) -> void:
 		var l: Variant = lines[i]
 		var text := str(l.get("text", "")) if l is Dictionary else str(l)
 		var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
-		_queue.append([id, text, hold, i == lines.size() - 1])
+		var after := float(l.get("after", 0.0)) if l is Dictionary else 0.0
+		_queue.append([id, text, hold, i == lines.size() - 1, after])
 	if not _busy:
 		_next()
 
@@ -154,7 +157,7 @@ func play_once(id: String) -> bool:
 
 ## One ad-hoc line. hold < 0 times it by its length.
 func say(text: String, hold := -1.0) -> void:
-	_queue.append(["", text, hold, false])
+	_queue.append(["", text, hold, false, 0.0])
 	if not _busy:
 		_next()
 
@@ -235,8 +238,11 @@ func _next() -> void:
 	_tween.tween_property(_root, "modulate:a", 1.0, FADE_IN).set_trans(Tween.TRANS_SINE)
 	_tween.tween_interval(hold)
 	# Back-to-back lines cross-fade through a shorter dip instead of a full fade out.
-	var out := FADE_OUT if _queue.is_empty() else FADE_OUT * 0.5
+	var after: float = line[4] if line.size() > 4 else 0.0
+	var out := FADE_OUT if _queue.is_empty() or after > 0.0 else FADE_OUT * 0.5
 	_tween.tween_property(_root, "modulate:a", 0.0, out).set_trans(Tween.TRANS_SINE)
+	if after > 0.0:
+		_tween.tween_interval(after)
 	_tween.tween_callback(func():
 		line_finished.emit(line[0], text)
 		if line[3]:

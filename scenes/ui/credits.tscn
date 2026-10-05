@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/credits.gd" id="1_oap8i"]
+
+[node name="Credits" type="Node2D" unique_id=1225073589]
+script = ExtResource("1_oap8i")

@@ -15,8 +15,8 @@ extends Level
 ## GameState.awaken_mind() (intelligence; no power).
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
-## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2 or room3
-## jumps straight to Room 2 or 3 (see _web_start_override).
+## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2 /
+## room3 / room4 / home jumps straight to that room (see _web_start_override).
 
 signal nanotech_absorbed_started
 signal transform_finished
@@ -203,24 +203,34 @@ func _setup_web() -> void:
 	win["wakeTeleport"] = cb
 
 
-## Web audit deep links: index.html?start=room2 / room3 / room4 skips ahead and
-## arrives the way the previous room's exit would leave the cat (mind awake, no
-## powers, auto-save); room4 also has the shockwave, which the Room 3 conduit grants.
+## Web audit deep links: index.html?start=room2 / room3 / room4 / home skips ahead
+## and arrives the way the previous room's exit would leave the cat (mind awake, no
+## powers, auto-save); room4 and home also have the shockwave, which the Room 3
+## conduit grants.
 const WEB_STARTS := {
 	"room2": "res://scenes/levels/room2.tscn",
 	"room3": "res://scenes/levels/room3.tscn",
 	"room4": "res://scenes/levels/room4.tscn",
+	"home": "res://scenes/levels/home.tscn",
 }
 
 
+## The deep link applies to the page load only: a later Room 1 (the return
+## after the credits) is the real start.
+static var _web_start_used := false
+
+
 func _web_start_override() -> void:
+	if _web_start_used:
+		return
+	_web_start_used = true
 	var start := str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''"))
 	if not WEB_STARTS.has(start):
 		return
 	intro_done = true
 	GameState.new_game()
 	GameState.awaken_mind()
-	if start == "room4":
+	if start == "room4" or start == "home":
 		GameState.unlock_shockwave()
 	Monologue.reset()
 	SaveSystem.session_scene = ""

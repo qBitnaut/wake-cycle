@@ -20,6 +20,9 @@ const PLINK := [
 	preload("res://assets/audio/sfx/impactMetal_light_002.ogg"),
 ]
 
+## The two loops of the bed (a day room swaps them, e.g. birdsong and drips).
+@export var rain_stream: AudioStream = RAIN
+@export var hum_stream: AudioStream = HUM
 @export var rain_db := -17.0
 @export var hum_db := -24.0
 @export var step_db := -20.0
@@ -41,8 +44,8 @@ func _ready() -> void:
 
 func setup(player: Cat) -> void:
 	cat = player
-	_rain = _loop(RAIN, rain_db)
-	_hum = _loop(HUM, hum_db)
+	_rain = _loop(rain_stream, rain_db)
+	_hum = _loop(hum_stream, hum_db)
 	_step = AudioStreamPlayer.new()
 	_step.volume_db = step_db
 	add_child(_step)

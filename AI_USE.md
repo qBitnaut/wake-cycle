@@ -113,3 +113,11 @@ Append-only. Add a dated entry for each working day. Do not edit past entries.
   scripted playthrough of Room 1 in headless Godot
   (`tools/audit/room1_playthrough.gd`) and in the web export
   (`tools/audit/web_room1.mjs`).
+- The ending: `davinci` built Home, the morning after the storm, and the end
+  credits. The street, the houses, the cat's living room, the sky and the
+  credits room are drawn by a script it wrote (`tools/art/home_art.py`:
+  shapes, colour ramps and noise, no generative art); day lighting, puddles,
+  glints and birds are code. `jadzia` found and licence-checked the CC0
+  birdsong and the ending music. Headless and web playthroughs check the
+  walk, the flap, the sleep, every line, the credits and the return to the
+  start (`tools/audit/home_playthrough.gd`, `tools/audit/web_home.mjs`).

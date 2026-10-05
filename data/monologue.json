@@ -87,5 +87,19 @@
 	"perimeter_exit": [
 		"The rain's stopping. The sky's getting light.",
 		"Almost home."
+	],
+	"home_arrival": [
+		"The sun. I forgot how warm it is.",
+		"This street. That fence. I know this place."
+	],
+	"home_flap": [
+		"Still unlocked. They left it open for me."
+	],
+	"home_final": [
+		{"text": "Home. It smells like home.", "hold": 3.4, "after": 1.2},
+		{"text": "I don't know exactly what I am now. Something more than I was.", "hold": 5.2, "after": 1.4},
+		{"text": "But some things are still simple.", "hold": 3.4, "after": 1.0},
+		{"text": "Warm sun. Soft cushion. Safe.", "hold": 4.2, "after": 2.0},
+		{"text": "...Wake cycle complete.", "hold": 4.6}
 	]
 }

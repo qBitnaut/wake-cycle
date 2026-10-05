@@ -57,6 +57,17 @@ const MASK_BACKDROP := 4
 	set(v):
 		moon_shadow_smooth = v
 		_apply()
+## Off for a day sun: motes then show only in shafts and lamps, not everywhere.
+@export var moon_lights_motes := true:
+	set(v):
+		moon_lights_motes = v
+		_apply()
+## Extra light-mask bits the moon (or sun) lights, e.g. a room it should not
+## reach is left out by giving that room's items a bit not listed here.
+@export_flags_2d_render var moon_extra_mask := 0:
+	set(v):
+		moon_extra_mask = v
+		_apply()
 
 @export_group("Glow")
 ## WorldEnvironment glow (background mode Canvas). Verified working in the
@@ -168,8 +179,9 @@ func _apply() -> void:
 	_moon.shadow_filter = moon_shadow_filter
 	_moon.shadow_filter_smooth = moon_shadow_smooth
 	_moon.shadow_color = Color(0, 0, 0, 1)
-	_moon.range_item_cull_mask = MASK_WORLD | MASK_MOTES
-	_moon.shadow_item_cull_mask = MASK_WORLD | MASK_MOTES
+	var motes := MASK_MOTES if moon_lights_motes else 0
+	_moon.range_item_cull_mask = MASK_WORLD | motes | moon_extra_mask
+	_moon.shadow_item_cull_mask = MASK_WORLD | motes | moon_extra_mask
 	_moon.max_distance = shadow_reach(self)
 	_vignette.visible = vignette > 0.0
 	(_vignette.material as ShaderMaterial).set_shader_parameter("strength", vignette)

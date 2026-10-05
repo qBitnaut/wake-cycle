@@ -1,0 +1,84 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/stub_level.gd" id="1_up1on"]
+[ext_resource type="Script" path="res://scripts/fx/night_backdrop.gd" id="2_8x6a1"]
+[ext_resource type="TileSet" path="res://assets/tiles/wake_hd.tres" id="3_yha0q"]
+[ext_resource type="Script" path="res://scripts/fx/window_rain.gd" id="4_vutbx"]
+[ext_resource type="Script" path="res://scripts/fx/warning_light.gd" id="5_fghea"]
+[ext_resource type="FontFile" path="res://assets/fonts/monogram.ttf" id="6_3i6pc"]
+[ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="7_flxlc"]
+[ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="8_4tam6"]
+[ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="9_avrmb"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="10_qv7hx"]
+
+[node name="AfterRoom3" type="Node2D" unique_id=1647460951]
+script = ExtResource("1_up1on")
+limits = Rect2i(0, 24, 640, 360)
+
+[node name="SkyFill" type="ColorRect" parent="." unique_id=1610500606]
+offset_left = -64.0
+offset_top = -200.0
+offset_right = 704.0
+offset_bottom = 500.0
+color = Color(0.047058824, 0.0627451, 0.1882353, 1)
+
+[node name="Exterior" type="Node2D" parent="." unique_id=762345387]
+position = Vector2(0, 250)
+script = ExtResource("2_8x6a1")
+moon_position = Vector2(-120, -141)
+
+[node name="Tiles" type="TileMapLayer" parent="." unique_id=1689452515]
+tile_map_data = PackedByteArray("AAAAAAoAAAAAAAIAAAAAAAsAAAANACIAAAAAAAwAAAAEACEAAAABAAoAAAAAAAIAAAABAAsAAAANACIAAAABAAwAAAAFACEAAAACAAoAAAAAAAIAAAACAAsAAAANACIAAAACAAwAAAAEACEAAAADAAoAAAAAAAIAAAADAAsAAAANACIAAAADAAwAAAAFACEAAAAEAAoAAAAAAAIAAAAEAAsAAAANACIAAAAEAAwAAAAEACEAAAAFAAoAAAAAAAIAAAAFAAsAAAANACIAAAAFAAwAAAAFACEAAAAGAAoAAAAAAAIAAAAGAAsAAAANACIAAAAGAAwAAAAEACEAAAAHAAoAAAAAAAIAAAAHAAsAAAANACIAAAAHAAwAAAAFACEAAAAIAAoAAAAAAAIAAAAIAAsAAAANACIAAAAIAAwAAAAEACEAAAAJAAoAAAAAAAIAAAAJAAsAAAANACIAAAAJAAwAAAAFACEAAAAKAAoAAAAAAAIAAAAKAAsAAAANACIAAAAKAAwAAAAEACEAAAALAAoAAAAAAAIAAAALAAsAAAANACIAAAALAAwAAAAFACEAAAAMAAoAAAAAAAIAAAAMAAsAAAANACIAAAAMAAwAAAAEACEAAAANAAoAAAAAAAIAAAANAAsAAAANACIAAAANAAwAAAAFACEAAAAOAAoAAAAAAAIAAAAOAAsAAAANACIAAAAOAAwAAAAEACEAAAAPAAoAAAAAAAIAAAAPAAsAAAANACIAAAAPAAwAAAAFACEAAAAQAAoAAAAAAAIAAAAQAAsAAAANACIAAAAQAAwAAAAEACEAAAARAAoAAAAAAAIAAAARAAsAAAANACIAAAARAAwAAAAFACEAAAASAAoAAAAAAAIAAAASAAsAAAANACIAAAASAAwAAAAEACEAAAATAAoAAAAAAAIAAAATAAsAAAANACIAAAATAAwAAAAFACEAAAD//wAAAAAEAA0AAAAUAAAAAAAEAA0AAAD//wEAAAAEAA0AAAAUAAEAAAAEAA0AAAD//wIAAAAEAA0AAAAUAAIAAAAEAA0AAAD//wMAAAAEAA0AAAAUAAMAAAAEAA0AAAD//wQAAAAEAA0AAAAUAAQAAAAEAA0AAAD//wUAAAAEAA0AAAAUAAUAAAAEAA0AAAD//wYAAAAEAA0AAAAUAAYAAAAEAA0AAAD//wcAAAAEAA0AAAAUAAcAAAAEAA0AAAD//wgAAAAEAA0AAAAUAAgAAAAEAA0AAAD//wkAAAAEAA0AAAAUAAkAAAAEAA0AAAD//woAAAAEAA0AAAAUAAoAAAAEAA0AAAD//wsAAAAEAA0AAAAUAAsAAAAEAA0AAAD//wwAAAAEAA0AAAAUAAwAAAAEAA0AAAD//w0AAAAEAA0AAAAUAA0AAAAEAA0AAAA=")
+tile_set = ExtResource("3_yha0q")
+
+[node name="PlayerStart" type="Marker2D" parent="." unique_id=967363188]
+position = Vector2(112, 320)
+
+[node name="Rain" type="ColorRect" parent="." unique_id=117535674]
+z_index = 8
+offset_right = 640.0
+offset_bottom = 330.0
+script = ExtResource("4_vutbx")
+
+[node name="LampDock" type="Node2D" parent="." unique_id=2133455159]
+position = Vector2(560, 313)
+script = ExtResource("5_fghea")
+mode = 2
+energy = 1.6
+light_radius_scale = 3.0
+halo_strength = 0.4
+shadows = false
+
+[node name="ComingSoon" type="Label" parent="." unique_id=1355389589]
+offset_left = 224.0
+offset_top = 128.0
+offset_right = 608.0
+offset_bottom = 168.0
+theme_override_fonts/font = ExtResource("6_3i6pc")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.94600004, 1.001, 1.1, 1.1)
+text = "Room 4 - coming soon"
+horizontal_alignment = 1
+
+[node name="Cat" type="CharacterBody2D" parent="." unique_id=107806765 instance=ExtResource("7_flxlc")]
+z_index = 5
+collision_layer = 2
+collision_mask = 17
+floor_snap_length = 7.0
+
+[node name="LightingRig" type="Node2D" parent="." unique_id=2095034470 node_paths=PackedStringArray("solid_layers")]
+script = ExtResource("8_4tam6")
+night_tint = Color(0.36, 0.4, 0.58, 1)
+moon_angle = 16.0
+glow_intensity = 0.8
+vignette = 0.3
+solid_layers = [NodePath("../Tiles")]
+
+[node name="Ambience" type="Node" parent="." unique_id=705504121]
+script = ExtResource("9_avrmb")
+rain_db = -17.0
+hum_db = -24.0
+step_db = -20.0
+
+[node name="Hud" type="CanvasLayer" parent="." unique_id=34219059 instance=ExtResource("10_qv7hx")]
+layer = 10

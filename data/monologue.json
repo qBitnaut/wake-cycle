@@ -32,5 +32,28 @@
 	],
 	"exit_fence": [
 		"The fence goes on forever. There has to be a way through."
+	],
+	"stacks_arrival": [
+		"The rain's easing up.",
+		"From up here I can see the whole district... and not one person. Just machines, working."
+	],
+	"spring_first": [
+		"Up! Higher than any cat should go.",
+		"Green this time. Each pad wakes a different part of me."
+	],
+	"conduit": [
+		"Ow- no. Not pain. The machines in me... drank it.",
+		"Something new. When I jump twice, the air itself pushes out."
+	],
+	"shock_first": [
+		"Okay. That's... a lot of power for a house cat."
+	],
+	"mirror_bot": [
+		"It's copying me. Every step.",
+		"It thinks I'm in charge. Maybe the goo made me something they recognise."
+	],
+	"stacks_exit": [
+		"There, past the fences. Trees. Rooftops. Little lights in windows.",
+		"Home is that way. I can almost smell it."
 	]
 }

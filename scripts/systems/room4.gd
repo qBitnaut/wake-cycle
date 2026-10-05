@@ -34,6 +34,8 @@ var thunders := 0
 var finale: PerimeterFinale
 var sky: SkyProgress
 var _js_callbacks: Array = []
+var _fences: Array = []
+var _drones: Array = []
 var _lightning: LightningFX
 var _thunder: AudioStreamPlayer
 
@@ -66,6 +68,8 @@ func _ready() -> void:
 		sky.snap()
 	_follow_camera()
 	if OS.has_feature("web"):
+		_fences = find_children("*", "LaserFence", true, false)
+		_drones = find_children("*", "GuardDrone", true, false)
 		_setup_web()
 
 
@@ -97,6 +101,10 @@ func _follow_camera() -> void:
 func _physics_process(delta: float) -> void:
 	super(delta)
 	_follow_camera()
+	# Falling through a hatch: the camera floor drops with the cat (Level eases it at 6 px a frame,
+	# which would leave the cat at the bottom edge for the first drop).
+	if cat.global_position.y > 330.0:
+		cat.camera.limit_bottom = maxi(cat.camera.limit_bottom, mini(int(cat.global_position.y) + 150, deep_bottom))
 	if OS.has_feature("web"):
 		_publish()
 
@@ -162,10 +170,13 @@ func _publish() -> void:
 		"sky": sky.progress if sky else 0.0, "dawn": sky.dawn if sky else 0.0,
 		"tint": [tint.r, tint.g, tint.b],
 		"hatches": get_tree().get_nodes_in_group("breakable").size(),
+		"shields": [is_instance_valid(get_node_or_null("ShieldS1")), is_instance_valid(get_node_or_null("ShieldS2"))],
+		"turret": _flag("TurretP2", "state"),
 		"thunders": thunders, "flash": _lightning._level if _lightning else 0.0,
 		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),
 		"groundBelow": _probe(cat.global_position + Vector2(0, -2), cat.global_position + Vector2(0, 80)),
-		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y]),
+		"obs": _fences.map(func(f): return [f.global_position.x, f.global_position.y, 0]) + _drones.map(func(f): return [f.global_position.x, f.global_position.y, 1]),
+		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y, b.get("state")]),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 	}
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

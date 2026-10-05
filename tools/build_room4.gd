@@ -334,6 +334,8 @@ func _back_decor() -> void:
 			_cell(x, y, STEEL, GIRDER_V, back_tiles)
 	# The gatehouse behind the Master Gate: panelled walls under the lintel.
 	for x in range(336, 348):
+		if x == GATE_COL - 1 or x == GATE_COL:
+			continue  # the passage the door slides in: bare, the dawn shows through
 		for y in range(3, G):
 			_cell(x, y, MAROON, FLAT if (x + y) % 2 == 0 else RIVET, back_tiles)
 	# Pillars behind the guardhouse ceiling.

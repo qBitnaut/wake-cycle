@@ -18,6 +18,8 @@ signal credential_accepted
 signal gate_opened
 
 const GATE_ID := "r4_gate"
+## World y of the camera's resting view centre on the street (limit top 24 + 180, offset -25).
+const STREET_VIEW_Y := 179.0
 
 var relays: Array[PowerRelay] = []
 var scanner: SecurityScanner
@@ -76,12 +78,19 @@ func _on_relay(_index: int) -> void:
 	scanner.set_relays(count)
 	relay_lit.emit(count)
 	Monologue.play_line("relay_done", count - 1)
-	_pan_to_gate(1.6)
+	_pan_to_gate(2.6 if count >= 3 else 1.6)
 
 
-## The camera centre that shows the scanner and the gate together.
+## The camera centre that shows the scanner and the gate together, on the street line
+## (the level's pinned camera centre), wherever the cat is: up a tower or down a vault.
 func gate_view() -> Vector2:
-	return Vector2((scanner.global_position.x + gate.global_position.x) * 0.5, cat.global_position.y - 60.0)
+	return Vector2((scanner.global_position.x + gate.global_position.x) * 0.5, STREET_VIEW_Y)
+
+
+## The camera offset that puts the view centre at `world`: the level's limits clamp the
+## camera's own position, the offset is added after, so it is `world` minus that position.
+func _offset_for(world: Vector2) -> Vector2:
+	return world - (cat.camera.get_screen_center_position() - cat.camera.offset)
 
 
 func _shake() -> ScreenShake:
@@ -105,11 +114,11 @@ func _pan_to_gate(hold: float) -> void:
 	cat.velocity.x = 0.0
 	var s := _shake()
 	var from := s.get_base_offset()
-	var target := gate_view() - cat.global_position
-	var dist := absf(target.x)
-	var secs := clampf(dist / 1500.0, 0.6, 1.8)
+	var target := _offset_for(gate_view())
+	var dist := absf(target.x - from.x)
+	var secs := clampf(dist / 1800.0, 0.6, 1.5)
 	var tw := create_tween()
-	tw.tween_method(s.set_base_offset, from, from + target, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(s.set_base_offset, from, target, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw.finished
 	await get_tree().create_timer(hold).timeout
 	var back := create_tween()
@@ -153,9 +162,9 @@ func _scan() -> void:
 		sky.set_dawn(1.0, 6.0)
 	var s := _shake()
 	var from := s.get_base_offset()
-	var target := Vector2(gate.global_position.x - 40.0 - cat.global_position.x, -60.0 + 25.0)
+	var target := _offset_for(Vector2(gate.global_position.x - 50.0, STREET_VIEW_Y))
 	var tw := create_tween()
-	tw.tween_method(s.set_base_offset, from, from + target, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(s.set_base_offset, from, target, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await gate.opened
 	await get_tree().create_timer(0.8).timeout
 	var back := create_tween()

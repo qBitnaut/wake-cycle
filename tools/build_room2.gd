@@ -1,5 +1,5 @@
-## Generates res://scenes/levels/room2.tscn (Room 2, "The Yard") and the stub
-## res://scenes/levels/room3.tscn. Run:
+## Generates res://scenes/levels/room2.tscn (Room 2, "The Yard"). Room 3 is built by
+## tools/build_room3.gd; this script no longer touches room3.tscn. Run:
 ##   godot --headless --path . --script res://tools/build_room2.gd
 ##
 ## Sizes come from the measured reach (tools/audit/reach.gd), centre travel:
@@ -70,7 +70,6 @@ var back_tiles: TileMapLayer
 
 func _initialize() -> void:
 	_build_room2()
-	_build_room3()
 	quit()
 
 
@@ -579,97 +578,3 @@ func _poles() -> void:
 		lamp.z_index = 1
 		_own_under(pole, lamp)
 		i += 1
-
-
-# ---- Room 3 (stub) --------------------------------------------------------------
-
-func _build_room3() -> void:
-	room = Node2D.new()
-	room.name = "Room3"
-	room.set_script(load("res://scripts/systems/room3.gd"))
-	room.set("limits", Rect2i(0, 24, 20 * T, 360))
-	var w := 20 * T
-
-	var sky := ColorRect.new()
-	sky.name = "SkyFill"
-	sky.color = Color("0c1030")
-	sky.position = Vector2(-64, -200)
-	sky.size = Vector2(w + 128, 700)
-	_own(sky)
-	var exterior := NightBackdrop.new()
-	exterior.name = "Exterior"
-	exterior.position = Vector2(0, 250)
-	exterior.moon_position = Vector2(-120, -141)
-	_own(exterior)
-
-	tiles = TileMapLayer.new()
-	tiles.name = "Tiles"
-	tiles.tile_set = load("res://assets/tiles/wake_hd.tres")
-	_own(tiles)
-	for x in range(0, 20):
-		_cell(x, G, STEEL, BEVEL)
-		_cell(x, G + 1, MAROON, GIRDER_H)
-		_cell(x, G + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
-	for y in range(0, ROWS):
-		_cell(-1, y, BULKHEAD, FLAT)
-		_cell(20, y, BULKHEAD, FLAT)
-
-	var start := Marker2D.new()
-	start.name = "PlayerStart"
-	start.position = _p(3, G)
-	_own(start)
-
-	var rain := WindowRain.new()
-	rain.name = "Rain"
-	rain.position = Vector2(0, 0)
-	rain.size = Vector2(w, 330)
-	rain.intensity = 0.55
-	rain.z_index = 8
-	_own(rain)
-	var z := PuddleZone.new()
-	z.name = "Puddle"
-	z.width = 128.0
-	z.position = Vector2(10 * T, G * T)
-	_own(z)
-	var lamp := WarningLight.new()
-	lamp.name = "LampDock"
-	lamp.art_scale = 1
-	lamp.mode = WarningLight.Mode.STEADY
-	lamp.energy = 1.6
-	lamp.light_radius_scale = 3.0
-	lamp.halo_strength = 0.4
-	lamp.shadows = false
-	lamp.position = Vector2(17 * T + 16, G * T - 7)
-	_own(lamp)
-
-	var label := Label.new()
-	label.name = "ComingSoon"
-	label.text = "Room 3 - coming soon"
-	label.add_theme_font_override("font", load("res://assets/fonts/monogram.ttf"))
-	label.add_theme_font_size_override("font_size", 32)
-	label.add_theme_color_override("font_color", Color(0.86, 0.91, 1.0) * 1.1)
-	label.position = Vector2(7 * T, 4 * T)
-	label.size = Vector2(12 * T, 40)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_own(label)
-
-	var cat: Node = load("res://scenes/player/cat.tscn").instantiate()
-	cat.name = "Cat"
-	_own(cat)
-	var rig := LightingRig.new()
-	rig.name = "LightingRig"
-	rig.night_tint = Color(0.36, 0.40, 0.58)
-	rig.moon_angle = 16.0
-	rig.moon_energy = 0.9
-	rig.glow_intensity = 0.8
-	rig.vignette = 0.30
-	var solid: Array[TileMapLayer] = [tiles]
-	rig.solid_layers = solid
-	_own(rig)
-	var amb := Ambience.new()
-	amb.name = "Ambience"
-	_own(amb)
-	var hud: Node = load("res://scenes/ui/hud.tscn").instantiate()
-	hud.name = "Hud"
-	_own(hud)
-	_save(room, "res://scenes/levels/room3.tscn")

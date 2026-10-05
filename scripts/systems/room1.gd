@@ -15,8 +15,8 @@ extends Level
 ## GameState.awaken_mind() (intelligence; no power).
 ##
 ## Web debug hooks for tools/audit/web_room1.mjs: window.__wake is published
-## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2
-## jumps straight to Room 2 (see _web_start_override).
+## every physics frame; window.wakeTeleport(x, y) moves the cat; ?start=room2 or room3
+## jumps straight to Room 2 or 3 (see _web_start_override).
 
 signal nanotech_absorbed_started
 signal transform_finished
@@ -203,10 +203,18 @@ func _setup_web() -> void:
 	win["wakeTeleport"] = cb
 
 
-## Web audit deep link: index.html?start=room2 skips Room 1 and arrives in Room 2
-## the way the exit would leave the cat (mind awake, no powers, auto-save).
+## Web audit deep links: index.html?start=room2 (or room3) skips ahead and arrives
+## the way the previous room's exit would leave the cat (mind awake, no powers,
+## no shockwave, auto-save).
+const WEB_STARTS := {
+	"room2": "res://scenes/levels/room2.tscn",
+	"room3": "res://scenes/levels/room3.tscn",
+}
+
+
 func _web_start_override() -> void:
-	if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''")) != "room2":
+	var start := str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('start') || ''"))
+	if not WEB_STARTS.has(start):
 		return
 	intro_done = true
 	GameState.new_game()
@@ -215,7 +223,7 @@ func _web_start_override() -> void:
 	SaveSystem.session_scene = ""
 	SaveSystem.session_checkpoint = ""
 	RoomTransition.arriving = true
-	get_tree().change_scene_to_file.call_deferred("res://scenes/levels/room2.tscn")
+	get_tree().change_scene_to_file.call_deferred(WEB_STARTS[start])
 
 
 func _flag(node_name: String, prop: String) -> Variant:

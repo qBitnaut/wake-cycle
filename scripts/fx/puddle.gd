@@ -29,6 +29,16 @@ const MAX_RIPPLES := 4
 	set(v):
 		edge_fade = v
 		_sync()
+## 1 = an exact mirror; higher reaches further up the screen (shows the sky).
+@export_range(1.0, 12.0, 0.1) var reflect_scale := 1.0:
+	set(v):
+		reflect_scale = v
+		_sync()
+## The bright line and ripple rings.
+@export var highlight := Color(0.62, 0.74, 1.0):
+	set(v):
+		highlight = v
+		_sync()
 
 var _ripples: Array[Vector3] = []
 
@@ -82,3 +92,5 @@ func _sync() -> void:
 	mat.set_shader_parameter("rect_width", size.x)
 	mat.set_shader_parameter("rect_height", size.y)
 	mat.set_shader_parameter("px_scale", FXScale.factor(self))
+	mat.set_shader_parameter("reflect_scale", reflect_scale)
+	mat.set_shader_parameter("highlight", highlight)

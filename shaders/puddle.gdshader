@@ -17,6 +17,9 @@ uniform float rect_width = 64.0;
 uniform float rect_height = 6.0;
 uniform vec4 highlight : source_color = vec4(0.62, 0.74, 1.0, 1.0);
 uniform float px_scale = 1.0;       // FXScale: wobble, rings and edges in 320x180 pixels
+// 1 = an exact mirror. Above 1 the reflection reaches further up the screen
+// (a foreshortened, grazing-angle look): a shallow puddle can show the sky.
+uniform float reflect_scale = 1.0;
 // Up to 4 ripples: x = local x (px), y = age (s), z = strength.
 uniform vec3 ripples[4];
 
@@ -44,7 +47,7 @@ void fragment() {
 		wob += band * fade * 2.0 * sign(q.x - rq);
 	}
 	vec2 uv = SCREEN_UV;
-	uv.y -= 2.0 * d * SCREEN_PIXEL_SIZE.y;  // mirror about the top edge
+	uv.y -= (1.0 + reflect_scale) * d * SCREEN_PIXEL_SIZE.y;  // mirror about the top edge
 	uv.x += round(wob * px_scale) * SCREEN_PIXEL_SIZE.x;
 	vec3 refl = texture(screen_tex, uv).rgb;
 	float depth = 1.0 - clamp(d / max(rect_height, 1.0), 0.0, 1.0) * depth_fade;

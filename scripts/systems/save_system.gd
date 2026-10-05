@@ -3,6 +3,8 @@ extends Node
 ## the in-session respawn bookkeeping. Registered as the autoload "SaveSystem".
 
 const SAVE_PATH := "user://save.json"
+## Written once the game has been finished (the Home ending's credits).
+const COMPLETE_PATH := "user://complete.json"
 const VERSION := 1
 
 var session_scene := ""
@@ -95,3 +97,20 @@ func continue_game() -> bool:
 	_respawning = false
 	get_tree().change_scene_to_file(session_scene)
 	return true
+
+
+## The game is finished: remember that (with the score and letters), and
+## clear the checkpoint, so the next run starts from the beginning.
+func mark_complete() -> void:
+	var f := FileAccess.open(COMPLETE_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"complete": true, "score": GameState.score, "letters": GameState.letters}))
+		f.close()
+	delete_save()
+	session_scene = ""
+	session_checkpoint = ""
+	session_snapshot = {}
+
+
+func is_complete() -> bool:
+	return FileAccess.file_exists(COMPLETE_PATH)

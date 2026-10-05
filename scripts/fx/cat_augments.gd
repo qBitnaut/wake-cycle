@@ -10,6 +10,7 @@ extends Node2D
 ##     aug.set_power(FXPalette.SPRING)            # emitters go green
 ##     aug.clear_power()                          # neutral soft blue-green
 ##     aug.flare()                                # burst (shockwave, dash)
+##     aug.set_sleeping(true)                     # dim, slow breathing glow
 ##
 ## The art is one overlay sheet per cat sheet (assets/sprites/cat/augments,
 ## drawn by tools/art/cat_augments.py from per-frame anchors), so every
@@ -38,6 +39,10 @@ static var _pieces := {}
 @export_range(0.0, 2.0, 0.01) var idle_energy := 0.75
 ## Emitter level while a power is active.
 @export_range(0.0, 2.0, 0.01) var power_energy := 1.3
+## Asleep (set_sleeping): the emitters breathe between a fraction and all of
+## this level, once every sleep_period seconds.
+@export_range(0.0, 2.0, 0.01) var sleep_energy := 0.3
+@export var sleep_period := 4.4
 @export var follow_game_state := true
 @export var auto_flare := true
 
@@ -55,6 +60,10 @@ var _color_tween: Tween
 var _cat: Node
 var _was_phasing := false
 var _landed := {}
+var _sleep := 0.0         # 0 awake .. 1 asleep
+var _sleep_target := 0.0
+var _sleep_ease := 3.0
+var _sleep_t := 0.0
 
 
 ## Add augments to `cat` (a Cat, or anything with a `sprite` or a "Sprite"
@@ -150,6 +159,24 @@ func emitter_color() -> Color:
 	return _color
 
 
+## Asleep: the power colour clears and the emitters settle, over `settle`
+## seconds, to a dim glow that breathes slowly. False wakes them again.
+func set_sleeping(on: bool, settle := 3.0) -> void:
+	if on:
+		clear_power()
+	_sleep_target = 1.0 if on else 0.0
+	_sleep_ease = maxf(settle, 0.01)
+
+
+func is_sleeping() -> bool:
+	return _sleep_target > 0.0
+
+
+## The emitter level being drawn now (after the sleep settle).
+func emitter_energy() -> float:
+	return _shown_energy()
+
+
 ## A burst through the emitters and metal edges, e.g. on shockwave or dash.
 func flare(strength := 1.0) -> void:
 	_flare = maxf(_flare, strength)
@@ -163,6 +190,10 @@ func _process(delta: float) -> void:
 		_was_phasing = ph
 	if _flare > 0.0:
 		_flare = maxf(_flare - delta * 3.0, 0.0)
+		_push()
+	if _sleep > 0.0 or _sleep_target > 0.0:
+		_sleep = move_toward(_sleep, _sleep_target, delta / _sleep_ease)
+		_sleep_t += delta
 		_push()
 
 
@@ -229,6 +260,14 @@ func _push() -> void:
 	var gm := glow.material as ShaderMaterial
 	gm.set_shader_parameter("reveal", _reveal)
 	gm.set_shader_parameter("power_color", _color)
-	gm.set_shader_parameter("energy", _energy)
+	gm.set_shader_parameter("energy", _shown_energy())
 	gm.set_shader_parameter("flash", _flash)
 	gm.set_shader_parameter("flare", _flare)
+
+
+func _shown_energy() -> float:
+	if _sleep <= 0.0:
+		return _energy
+	var breathe := 0.55 + 0.45 * (0.5 + 0.5 * sin(TAU * _sleep_t / sleep_period))
+	var s := smoothstep(0.0, 1.0, _sleep)
+	return lerpf(_energy, sleep_energy * breathe, s)

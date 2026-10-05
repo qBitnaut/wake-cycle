@@ -131,6 +131,14 @@ for _i in range(1, 7):
         "050912": "161630", "ec7809": "ff4a3a", "ff2245": "ff4a3a", "ffd800": "eda63a"})
 JOBS["bg/near_buildings.png"] = (WC + "background/near-buildings-bg.png", JOBS["towers.png"][1])
 
+# Painted out after the swap, as (x0, y0, x1, y1) boxes filled with the deep
+# sky. The sky layer tiles every 128 px, so its big planet and the ringed
+# planet repeated across Room 2's open sky as a row of bubbles. The night
+# sky keeps its stars; NightBackdrop draws the one moon.
+ERASE = {
+    "sky.png": [(66, 44, 102, 79), (7, 29, 57, 40)],
+}
+
 
 def hx(s):
     return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4))
@@ -154,7 +162,10 @@ def main():
         img = Image.open(dl / src)
         dest = out / (name if "/" in name else "bg/" + name)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        swap(img, table).save(dest)
+        img = swap(img, table)
+        for box in ERASE.get(name, []):
+            img.paste((*hx("0c1030"), 255), box)
+        img.save(dest)
         print(f"{name}: {img.width}x{img.height}, {len(table)} colours swapped")
 
 

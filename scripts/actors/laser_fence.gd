@@ -5,8 +5,15 @@ extends Hazard
 ##
 ## The beam is a LaserBeam (unshaded HDR strip plus a red light); the posts are
 ## hazard-ramp tile slices. Red means hostile, so the beam is the only red.
+##
+## solid_when_on: while the beam is on, an invisible solid body (the full height of
+## the fence, a hair narrower than the hurt zone) also blocks the cat, so a plain
+## cat cannot tank through; a dashing Phase cat passes. Touching it still hurts.
 
 const POST_H := 10.0
+## The solid body is narrower than the 6 px hurt zone, so a cat pressed against it
+## still overlaps the beam and is hurt.
+const SOLID_W := 4.0
 
 @export var height_tiles := 3
 @export var timed := true
@@ -14,11 +21,14 @@ const POST_H := 10.0
 @export var off_time := 1.4
 @export var start_offset := 0.0
 @export var controller: NodePath
+@export var solid_when_on := false
 
 var _t := 0.0
 var _ctrl_active := false
 var _shape := RectangleShape2D.new()
 var _beam: LaserBeam
+var _solid: CollisionShape2D
+var _solid_open := false  ## a phasing cat is in or near the body: keep it open until the cat is clear
 
 
 func _ready() -> void:
@@ -44,6 +54,17 @@ func _ready() -> void:
 	_beam.jitter = true
 	_beam.position = Vector2(0, -POST_H)
 	add_child(_beam)
+	if solid_when_on:
+		var body := StaticBody2D.new()
+		body.collision_layer = 1
+		body.collision_mask = 0
+		_solid = CollisionShape2D.new()
+		var rs := RectangleShape2D.new()
+		rs.size = Vector2(SOLID_W, h)
+		_solid.shape = rs
+		_solid.position = Vector2(0, -h / 2.0)
+		body.add_child(_solid)
+		add_child(body)
 	var c := get_node_or_null(controller)
 	if c and c.has_signal("state_changed"):
 		c.state_changed.connect(func(a: bool): _ctrl_active = a)
@@ -55,6 +76,20 @@ func _beam_on() -> bool:
 	if timed:
 		return fmod(_t, on_time + off_time) < on_time
 	return true
+
+
+func _physics_process(delta: float) -> void:
+	super(delta)
+	if _solid == null:
+		return
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	if cat != null and cat is Cat:
+		var dx := absf(cat.global_position.x - global_position.x)
+		if cat.is_phasing() and dx < 90.0:
+			_solid_open = true
+		elif dx > 14.0:
+			_solid_open = false
+	_solid.disabled = not active or _solid_open
 
 
 func _process(delta: float) -> void:

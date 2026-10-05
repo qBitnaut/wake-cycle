@@ -144,6 +144,12 @@ func clear_power() -> void:
 	_tween_color(idle_color, idle_energy)
 
 
+## The emitters' current colour (the power colour, or the idle blue-green):
+## what a robot sees when it reacts to the cat.
+func emitter_color() -> Color:
+	return _color
+
+
 ## A burst through the emitters and metal edges, e.g. on shockwave or dash.
 func flare(strength := 1.0) -> void:
 	_flare = maxf(_flare, strength)

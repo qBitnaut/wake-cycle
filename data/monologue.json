@@ -14,5 +14,23 @@
 	],
 	"exit_hint": [
 		"The door's open. Outside... I should find a way home."
+	],
+	"yard_arrival": [
+		"Rain. Cold. Real.",
+		"The city... all those lights. Is anyone out there?"
+	],
+	"surge_first": [
+		"Whoa- my legs! Everything's... faster.",
+		"That pad. It's humming the same blue as the lines in me."
+	],
+	"surge_gate": [
+		"That gate won't wait for me. Good thing I don't have to wait either."
+	],
+	"dock_bot": [
+		"It... looked at me. Like it knew me.",
+		"Why do I feel like it's waiting for an order?"
+	],
+	"exit_fence": [
+		"The fence goes on forever. There has to be a way through."
 	]
 }

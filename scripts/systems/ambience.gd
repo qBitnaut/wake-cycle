@@ -29,6 +29,11 @@ const PLINK := [
 
 var cat: Cat
 var steps_played := 0
+## 0..1: how loud the rain loop should be (a room whose rain thins and stops, e.g.
+## SkyProgress, sets it). The loop eases to it and is paused once silent.
+var rain_level := 1.0
+
+var _rain_gain := 1.0
 
 var _rain: AudioStreamPlayer
 var _hum: AudioStreamPlayer
@@ -77,6 +82,7 @@ func _plink(pos: Vector2) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_ease_rain(delta)
 	if cat == null or cat.dead:
 		return
 	_step_t -= delta
@@ -90,3 +96,20 @@ func _physics_process(delta: float) -> void:
 		_step.volume_db = step_db - (6.0 if cat.crouched else 0.0)
 		_step.play()
 		steps_played += 1
+
+
+func _ease_rain(delta: float) -> void:
+	if _rain == null or is_equal_approx(_rain_gain, rain_level):
+		return
+	_rain_gain = move_toward(_rain_gain, rain_level, delta * 0.5)
+	if _rain_gain < 0.003:
+		_rain.volume_db = -80.0
+		_rain.stream_paused = true
+	else:
+		_rain.stream_paused = false
+		_rain.volume_db = rain_db + linear_to_db(_rain_gain)
+
+
+## Current rain loop state: an audit hook.
+func rain_playing() -> bool:
+	return _rain != null and _rain.playing and not _rain.stream_paused

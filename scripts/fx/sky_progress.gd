@@ -8,7 +8,9 @@ extends Node
 ##   moon energy, vignette and glow,
 ##   the NightBackdrop brightness and its moon,
 ##   a warm additive DawnGlow band on the horizon,
-##   the rain (each RainFX's intensity, thinning to a drizzle).
+##   the rain (each RainFX's intensity, thinning to a drizzle) and the rain loop of
+##   the room's sibling Ambience node, which fades with it and falls silent when
+##   the rain stops.
 ## `dawn` (0..1) is a separate boost for the finale: the sky blushes and the
 ## last rain stops. While LightningFX is mid-flash the tint is left to it.
 
@@ -42,6 +44,7 @@ var target := 0.0
 var dawn := 0.0
 
 var _cat: Node2D
+var _ambience: Node  # the sibling Ambience (untyped: a typed reference drags cat.gd in before the autoloads exist when a tool loads this script)
 var _glow: Sprite2D
 var _throttle := 0.0
 
@@ -68,6 +71,7 @@ func _ready() -> void:
 	_glow.modulate.a = 0.0
 	add_child(_glow)
 	_glow.top_level = true
+	_ambience = get_parent().get_node_or_null("Ambience")
 
 
 func target_for(x: float) -> float:
@@ -125,7 +129,10 @@ func _apply(force: bool, delta := 0.0) -> void:
 		var moon := backdrop.get_node_or_null("MoonLayer") as Node2D
 		if moon:
 			moon.modulate.a = clampf(1.0 - p * 1.2, 0.0, 1.0)
-	var k := snappedf(lerpf(1.0, rain_floor, p) * (1.0 - dawn), 0.1)
+	var raw := lerpf(1.0, rain_floor, p) * (1.0 - dawn)
+	var k := snappedf(raw, 0.1)
+	if _ambience:
+		_ambience.set("rain_level", raw)
 	for r in rains:
 		if r:
 			r.set_intensity(k)

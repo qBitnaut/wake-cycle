@@ -1,5 +1,5 @@
-## Generates res://scenes/levels/room4.tscn (Room 4, "The Perimeter") and the stub
-## res://scenes/levels/stubs/after_room4.tscn ("Home - coming soon"). Run:
+## Generates res://scenes/levels/room4.tscn (Room 4, "The Perimeter"); its exit leads to
+## res://scenes/levels/home.tscn. Run:
 ##   godot --headless --path . --script res://tools/build_room4.gd
 ##
 ## Reach (tools/audit/reach.gd, centre travel; vertical rise is v^2/2g):
@@ -59,7 +59,7 @@ const SCANNER_COL := 330
 const EXIT_COL := 368
 
 const SCENE_ROOM := "res://scenes/levels/room4.tscn"
-const SCENE_STUB := "res://scenes/levels/stubs/after_room4.tscn"
+const SCENE_HOME := "res://scenes/levels/home.tscn"
 
 var room: Node2D
 var tiles: TileMapLayer
@@ -69,7 +69,6 @@ var _mats := {}
 
 func _initialize() -> void:
 	_build_room4()
-	_build_stub()
 	quit()
 
 
@@ -235,7 +234,7 @@ func _build_room4() -> void:
 
 	var exit_area: Area2D = load("res://scripts/systems/room_exit.gd").new()
 	exit_area.name = "RoomExit"
-	exit_area.set("next_scene", SCENE_STUB)
+	exit_area.set("next_scene", SCENE_HOME)
 	exit_area.set("enabled", false)
 	exit_area.position = _p(EXIT_COL, G)
 	_own(exit_area)
@@ -479,7 +478,7 @@ func _place_actors() -> void:
 
 	# --- P1: Phase discovery. A pad, ten tiles of run-up, one fence; walls and a roof on both sides. ---
 	_put(pad, "PadPhase1", 36, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
-	_put(fence, "FenceP1", 47, G, {"height_tiles": 4, "timed": false})
+	_put(fence, "FenceP1", 47, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
 	_mono("PhaseFirst", "phase_first", _p(50, G), Vector2(96, 96))
 	_put(gem, "GemP1a", 41, G - 1)
 	_put(gem, "GemP1b", 43, G - 1)
@@ -488,11 +487,12 @@ func _place_actors() -> void:
 	# --- P2: Phase use. Five fences, two drones, a turret. ---
 	_put(cp, "CheckpointA", 55, G, {"checkpoint_id": "cp_a"})
 	_put(pad, "PadPhase2a", 60, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
-	_put(fence, "FenceP2a", 68, G, {"height_tiles": 4, "timed": false})
-	_put(fence, "FenceP2b", 74, G, {"height_tiles": 4, "timed": false})
+	_put(fence, "FenceP2a", 68, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
+	_put(pad, "PadPhase2ab", 71, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})  # between two solid fences: never trapped without Phase
+	_put(fence, "FenceP2b", 74, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
 	_put(pad, "PadPhase2b", 78, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
 	_drone("DroneP2a", 84, G - 2, 48.0, 0.0)
-	_put(fence, "FenceP2c", 92, G, {"height_tiles": 4, "timed": false})
+	_put(fence, "FenceP2c", 92, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
 	_put(pad, "PadPhase2c", 96, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
 	_drone("DroneP2b", 102, G - 2, 40.0, 1.7)
 	_turret("TurretP2", 112, G, -1, 224.0, 0.0)
@@ -504,7 +504,7 @@ func _place_actors() -> void:
 	# --- P3: Spring up the guardhouse, Phase through the fence on the roof. ---
 	_put(pad, "PadSpring1", 114, G, {"power": 2, "duration": 10.0, "cooldown": 3.0})
 	_put(pad, "PadPhase3", 120, 3, {"power": 3, "duration": 10.0, "cooldown": 3.0})
-	_put(fence, "FenceP3", 127, 3, {"height_tiles": 2, "timed": false})
+	_put(fence, "FenceP3", 127, 3, {"height_tiles": 2, "timed": false, "solid_when_on": true})
 	_put(gem, "GemP3a", 117, G - 5)
 	_put(gem, "GemP3b", 122, 2)
 	_put(gem, "GemP3c", 131, 2)
@@ -533,7 +533,7 @@ func _place_actors() -> void:
 	_put(cp, "CheckpointD", 166, 18, {"checkpoint_id": "cp_d"})
 	_put_script("res://scripts/actors/shield_panel.gd", "ShieldS1", 174, 18)
 	_put(pad, "PadPhase4", 177, 18, {"power": 3, "duration": 10.0, "cooldown": 3.0})
-	_put(fence, "FenceI3", 182, 18, {"height_tiles": 3, "timed": false})
+	_put(fence, "FenceI3", 182, 18, {"height_tiles": 3, "timed": false, "solid_when_on": true})
 	_put(pad, "PadImpact3", 184, 18, {"power": 4, "duration": 12.0, "cooldown": 3.0})
 	for c in [187, 188, 189]:
 		_put(crack, "HatchH3%d" % c, c, 19)
@@ -563,11 +563,12 @@ func _place_actors() -> void:
 	_own(drone)
 	# R2: the maze: three fences and a drone, a pad before each stretch.
 	_put(pad, "PadPhase5a", 245, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
-	_put(fence, "FenceR2a", 251, G, {"height_tiles": 4, "timed": false})
-	_put(fence, "FenceR2b", 257, G, {"height_tiles": 4, "timed": false})
+	_put(fence, "FenceR2a", 251, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
+	_put(pad, "PadPhase5ab", 254, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})  # between two solid fences
+	_put(fence, "FenceR2b", 257, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
 	_put(pad, "PadPhase5b", 261, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
 	_drone("DroneR2a", 267, G - 2, 40.0, 0.9)
-	_put(fence, "FenceR2c", 274, G, {"height_tiles": 4, "timed": false})
+	_put(fence, "FenceR2c", 274, G, {"height_tiles": 4, "timed": false, "solid_when_on": true})
 	_put(pad, "PadPhase5c", 277, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
 	_put_script("res://scripts/actors/power_relay.gd", "Relay2", 282, G, {"index": 2})
 	_put(cp, "CheckpointH", 289, G, {"checkpoint_id": "cp_h"})
@@ -747,82 +748,3 @@ func _lamps() -> void:
 	# The road: bright, warm pre-dawn lamps.
 	for c in [349, 356, 363, 370]:
 		_lamp("RoadLamp%d" % c, c * T + 16, (G - 5) * T, true, 1.5, Color(1.0, 0.8, 0.55))
-
-
-# ---- the stub after Room 4 ---------------------------------------------------------
-
-func _build_stub() -> void:
-	_mats.clear()
-	room = Node2D.new()
-	room.name = "AfterRoom4"
-	room.set_script(load("res://scripts/systems/after_room4.gd"))
-	room.set("limits", Rect2i(0, 24, 20 * T, 360))
-	var w := 20 * T
-
-	var sky := ColorRect.new()
-	sky.name = "SkyFill"
-	sky.color = Color("1b2342")
-	sky.position = Vector2(-64, -200)
-	sky.size = Vector2(w + 128, 700)
-	sky.z_index = -10
-	_own(sky)
-	var exterior := NightBackdrop.new()
-	exterior.name = "Exterior"
-	exterior.position = Vector2(0, 250)
-	exterior.brightness = 2.3
-	exterior.moon_visible = false
-	exterior.z_index = -9
-	_own(exterior)
-	var subs: Node2D = load("res://scripts/fx/suburb_row.gd").new()
-	subs.name = "Suburbs"
-	subs.set("length", float(w))
-	subs.position = Vector2(0, G * T - 14)
-	subs.z_index = -8
-	_own(subs)
-
-	tiles = TileMapLayer.new()
-	tiles.name = "Tiles"
-	tiles.tile_set = load("res://assets/tiles/wake_hd.tres")
-	_own(tiles)
-	_fill(0, G, 19, G + 2, MAROON)
-	for y in range(0, ROWS):
-		_mats[Vector2i(-1, y)] = BULKHEAD
-		_mats[Vector2i(20, y)] = BULKHEAD
-	_paint()
-
-	var start := Marker2D.new()
-	start.name = "PlayerStart"
-	start.position = _p(3, G)
-	_own(start)
-
-	var label := Label.new()
-	label.name = "ComingSoon"
-	label.text = "Home - coming soon"
-	label.add_theme_font_override("font", load("res://assets/fonts/monogram.ttf"))
-	label.add_theme_font_size_override("font_size", 32)
-	label.add_theme_color_override("font_color", Color(0.9, 0.93, 1.0) * 1.1)
-	label.position = Vector2(7 * T, 4 * T)
-	label.size = Vector2(12 * T, 40)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_own(label)
-
-	var cat: Node = load("res://scenes/player/cat.tscn").instantiate()
-	cat.name = "Cat"
-	_own(cat)
-	var rig := LightingRig.new()
-	rig.name = "LightingRig"
-	rig.night_tint = Color(0.78, 0.82, 0.95)
-	rig.moon_angle = 16.0
-	rig.moon_energy = 0.3
-	rig.glow_intensity = 0.8
-	rig.vignette = 0.12
-	var solid: Array[TileMapLayer] = [tiles]
-	rig.solid_layers = solid
-	_own(rig)
-	var amb := Ambience.new()
-	amb.name = "Ambience"
-	_own(amb)
-	var hud: Node = load("res://scenes/ui/hud.tscn").instantiate()
-	hud.name = "Hud"
-	_own(hud)
-	_save(room, SCENE_STUB)

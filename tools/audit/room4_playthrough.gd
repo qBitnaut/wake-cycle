@@ -973,6 +973,25 @@ func _beat_relay2() -> void:
 	var ok := await run_to(cx(244.0))
 	note("R2 the searchlight drone is triggered and a running cat stays ahead of it, never seen", ok and drone.get("state") >= 1 and _lit_frames == 0 and not drone.get("alarmed"), "drone state %d, lit %d frames, x=%.0f" % [drone.get("state"), _lit_frames, x()])
 	await shot("R2_searchlight_drone")
+	# Seen: standing in the beam raises the alarm and sends the cat back to checkpoint G (no death, no hit).
+	await recover()
+	var old0 := room.get_instance_id()
+	ss().respawn()      # (a fresh drone: it is one-shot)
+	await await_reload(old0)
+	drone = node("SearchDrone")
+	await ticks(10)
+	var old_id := room.get_instance_id()
+	var died0 := _died
+	var hp_seen := hp()
+	teleport(cx(238.0))
+	var wd := 0
+	while not drone.get("alarmed") and wd < 1200:
+		await ticks(1)
+		wd += 1
+	var alarm_after := wd / 60.0
+	var reloaded := await await_reload(old_id)
+	note("R2 standing in the searchlight raises the alarm and sends the cat back to checkpoint G: no death, no hit", reloaded and absf(x() - cx(233.0)) < 14.0 and ss().session_checkpoint == "cp_g" and _died == died0 and hp() == hp_seen and cat.can_move, "after %.1f s, back at x=%.0f" % [alarm_after, x()])
+	drone = node("SearchDrone")
 	# The maze: plain, the first fence hurts.
 	await recover()
 	gs().clear_power()

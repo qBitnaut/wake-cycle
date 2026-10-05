@@ -253,7 +253,7 @@ for (let n = 0; W.scene.endsWith('room2.tscn') && n < 900; n++) { await frame();
 await stop();
 for (let i = 0; i < 100 && !W.scene.endsWith('room3.tscn'); i++) { await sleep(50); await poll(); }
 await sleep(1800); await poll();
-note('E exit leads to the Room 3 stub', W.scene.endsWith('room3.tscn'), W.scene);
+note('E exit leads to Room 3', W.scene.endsWith('room3.tscn'), W.scene);
 note('E Room 3 auto-saved with the mind, no shockwave', W.save && W.mind && !W.shock, `power ${W.power}`);
 await shot('E_room3_coming_soon');
 

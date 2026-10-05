@@ -589,7 +589,7 @@ func _beat_exit() -> void:
 	await ticks(100)
 	var r3 := current_scene
 	note("E the exit leads to Room 3", r3 != null and r3.scene_file_path == "res://scenes/levels/room3.tscn", str(r3.scene_file_path if r3 else "?"))
-	note("E Room 3 stub says coming soon", r3 != null and r3.get_node_or_null("ComingSoon") != null and r3.get_node("ComingSoon").text == "Room 3 - coming soon")
+	note("E Room 3 is the real room (The Stacks): the conduit and the Spring pad are there", r3 != null and r3.get_node_or_null("Conduit") != null and r3.get_node_or_null("PadSpring1") != null)
 	var save: Dictionary = ss().read_save()
 	note("E auto-saved at the start of Room 3 with the mind, no shockwave", save.get("scene", "") == "res://scenes/levels/room3.tscn" and save.get("abilities", {}).get("mind", false) and not save.get("abilities", {}).get("shockwave", true), str(save.get("abilities", {})))
 	note("E the cat keeps its augments in Room 3", r3 != null and r3.get_node_or_null("Cat/Sprite/Augments") != null and gs().intelligence)

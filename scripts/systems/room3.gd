@@ -44,7 +44,8 @@ func _ready() -> void:
 	_exterior = get_node_or_null("Exterior")
 	_suburbs = get_node_or_null("Suburbs")
 	for c in get_tree().get_nodes_in_group("breakable"):
-		if is_ancestor_of(c):
+		# Crates already broken in an earlier visit free themselves in their own _ready.
+		if is_ancestor_of(c) and not c.is_queued_for_deletion():
 			_crates.append(c)
 	crates_total = _crates.size()
 	_follow_camera(1.0)
@@ -133,6 +134,11 @@ func _flag(node_name: String, prop: String) -> Variant:
 	return n.get(prop) if n else null
 
 
+func _probe(from: Vector2, to: Vector2) -> bool:
+	var q := PhysicsRayQueryParameters2D.create(from, to, 1)
+	return not cat.get_world_2d().direct_space_state.intersect_ray(q).is_empty()
+
+
 func _publish() -> void:
 	var hud := get_node_or_null("Hud") as CanvasLayer
 	var bot := get_node_or_null("MirrorBot") as MirrorBot
@@ -154,5 +160,9 @@ func _publish() -> void:
 		"mirror": [bot.global_position.x, bot.global_position.y, bot.awake] if bot else null,
 		"plate": _flag("BayPlate", "active"), "bayShutter": _flag("BayShutter", "open"),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
+		# Probes for the audit's reactive runner: a wall 34 px ahead, floor within 80 px below, patrol bots.
+		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),
+		"groundBelow": _probe(cat.global_position + Vector2(0, -2), cat.global_position + Vector2(0, 80)),
+		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y]),
 	}
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

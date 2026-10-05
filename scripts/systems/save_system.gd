@@ -13,6 +13,17 @@ var session_snapshot := {}
 var _respawning := false
 
 
+func _ready() -> void:
+	# Web audit deep link: index.html?start=map&completed=<level id> opens the
+	# world map as that level's exit would (see WorldMap.web_deep_link).
+	if OS.has_feature("web"):
+		_web_map_link.call_deferred()
+
+
+func _web_map_link() -> void:
+	WorldMap.web_deep_link()
+
+
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) and not read_save().is_empty()
 
@@ -48,6 +59,7 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 		"collectibles": GameState.collected.duplicate(),
 		"health": GameState.health,
 		"score": GameState.score,
+		"map": GameState.map_snapshot(),
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
@@ -94,6 +106,8 @@ func continue_game() -> bool:
 		"collected": d.get("collectibles", []),
 		"shockwave": bool(d.get("abilities", {}).get("shockwave", false)),
 	}
+	if d.has("map"):
+		session_snapshot["map"] = d["map"]
 	_respawning = false
 	get_tree().change_scene_to_file(session_scene)
 	return true

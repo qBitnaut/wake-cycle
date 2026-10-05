@@ -203,12 +203,13 @@ func _setup_web() -> void:
 	win["wakeTeleport"] = cb
 
 
-## Web audit deep links: index.html?start=room2 (or room3) skips ahead and arrives
-## the way the previous room's exit would leave the cat (mind awake, no powers,
-## no shockwave, auto-save).
+## Web audit deep links: index.html?start=room2 / room3 / room4 skips ahead and
+## arrives the way the previous room's exit would leave the cat (mind awake, no
+## powers, auto-save); room4 also has the shockwave, which the Room 3 conduit grants.
 const WEB_STARTS := {
 	"room2": "res://scenes/levels/room2.tscn",
 	"room3": "res://scenes/levels/room3.tscn",
+	"room4": "res://scenes/levels/room4.tscn",
 }
 
 
@@ -219,6 +220,8 @@ func _web_start_override() -> void:
 	intro_done = true
 	GameState.new_game()
 	GameState.awaken_mind()
+	if start == "room4":
+		GameState.unlock_shockwave()
 	Monologue.reset()
 	SaveSystem.session_scene = ""
 	SaveSystem.session_checkpoint = ""

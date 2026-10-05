@@ -55,5 +55,37 @@
 	"stacks_exit": [
 		"There, past the fences. Trees. Rooftops. Little lights in windows.",
 		"Home is that way. I can almost smell it."
+	],
+	"perimeter_arrival": [
+		"Fences. Lasers. Lights that watch.",
+		"'Authorised units only.' ...Am I a unit now?"
+	],
+	"phase_first": [
+		"Through it?! I went through it!",
+		"Cyan. Like slipping between raindrops."
+	],
+	"impact_first": [
+		"Heavy. When I land, the ground answers.",
+		"Violet. That's all four. The whole rainbow inside me."
+	],
+	"relays_intro": [
+		"The big gate needs power. Three relays. Of course it's three."
+	],
+	"relay_done": [
+		"One down.",
+		"Two.",
+		"That's all of them!"
+	],
+	"scanner": [
+		"It's scanning me. Please, please..."
+	],
+	"credential": [
+		"'Supervisor credential accepted.'",
+		"They really think I'm one of them.",
+		"...Maybe I am, a little."
+	],
+	"perimeter_exit": [
+		"The rain's stopping. The sky's getting light.",
+		"Almost home."
 	]
 }

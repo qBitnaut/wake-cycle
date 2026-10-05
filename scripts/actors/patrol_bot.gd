@@ -25,6 +25,9 @@ const BOUNDS_MASK := 64
 @export var stomps_to_befriend := 3
 ## True: a cat without powers bounces off harmlessly (see above).
 @export var armoured := true
+## True: plated against everything but the ground pound. Stomps and the
+## double-jump shockwave only clank off the plating (Room 4's armoured bot).
+@export var shielded := false
 
 var state := State.PATROL
 var dir := -1
@@ -54,6 +57,8 @@ func _ready() -> void:
 	hitbox.collision_mask = 2
 	sprite.sprite_frames = _build_frames()
 	sprite.play("walk")
+	if shielded:
+		sprite.self_modulate = Color(1.0, 0.92, 0.72)
 
 
 func _build_frames() -> SpriteFrames:
@@ -104,6 +109,8 @@ func _physics_process(delta: float) -> void:
 			sprite.modulate = Color(1.5, 1.5, 1.5) if int(_t * 10.0) % 2 == 0 else Color.WHITE
 	if state != State.FRIENDLY:
 		_flinch_fx()
+	if shielded:
+		queue_redraw()
 	move_and_slide()
 	if global_position.y > 3000.0:
 		queue_free()
@@ -135,7 +142,7 @@ func can_be_harmed() -> bool:
 func _stomp(cat: Cat) -> void:
 	_stomp_lock = 0.3
 	cat.bounce(462.0)
-	if not can_be_harmed():
+	if shielded or not can_be_harmed():
 		_clank()
 		return
 	stomps += 1
@@ -176,10 +183,23 @@ func befriend() -> void:
 	Sfx.play(self, "power_up", -6.0, 1.4)
 
 
-func on_shockwave(origin: Vector2, _radius: float, _source: String) -> void:
+func on_shockwave(origin: Vector2, _radius: float, source: String) -> void:
+	if shielded and source != "pound":
+		_clank()
+		return
 	if state == State.FRIENDLY:
 		velocity.y = -160.0
 		return
 	velocity.y = -160.0
 	velocity.x = signf(global_position.x - origin.x) * 107.0
 	stun(stun_time)
+
+
+## The plating: a gold shell that fades while the bot is stunned.
+func _draw() -> void:
+	if not shielded:
+		return
+	var a := 0.55 if state == State.PATROL else 0.0
+	var c := Color(NanoPalette.SHOCKWAVE, a * (0.7 + 0.3 * sin(_t * 5.0)))
+	draw_arc(Vector2(0, -26), 31.0, -PI * 0.9, PI * 0.9, 18, c, 2.0)
+	draw_arc(Vector2(0, -26), 27.0, -PI * 0.7, PI * 0.7, 14, Color(c, c.a * 0.5), 1.0)

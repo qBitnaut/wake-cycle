@@ -84,6 +84,10 @@ func _ready() -> void:
 				_facade_mat = (s as Sprite2D).material
 				break
 	_flap = get_node_or_null("Facade/Flap") as Sprite2D
+	# The cushion's front rim draws over the cat: hidden while the wall stands.
+	var rim := get_node_or_null("CushionFront") as CanvasItem
+	if rim:
+		rim.visible = false
 	var ft := get_node_or_null("FlapTrigger") as Area2D
 	if ft:
 		_flap_x = ft.global_position.x
@@ -108,6 +112,10 @@ func _ready() -> void:
 			glints.puddles.append(pu)
 	for shaft in find_children("*", "MoonShaft", true, false):
 		Home.give_ray_uvs(shaft)
+	# The window's beam lights the room and its dust, never the facade outside.
+	var beam_light := get_node_or_null("Sunbeam/Light") as Light2D
+	if beam_light:
+		beam_light.range_item_cull_mask = MASK_INTERIOR | LightingRig.MASK_MOTES
 	if OS.has_feature("web"):
 		_setup_web()
 
@@ -195,6 +203,9 @@ func _set_facade(v: float) -> void:
 	var facade := get_node_or_null("Facade") as Node2D
 	if facade:
 		facade.visible = v > 0.0
+	var rim := get_node_or_null("CushionFront") as CanvasItem
+	if rim:
+		rim.visible = v <= 0.0
 
 
 ## Inside, the cat is lit like the room (the window, not the sun).
@@ -214,8 +225,8 @@ func _settle() -> void:
 	_start_zoom()
 	# Onto the cushion: a few steps to its middle.
 	settle_step = "step_in"
-	cat.facing = 1
-	cat.sprite.flip_h = false
+	cat.sprite.flip_h = spot_x < cat.global_position.x
+	cat.facing = -1 if cat.sprite.flip_h else 1
 	cat.set_forced_anim("walk")
 	var d := absf(spot_x - cat.global_position.x)
 	var tw := create_tween()

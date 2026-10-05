@@ -1353,8 +1353,6 @@ def credits_room():
         c.hline(40 + inset, 200 - inset, y, RUG[2] if k % 2 == 0 else RUG[3])
     for x in range(44, 197, 4):
         c.px(x, floor_y + 5, RUG[4])
-    for x in range(33, 208, 2):
-        c.px(x, floor_y + 9, "#e8d8b8")
     # A tall plant in a pot on the left.
     c.poly([(8, 142), (30, 142), (27, 164), (11, 164)], TERRACOTTA[2])
     c.rect(7, 140, 24, 4, TERRACOTTA[3])

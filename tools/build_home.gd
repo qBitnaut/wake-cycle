@@ -411,7 +411,7 @@ func _build_house() -> void:
 	beam.light_energy = 0.6
 	beam.dust_amount = 34
 	beam.dust_color = Color(1.7, 1.5, 1.05)
-	beam.z_index = 4
+	beam.z_index = 1  # over the room, under the facade (2) and the cat (5)
 	_own(beam)
 	var land := PointLight2D.new()
 	land.name = "BeamLight"
@@ -489,14 +489,15 @@ func _build_house() -> void:
 	st.name = "SpotTrigger"
 	st.collision_layer = 0
 	st.collision_mask = 2
-	st.position = Vector2(SPOT_X - 22, HOME_FLOOR)
+	# From just short of the cushion to the right wall: it cannot be hopped over.
+	st.position = Vector2((SPOT_X - 26 + HOME_X + HOME_W - 8) * 0.5, HOME_FLOOR)
 	_own(st)
 	var ss := CollisionShape2D.new()
 	ss.name = "Shape"
 	var sr := RectangleShape2D.new()
-	sr.size = Vector2(16, 40)
+	sr.size = Vector2(HOME_X + HOME_W - 8 - (SPOT_X - 26), 120)
 	ss.shape = sr
-	ss.position = Vector2(0, -20)
+	ss.position = Vector2(0, -60)
 	_own(ss, st)
 
 

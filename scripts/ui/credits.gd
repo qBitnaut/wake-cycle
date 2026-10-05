@@ -11,6 +11,7 @@ extends Node2D
 ##
 ## Credits lines: "# Heading", "plain line", "" (a gap). Edit the file.
 ## The room is 320x180 art shown at 2x (tools/art/home_art.py).
+## Web debug hook (tools/audit/web_home.mjs): window.__wake every physics frame.
 
 signal left
 
@@ -86,7 +87,7 @@ func _build_room() -> void:
 	patch.name = "SunPatch"
 	patch.texture = load(ART + "credits_light.png")
 	patch.centered = false
-	patch.modulate = Color(0.62, 0.46, 0.24)
+	patch.modulate = Color(0.5, 0.37, 0.19)
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	add.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
@@ -114,7 +115,7 @@ func _build_room() -> void:
 	add_child(back)
 	_cat = Node2D.new()
 	_cat.name = "SleepyCat"
-	_cat.position = Vector2(120, 168)
+	_cat.position = Vector2(120, 165)  # sunk into the cushion, as in the house
 	add_child(_cat)
 	var spr := AnimatedSprite2D.new()
 	spr.name = "Sprite"
@@ -146,6 +147,18 @@ func _process(delta: float) -> void:
 			_end_t += delta
 			if _end_t > 1.2 and _any_move_pressed() or _end_t > end_hold:
 				_leave()
+
+
+func _physics_process(_delta: float) -> void:
+	if OS.has_feature("web"):
+		var d := {
+			"f": Engine.get_physics_frames(), "scene": scene_file_path, "step": int(step),
+			"title": _title.modulate.a, "white": _white.modulate.a, "end": _end.modulate.a,
+			"roll": _roll.position.y, "rollDone": roll_done, "black": _black.modulate.a,
+			"augE": _aug.emitter_energy() if _aug else 0.0,
+			"music": _music.volume_db if _music and is_instance_valid(_music) else -80.0,
+		}
+		JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))
 
 
 static func _any_move_pressed() -> bool:

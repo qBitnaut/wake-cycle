@@ -102,11 +102,15 @@ func _ease_rain(delta: float) -> void:
 	if _rain == null or is_equal_approx(_rain_gain, rain_level):
 		return
 	_rain_gain = move_toward(_rain_gain, rain_level, delta * 0.5)
+	# Write stream_paused only when it changes: on the web (samples) every write restarts
+	# the loop's sample, and an easing rain did that every frame (about ten stacked copies).
 	if _rain_gain < 0.003:
 		_rain.volume_db = -80.0
-		_rain.stream_paused = true
+		if not _rain.stream_paused:
+			_rain.stream_paused = true
 	else:
-		_rain.stream_paused = false
+		if _rain.stream_paused:
+			_rain.stream_paused = false
 		_rain.volume_db = rain_db + linear_to_db(_rain_gain)
 
 

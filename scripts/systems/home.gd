@@ -364,4 +364,5 @@ func _publish() -> void:
 		"music": music.volume_db if music else -80.0,
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 	}
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

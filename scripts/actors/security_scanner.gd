@@ -100,13 +100,15 @@ func _refresh() -> void:
 func begin_scan(seconds := 3.2) -> void:
 	mode = Mode.SCANNING
 	_refresh()
-	Sfx.play(self, "laser_hum_loop", -10.0, 1.9)
+	var hum := LoopSfx.attach(self, preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg"), -10.0, 1.9, 420.0)
 	var tw := create_tween()
 	# Left to right, back, and a last slow pass: a sweep that reads as thorough.
 	tw.tween_property(self, "beam_pos", 1.0, seconds * 0.4).from(-1.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(self, "beam_pos", -1.0, seconds * 0.35).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(self, "beam_pos", 0.0, seconds * 0.25).set_trans(Tween.TRANS_SINE)
 	await tw.finished
+	if is_instance_valid(hum):
+		hum.retire()
 	accept()
 
 

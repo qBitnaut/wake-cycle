@@ -165,4 +165,5 @@ func _publish() -> void:
 		"groundBelow": _probe(cat.global_position + Vector2(0, -2), cat.global_position + Vector2(0, 80)),
 		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y]),
 	}
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

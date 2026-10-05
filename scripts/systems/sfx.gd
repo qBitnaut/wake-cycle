@@ -10,8 +10,15 @@ static var _cache := {}
 static func play(ctx: Node, sound: String, volume_db := -6.0, pitch := 1.0) -> void:
 	if not _cache.has(sound):
 		_cache[sound] = load(sound if sound.begins_with("res://") else DIR % sound)
+	var stream: AudioStream = _cache[sound]
+	if LoopSfx._loops(stream):
+		# A looping stream never emits `finished`: played here it would live on the root
+		# for ever (the drone hum did exactly that). One-shots are always played once;
+		# a real loop belongs to LoopSfx.
+		stream = stream.duplicate()
+		stream.set("loop", false)
 	var p := AudioStreamPlayer.new()
-	p.stream = _cache[sound]
+	p.stream = stream
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
 	ctx.get_tree().root.add_child(p)

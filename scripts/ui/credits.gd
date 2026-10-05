@@ -157,6 +157,7 @@ func _physics_process(_delta: float) -> void:
 			"augE": _aug.emitter_energy() if _aug else 0.0,
 			"music": _music.volume_db if _music and is_instance_valid(_music) else -80.0,
 		}
+		d["loops"] = LoopSfx.census_cached(get_tree())
 		JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))
 
 

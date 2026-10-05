@@ -137,4 +137,5 @@ func _publish() -> void:
 	}
 	var dp = d["droneX"]
 	d["droneX"] = dp.x if dp is Vector2 else null
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

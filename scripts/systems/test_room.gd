@@ -62,6 +62,7 @@ func _physics_process(delta: float) -> void:
 		"door": get_node_or_null("DoorBrass") != null,
 		"crates": get_tree().get_nodes_in_group("breakable").size(),
 	}
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))
 
 

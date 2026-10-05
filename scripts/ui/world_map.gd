@@ -1298,4 +1298,5 @@ func _publish() -> void:
 		"open": LevelRegistry.open_levels(), "mapNode": GameState.map_node,
 		"save": SaveSystem.has_save(), "fps": Engine.get_frames_per_second(),
 	}
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__map = %s;" % JSON.stringify(d))

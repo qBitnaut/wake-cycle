@@ -325,4 +325,5 @@ func _publish() -> void:
 		"fenceT": _flag("FenceTimed", "active"), "steam": steam,
 		"door": get_node_or_null("DoorBrass") != null,
 	}
+	d["loops"] = LoopSfx.census_cached(get_tree())
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

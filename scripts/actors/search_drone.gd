@@ -28,6 +28,7 @@ enum State { IDLE, SWEEP, LEAVING, GONE }
 const DRONE := preload("res://assets/art_hd/robots/drone_3.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 const BEAM_COLOR := Color(1.0, 0.93, 0.72)
+const HUM_RANGE := 480.0   ## px: silent beyond this distance from the cat
 
 var state := State.IDLE
 var seen_meter := 0.0
@@ -35,6 +36,10 @@ var alarmed := false
 var cat: Cat
 ## Audit hook: true while the cat is currently lit.
 var lit := false
+
+## The drone's whirr: a looping sound that follows the drone, fades with the distance to
+## the cat, and ends when the drone does (see LoopSfx).
+var hum: LoopSfx
 
 var _t := 0.0
 var _body: Sprite2D
@@ -89,7 +94,7 @@ func _physics_process(delta: float) -> void:
 				visible = true
 				global_position = Vector2(start_x, height_y())
 				triggered.emit()
-				Sfx.play(self, "laser_hum_loop", -14.0, 1.6)
+				hum = LoopSfx.attach(self, preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg"), -14.0, 1.6, HUM_RANGE)
 		State.SWEEP:
 			global_position.x += speed * delta
 			global_position.y = height_y() + sin(_t * 2.0) * 3.0
@@ -101,6 +106,8 @@ func _physics_process(delta: float) -> void:
 			if global_position.y < -80.0:
 				state = State.GONE
 				visible = false
+				if hum:
+					hum.retire()
 	_update_beam()
 	_update_seen(delta)
 

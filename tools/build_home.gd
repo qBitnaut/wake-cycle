@@ -461,6 +461,21 @@ func _build_house() -> void:
 	flap.position = Vector2(cx + HOME_OX + 52 + 8, HOME_TOP + 260 - 18 - 3)
 	flap.material = mat
 	_own(flap, facade)
+	# Under the floor the street (sidewalk, wet road) would show through the
+	# open house. As the wall dissolves the house settles onto a dark base, the
+	# attic's colour, so the room reads as a room between the two. It fades in
+	# with the dissolve (Home._set_facade); not through dither_fade, which
+	# renders its texture darker than drawn (the facade's look was tuned with that).
+	var base := Sprite2D.new()
+	base.name = "Base"
+	base.texture = load(A + "home_base.png")
+	base.centered = false
+	base.position = Vector2(HOME_X - 2, G)
+	base.modulate = Color(1, 1, 1, 0)
+	base.light_mask = MASK_INTERIOR  # lit like the attic: the sun does not reach it
+	base.z_index = 8  # over the wet road (6) and its glints (7)
+	base.visible = false
+	_own(base)
 	front_areas.append(Rect2(cx + HOME_OX + 190, HOME_TOP + 144, 64, 30))
 	front_areas.append(Rect2(cx + HOME_OX + 330, HOME_TOP + 144, 64, 30))
 	front_drips.append(Vector4(cx + 8, cx + 190, 217, HOME_FLOOR))

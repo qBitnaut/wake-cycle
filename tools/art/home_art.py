@@ -1260,6 +1260,28 @@ def home_inside():
     return c
 
 
+def home_base():
+    """Under the open house: the cut walls carried down as stone and the dark
+    space under the floor, the attic's colour, so that once the facade has
+    dissolved the room sits between two dark bands and the street does not
+    show through under it. Spans the interior's floor (canvas x 50..533)."""
+    W, H = HOME_W + 4, 72
+    c = Canvas(W, H)
+    yy = np.mgrid[0:H, 0:W][0]
+    c.a[:] = quantize(0.62 - yy / (H - 1) * 0.62, ["#2a1d25", "#32232b", "#3a2830"], np.ones((H, W), bool), dither=0.5)
+    c.hline(0, W - 1, 0, WOOD[0])
+    # The side walls' cut, carried down as a stone footing (the walls' cut
+    # edge is canvas x 52..58 and 526..532 in home_inside).
+    for x0 in (2, W - 9):
+        c.rect(x0, 0, 7, H, "#8e8086")
+        c.vline(x0 + 6 if x0 == 2 else x0, 0, H - 1, "#6e6268")
+        for k, y in enumerate(range(5, H, 9)):
+            c.hline(x0, x0 + 6, y, "#6e6268")
+            c.px(x0 + (2 if k % 2 else 4), y - 4, "#6e6268")
+        c.hline(x0, x0 + 6, 1, "#a89aa0")
+    return c
+
+
 WIN_X, WIN_Y, WIN_W, WIN_H = 356, 150, 58, 56   # window on the back wall (canvas px, before ox)
 RUG_X0, RUG_X1 = 230, 380
 
@@ -1418,6 +1440,7 @@ def main():
         "house_rose.png": house("rose"),
         "home_front.png": home_front(),
         "home_inside.png": home_inside(),
+        "home_base.png": home_base(),
         "flap.png": flap(),
         "steps.png": steps(),
         "gate.png": garden_gate(),

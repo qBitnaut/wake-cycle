@@ -36,6 +36,7 @@
 [ext_resource type="Shader" path="res://shaders/dither_fade.gdshader" id="34_206yk"]
 [ext_resource type="Texture2D" path="res://assets/art_hd/home/home_front.png" id="35_oysdv"]
 [ext_resource type="Texture2D" path="res://assets/art_hd/home/flap.png" id="36_cmms6"]
+[ext_resource type="Texture2D" path="res://assets/art_hd/home/home_base.png" id="37_qrwn3"]
 [ext_resource type="Script" path="res://scripts/actors/monologue_trigger.gd" id="37_j8wby"]
 [ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="38_qrwn3"]
 [ext_resource type="Script" path="res://scripts/player/cat.gd" id="39_ma2p6"]
@@ -778,6 +779,15 @@ centered = false
 material = SubResource("ShaderMaterial_8tp4q")
 position = Vector2(3260, 283)
 texture = ExtResource("36_cmms6")
+centered = false
+
+[node name="Base" type="Sprite2D" parent="." unique_id=974043348]
+visible = false
+modulate = Color(1, 1, 1, 0)
+light_mask = 8
+z_index = 8
+position = Vector2(3198, 320)
+texture = ExtResource("37_qrwn3")
 centered = false
 
 [node name="FlapTrigger" type="Area2D" parent="." unique_id=1231125076]

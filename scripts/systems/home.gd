@@ -51,6 +51,7 @@ var facade_amount := 1.0
 var settle_step := ""        ## audit hook: the step of the settle sequence
 
 var _facade_mat: ShaderMaterial
+var _base: Sprite2D
 var _flap: Sprite2D
 var _flap_x := 0.0
 var _aug: CatAugments
@@ -84,6 +85,8 @@ func _ready() -> void:
 				_facade_mat = (s as Sprite2D).material
 				break
 	_flap = get_node_or_null("Facade/Flap") as Sprite2D
+	# The dark base under the floor that hides the street once the wall has gone.
+	_base = get_node_or_null("Base") as Sprite2D
 	# The cushion's front rim draws over the cat: hidden while the wall stands.
 	var rim := get_node_or_null("CushionFront") as CanvasItem
 	if rim:
@@ -199,6 +202,9 @@ func _set_facade(v: float) -> void:
 	var rim := get_node_or_null("CushionFront") as CanvasItem
 	if rim:
 		rim.visible = v <= 0.0
+	if _base:
+		_base.modulate.a = smoothstep(1.0, 0.35, v)
+		_base.visible = v < 1.0
 
 
 ## Inside, the cat is lit like the room (the window, not the sun).

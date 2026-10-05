@@ -99,7 +99,7 @@ func _draw() -> void:
 		# The dawn behind the gate, in the part the door has left: warm and bright (HDR, so it blooms).
 		draw_polygon(
 			PackedVector2Array([Vector2(-w / 2.0, top), Vector2(w / 2.0, top), Vector2(w / 2.0, 0), Vector2(-w / 2.0, 0)]),
-			PackedColorArray([Color(1.0, 0.62, 0.5), Color(1.0, 0.62, 0.5), Color(1.9, 1.5, 1.0), Color(1.9, 1.5, 1.0)]))
+			PackedColorArray([Color(0.95, 0.55, 0.45), Color(0.95, 0.55, 0.45), Color(1.45, 1.05, 0.7), Color(1.45, 1.05, 0.7)]))
 	if shown > 1.0:
 		draw_rect(Rect2(-w / 2.0, top, w, shown), INK)
 		var y := top

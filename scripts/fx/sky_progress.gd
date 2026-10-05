@@ -64,7 +64,7 @@ func _ready() -> void:
 	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	_glow.material = m
-	_glow.z_index = -8
+	_glow.z_index = -9  # above the exterior backdrop (-9, earlier in the tree), below the suburbs (-8)
 	_glow.modulate.a = 0.0
 	add_child(_glow)
 	_glow.top_level = true
@@ -110,8 +110,9 @@ func _apply(force: bool, delta := 0.0) -> void:
 		if cm and (lightning == null or lightning._level < 0.001):
 			cm.color = night_tint.lerp(dawn_tint, p).lerp(sunrise_tint, dawn)
 	if _glow:
-		_glow.global_position = Vector2(cx - 480.0, horizon_y - 208.0 + 40.0)
-		_glow.modulate.a = clampf(p * p * 0.55 + dawn * 0.45, 0.0, 1.0)
+		# (The sprite is centred: 960 px wide on the camera, 208 px tall from 168 above the horizon to 40 below.)
+		_glow.global_position = Vector2(cx, horizon_y - 64.0)
+		_glow.modulate.a = clampf(p * p * 0.35 + dawn * 0.35, 0.0, 1.0)
 	_throttle -= delta
 	if not force and _throttle > 0.0:
 		return

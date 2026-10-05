@@ -534,7 +534,7 @@ func _beat_phase2() -> void:
 	# The turret: telegraphed, then a beam along the floor. Avoidable by timing and by a jump.
 	var tur := node("TurretP2")
 	note("P2 the turret idles, then warns, then fires (never instant)", tur.get("idle_time") > 1.0 and tur.get("warn_time") >= 0.8 and tur.get("fire_time") <= 0.6)
-	await stage(101.5)   # just outside the beam (it starts at x=3312, col 103.5)
+	await stage(104.5)   # just outside the beam (it starts at x=3376, col 105.5) and past the drone
 	var cycle: float = tur.get("idle_time") + tur.get("warn_time") + tur.get("fire_time")
 	# Wait for the end of a firing, then cross the whole reach: no hit.
 	var w := 0

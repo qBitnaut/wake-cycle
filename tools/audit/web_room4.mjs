@@ -234,8 +234,8 @@ let shot2 = false;
 res = await phaseRun(cx(108), { onDash: async n => { if (n === 3 && !shot2) { shot2 = true; await shot('P2_laser_dash_series_and_drones'); } } });
 note('P2 the corridor by keyboard: three fences and two drones, unhurt', res.reached && res.hpLost === 0 && res.dashes >= 5, JSON.stringify(res));
 fps.push(await measureFps('the laser corridor'));
-// The turret: stand just outside its beam (it starts at x=3312), wait for the end of a shot, cross.
-await teleport(cx(101.5));
+// The turret: stand just outside its beam (it starts at x=3376), past the drone, wait for the end of a shot, cross.
+await teleport(cx(104.5));
 await shot('P2_turret_beam_telegraph');
 let t0 = W.turret; let seenFire = false;
 for (let n = 0; n < 900 && !(seenFire && W.turret === 0); n++) { await frame(); if (W.turret === 2) seenFire = true; }
@@ -367,7 +367,7 @@ await stop();
 note('R1 relay 1 lit, the cat held for the camera pan', W.relayLit[0] === true && W.relays === 1, `relays ${W.relays}`);
 await sleep(250);
 await shot('R1_relay_lit_pan_starts');
-await waitFor(() => W.pans >= 1 && (W.cam[0] - W.x) > 900, 6000);
+await waitFor(() => W.pans >= 1 && W.cam[0] > 10640, 8000);
 await sleep(500);
 await shot('R1_pan_to_the_gatehouse_lamp_one');
 await waitFor(() => !W.panning && W.can_move, 8000);
@@ -392,7 +392,7 @@ await stop();
 note('R2 relay 2 lit', W.relayLit[1] === true && W.relays === 2, `relays ${W.relays}`);
 await sleep(250);
 await shot('R2_relay_lit');
-await waitFor(() => W.pans >= 2 && (W.cam[0] - W.x) > 900, 6000);
+await waitFor(() => W.pans >= 2 && W.cam[0] > 10640, 8000);
 await sleep(400);
 await shot('R2_pan_to_the_gatehouse_lamp_two');
 await waitFor(() => !W.panning && W.can_move, 8000);
@@ -422,7 +422,7 @@ await stop();
 note('R3 relay 3 lit', W.relayLit[2] === true && W.relays === 3, `relays ${W.relays}`);
 await sleep(250);
 await shot('R3_relay_lit');
-await waitFor(() => W.pans >= 3 && (W.cam[0] - W.x) > 900, 6000);
+await waitFor(() => W.pans >= 3 && W.cam[0] > 10640, 8000);
 await sleep(400);
 await shot('R3_pan_to_the_gatehouse_all_three_lamps');
 await waitFor(() => !W.panning && W.can_move, 8000);

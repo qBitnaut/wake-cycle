@@ -495,7 +495,7 @@ func _place_actors() -> void:
 	_put(fence, "FenceP2c", 92, G, {"height_tiles": 4, "timed": false})
 	_put(pad, "PadPhase2c", 96, G, {"power": 3, "duration": 12.0, "cooldown": 3.0})
 	_drone("DroneP2b", 102, G - 2, 40.0, 1.7)
-	_turret("TurretP2", 112, G, -1, 288.0, 0.0)
+	_turret("TurretP2", 112, G, -1, 224.0, 0.0)
 	_put(gem, "GemP2a", 64, G - 1)
 	_put(gem, "GemP2b", 71, G - 3)
 	_put(gem, "GemP2c", 88, G - 1)

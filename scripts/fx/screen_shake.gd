@@ -47,6 +47,16 @@ static func shake_at(node: Node, strength := 0.5, duration := 0.35) -> void:
 	s.shake(strength, duration)
 
 
+## Where the camera rests when nothing shakes it: a cutscene pan moves this
+## (the shake would otherwise snap the camera offset back every frame).
+func set_base_offset(v: Vector2) -> void:
+	_base_offset = v
+
+
+func get_base_offset() -> Vector2:
+	return _base_offset
+
+
 ## Add `strength` (0..1) of trauma that dies away over about `duration` s.
 func shake(strength := 0.5, duration := 0.35) -> void:
 	_trauma = clampf(_trauma + strength, 0.0, 1.0)

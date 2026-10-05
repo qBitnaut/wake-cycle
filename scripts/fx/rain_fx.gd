@@ -58,6 +58,7 @@ const MOTE_SHADER := preload("res://shaders/mote.gdshader")
 
 var _drops: CPUParticles2D
 var _splash: RainSplash
+var _intensity := 1.0
 
 
 func _ready() -> void:
@@ -76,11 +77,14 @@ func _ready() -> void:
 	_apply()
 
 
-## Rain intensity multiplier (0 stops it), for weather changes.
+## Rain intensity multiplier (0 stops it), for weather changes. Changing it
+## rebuilds the particles, so call it in coarse steps (a few per minute).
 func set_intensity(k: float) -> void:
-	if _drops:
-		_drops.amount_ratio = clampf(k, 0.0, 1.0)
-		_splash.amount_ratio = clampf(k, 0.0, 1.0)
+	k = clampf(k, 0.0, 1.0)
+	if is_equal_approx(k, _intensity):
+		return
+	_intensity = k
+	_apply()
 
 
 func _apply() -> void:
@@ -94,7 +98,8 @@ func _apply() -> void:
 	_drops.direction = v.normalized()
 	_drops.initial_velocity_min = v.length()
 	_drops.initial_velocity_max = v.length()
-	_drops.amount = maxi(int(density * width / 100.0 * life) + 1, 1)
+	_drops.amount = maxi(int(density * width / 100.0 * life * _intensity) + 1, 1)
+	_drops.emitting = _intensity > 0.01
 	# Spawn upwind so the slanted rain still covers the whole floor span.
 	_drops.position = Vector2(-v.x * life * 0.5, 0)
 	_drops.emission_rect_extents = Vector2(width * 0.5 + absf(v.x) * life * 0.25, 0.5)
@@ -116,11 +121,11 @@ func _apply() -> void:
 			mat = CanvasItemMaterial.new()
 			_drops.light_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
 	_drops.material = mat
-	_splash.visible = splash
-	_splash.emitting = splash
+	_splash.visible = splash and _intensity > 0.01
+	_splash.emitting = splash and _intensity > 0.01
 	_splash.position = Vector2(0, floor_y)
 	_splash.width = width
-	_splash.rate = density * splash_rate_scale
+	_splash.rate = density * splash_rate_scale * _intensity
 	_splash.splash_color = Color(rain_color, 0.9)
 	_splash.material = mat
 	_splash.light_mask = _drops.light_mask

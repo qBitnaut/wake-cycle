@@ -126,6 +126,22 @@ func play(id: String) -> void:
 		_next()
 
 
+## Queue one line of the set `id` (0-based), e.g. the count-th line of a
+## counting set. Out of range plays the last line.
+func play_line(id: String, index: int) -> void:
+	var lines: Array = _sets.get(id, [])
+	if lines.is_empty():
+		push_warning("Monologue: no lines for '%s'" % id)
+		return
+	var i := clampi(index, 0, lines.size() - 1)
+	var l: Variant = lines[i]
+	var text := str(l.get("text", "")) if l is Dictionary else str(l)
+	var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
+	_queue.append([id, text, hold, true])
+	if not _busy:
+		_next()
+
+
 ## play(), but only the first time `id` is asked for (until reset()).
 ## Returns false when it had already played.
 func play_once(id: String) -> bool:

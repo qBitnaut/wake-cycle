@@ -19,7 +19,7 @@ const ROWS := 14       ## 448 px: rows G+1..G+3 are the underfloor
 const COLS := 151
 
 # Pits (inclusive column ranges). Sized against the reach audit.
-const PIT_A := [17, 22]
+const PIT_A := [17, 21]
 const PIT_C := [41, 48]
 
 # Material blocks in tiles_wake_hd.png (atlas row = row + 10 * block).

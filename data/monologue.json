@@ -37,6 +37,21 @@
 		"The rain's easing up.",
 		"From up here I can see the whole district... and not one person. Just machines, working."
 	],
+	"spring_hint": [
+		"Too high to jump... that green pad hums like a spring."
+	],
+	"spring_hint_ledge": [
+		"Too high again. Maybe the green one will lift me."
+	],
+	"spring_hint_combine": [
+		"A tower. Too tall to jump... that green pad again."
+	],
+	"spring_hint_roof": [
+		"That roof is too high to reach. The green pad hums like a spring."
+	],
+	"spring_hint_tower": [
+		"Too tall to climb... but there is the green one again."
+	],
 	"spring_first": [
 		"Up! Higher than any cat should go.",
 		"Green this time. Each pad wakes a different part of me."

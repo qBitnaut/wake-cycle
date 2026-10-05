@@ -8,8 +8,12 @@
 ##   Surge           182 px   334 px
 ## A gap of N px needs travel >= N - 22 (the cat is 22 px wide). The Surge-only
 ## gap is 9 tiles (288 px): it needs 266, a plain double jump reaches 223 (43
-## short), a Surge double jump 334 (68 spare). The 6-tile pit in the combined
-## beat (192 px, needs 170) is a double jump for a plain cat, a single jump on Surge.
+## short), a Surge double jump 334 (68 spare: it lands in the human-timed double
+## jumps from the apex on, tools/audit/margins.gd). It stays 9: at 8 tiles the plain
+## double jump just reached the lip. The 5-tile pit in the
+## combined beat (160 px, needs 138) is a plain double jump (85 spare) or a Surge
+## single jump (44 spare); a plain single jump (122) falls short. (Both were a tile
+## wider and too tight: Surge single 0%, plain double 61% of the human sweep.)
 ##
 ## Beats, left to right (column numbers; 32 px tiles, floor surface at row 10):
 ##   A    0-28   arrival: out of the warehouse door into the rain, a walker (Bot1)
@@ -52,7 +56,7 @@ const START_COL := 3
 const TUNNEL := [30, 38]
 const PAD1_COL := 34
 const PAD2_COL := 62
-const PITS := [[70, 78], [169, 174]]     ## inclusive columns with no floor
+const PITS := [[70, 78], [169, 173]]     ## inclusive columns with no floor
 const PAD3_COL := 98
 const PLATE_COL := 102
 const GATE_COL := 127

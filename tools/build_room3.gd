@@ -8,10 +8,14 @@
 ##   plain              122 px   223 px                   95 (3.0)   171 (5.3 tiles)
 ##   Surge              182 px   334 px
 ##   Spring             160 px   297 px                  158 (4.9)   284 (8.9 tiles)
-## Every climb is 6 tiles (192 px): past a plain double jump (21 px short), 92 px
-## inside a Spring double jump. The gallery roof is 12 tiles up, out of Spring's reach.
-## The long gap is 10 tiles (320 px, needs 298): Surge double jump 334 (36 spare),
-## Spring double jump 297 (1 short), plain 223.
+## (Spring's first jump is now 211 px, 6.6 tiles; its air jump is the plain one, so the
+## double jump numbers below are unchanged.)
+## Every climb is 6 tiles (192 px): past a plain double jump (21 px short), 19 px
+## inside a held Spring single jump, 92 px inside a Spring double jump. The gallery roof is 12 tiles up, out of Spring's reach.
+## The long gap is 9 tiles (288 px, needs 266): Surge double jump 334 (68 spare),
+## Spring double jump 255 (11 short: Spring's air jump is a small extra, 0.6), plain 223.
+## (At 10 tiles the Surge double jump had 36 spare and landed in 45% of the human
+## sweep, tools/audit/margins.gd; Spring's double jump then had to be a pixel short.)
 ##
 ## The room is tall (rows 0-39, ground surface at row 36) and climbs to the right:
 ##   A     0-33   arrival on the yard floor in the easing rain; Bot1 walks the lane
@@ -27,7 +31,7 @@
 ##                augmented cat arrives and copies its steps; walk it onto its plate at the end of
 ##                the track and the shutter at the catwalk's end opens
 ##   G   130-170  SPRING 3 + SURGE: checkpoint C, a pad at the foot of a 6-tile tower, Spring up it,
-##                a Surge pad on top, a 10-tile gap, the exit roof (checkpoint D), the way
+##                a Surge pad on top, a 9-tile gap, the exit roof (checkpoint D), the way
 ##                toward the security perimeter. Under the gap: stairs down the tower's right
 ##                side to a pit floor 10 tiles under the exit roof, so a fall is never a trap
 ##                and the far tower cannot be climbed from the pit
@@ -65,7 +69,7 @@ const START_COL := 3
 const PAD1_COL := 33              ## Spring, at the foot of the first wall (col 34)
 const SHED := [34, 53]
 const PAD2_COL := 41
-const LEDGE := [45, 50]
+const LEDGE := [45, 52]            ## the floating ledge: ends one tile short of the long roof (col 54)
 const LONG := [54, 101]           ## the long roof building (gallery floor)
 const GALLERY := [66, 101]
 const CONDUIT_COL := 69
@@ -82,8 +86,8 @@ const PAD3_COL := 137             ## Spring, at the foot of the tower (col 138)
 const TOWER := [138, 149]       ## the tower, with stairs down its right side to the pit floor
 const SURGE_COL := 141
 const TOP_FLAT_END := 145         ## last full-height column of the tower top
-const GAP := [146, 155]           ## ten tiles; the stairs (146-149) and the pit floor (150-155) lie under it
-const LAND := [156, 169]
+const GAP := [146, 154]           ## nine tiles; the stairs (146-149) and the pit floor (150-154) lie under it
+const LAND := [155, 169]
 const EXIT_COL := 167
 
 var room: Node2D
@@ -334,6 +338,10 @@ func _build_geometry() -> void:
 	for x in range(SHED[0], SHED[0] + 3):
 		_lip(x, S1)
 	_deck(LEDGE[0], LEDGE[1], S2, 2)
+	# A strut under the ledge's left end: its face is a wall from the shed roof up, so a
+	# cat rising beside it never bangs its head on an overhang (a floating edge ate every
+	# jump that started closer than 42 px).
+	_mass(LEDGE[0], LEDGE[0] + 1, S2 + 2, S1 - 1, false)
 	# C-F: the long roof building: gallery and its ceilings, the bay.
 	_mass(LONG[0], GALLERY[0] - 1, S3, ROWS - 1)
 	_mass(GALLERY[0], GALLERY[1], S3, ROWS - 1, false)
@@ -456,12 +464,14 @@ func _place_actors() -> void:
 	_put("res://scenes/actors/gem.tscn", "GemA5", 30, G - 1)
 
 	# --- B1: Spring, discovery: the pad at the foot of the wall ---
+	_mono("SpringHint", "spring_hint", _p(PAD1_COL - 5, G), Vector2(96, 96))
 	_pad("PadSpring1", PAD1_COL, G, 2)
 	_mono("SpringFirst", "spring_first", _p(PAD1_COL, G), Vector2(44, 40))
 
 	# --- B2: use it ---
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointA", 36, S1, {"checkpoint_id": "cp_a"})
 	_put("res://scenes/actors/gem.tscn", "GemShed1", 38, S1 - 1)
+	_mono("SpringHintLedge", "spring_hint_ledge", _p(PAD2_COL - 3, S1), Vector2(64, 96))
 	_pad("PadSpring2", PAD2_COL, S1, 2)
 	_put("res://scenes/actors/gem.tscn", "GemLedge1", 46, S2 - 1)
 	_put("res://scenes/actors/gem.tscn", "GemLedge2", 49, S2 - 1)
@@ -521,6 +531,7 @@ func _place_actors() -> void:
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointC", 131, S3, {"checkpoint_id": "cp_c"})
 	_put("res://scenes/actors/gem.tscn", "GemTower1", 133, S3 - 1)
 	_put("res://scenes/actors/gem.tscn", "GemTower2", 135, S3 - 1)
+	_mono("SpringHintCombine", "spring_hint_combine", _p(PAD3_COL - 4, S3), Vector2(96, 96))
 	_pad("PadSpring3", PAD3_COL, S3, 2)
 	_pad("PadSurge1", SURGE_COL, S4, 1)
 	_put("res://scenes/actors/gem.tscn", "GemTop1", 142, S4 - 1)

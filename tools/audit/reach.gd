@@ -54,6 +54,11 @@ func _make_world(with_wall := false, wall_x := 0.0) -> void:
 	world.add_child(cat)
 	cat.death_y = 100000.0
 	cat.global_position = Vector2(100.0, FLOOR_Y)
+	# Tuning experiments: SPRING_MULT=1.48 SPRING_AIR=1.28 godot ... reach.gd
+	if OS.get_environment("SPRING_MULT") != "":
+		cat.spring_mult = float(OS.get_environment("SPRING_MULT"))
+	if OS.get_environment("SPRING_AIR") != "":
+		cat.spring_air_mult = float(OS.get_environment("SPRING_AIR"))
 
 
 func _hold(action: String, on: bool) -> void:

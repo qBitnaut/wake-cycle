@@ -3,9 +3,10 @@
 ##   godot --headless --path . --script res://tools/build_room4.gd
 ##
 ## Reach (tools/audit/reach.gd, centre travel; vertical rise is v^2/2g):
-##   plain single jump 100 px, plain double jump 180 px up
-##   Spring single 163 px, Spring double jump about 295 px up
-## So a ledge 7 rows (224 px) up needs Spring (180 < 224 < 295), and a pound
+##   plain single jump 95 px, plain double jump 171 px up
+##   Spring single 211 px (spring_mult 1.48), Spring double jump about 287 px up
+## So a ledge 6 rows (192 px) up needs Spring (171 < 192 < 211: a plain double jump
+## fails, a held Spring single jump clears it with 19 px to spare), and a pound
 ## needs air: the cat jumps (or steps off a ledge) and presses Down.
 ## Phase: a dash is 0.2 s at 409 px/s = 82 px, cooldown 0.45 s. A laser fence
 ## is 6 px of beam; the cat is 22 px wide, so a dash started 14..68 px before
@@ -16,7 +17,7 @@
 ##   P1  31-53    PHASE 1, discovery: gatehouse corridor, pad (36), one fence (47)
 ##   P2  54-114   PHASE 2, use: checkpoint A, a corridor of three fences and two
 ##                guard drones (pads 60, 78, 96), then a laser turret (112)
-##   P3 114-136   PHASE 3, combine: Spring pad (114), the guardhouse roof 7 rows
+##   P3 114-136   PHASE 3, combine: Spring pad (115), the guardhouse roof 6 rows
 ##                up, Phase pad (120), fence (127) under a ceiling
 ##   I1 138-153   IMPACT 1, discovery: checkpoint B, pad on a ledge (143), the
 ##                hatch H1 (147-149) in the floor, a closed gate wall (152)
@@ -356,9 +357,10 @@ func _build_geometry() -> void:
 	_fill(32, -3, 52, 5, STEEL)
 	# P2: the long corridor of fences.
 	_fill(58, -3, 106, 5, STEEL)
-	# P3: the guardhouse (roof 7 rows up) and the ceiling over its fence.
-	_fill(118, 3, 134, 9, TEAL)
-	_fill(124, -3, 134, 0, STEEL)
+	# P3: the guardhouse (roof 6 rows up: out of a plain double jump, inside a held
+	# Spring jump) and the ceiling over its fence (64 px of headroom, as the fence).
+	_fill(118, 4, 134, 9, TEAL)
+	_fill(124, -3, 134, 1, STEEL)
 
 	# I1: the pad's ledge, the closed gate wall.
 	_fill(141, 8, 145, 9, RUST)
@@ -379,15 +381,19 @@ func _build_geometry() -> void:
 	for k in range(7):
 		_fill(194 + 2 * k, tops[k], 195 + 2 * k, 21, STEEL)
 
-	# R1: the tower (top row 3 = 7 rows above the floor).
-	_fill(222, 3, 229, 9, TEAL)
+	# R1: the tower (top row 4 = 6 rows above the floor).
+	_fill(222, 4, 229, 9, TEAL)
 	# R2: the maze corridor.
 	_fill(243, -3, 285, 5, STEEL)
 	# R3: the vault under the surface (rows 11-13, floor row 14), hatch H4 and a stair out.
 	_clear(293, 11, 312, 13)
 	_clear(299, 10, 301, 10)
-	_clear(313, 10, 314, 11)
-
+	# The way out is a short open trench with 1-tile and 2-tile risers (two treads, 2 tiles
+	# wide each): the old notch (two 2-tile risers under the vault's 3-tile ceiling) bumped
+	# the cat's head on a plain jump, and the human sweep got up it in 5 of 40 tries.
+	_clear(313, 10, 316, 13)
+	_fill(313, 13, 314, 13, STEEL)
+	_fill(315, 12, 316, 13, STEEL)
 	# The gatehouse lintel over the Master Gate.
 	_fill(336, -3, 347, 2, TEAL)
 	# Right end of the road: a bulkhead.
@@ -399,7 +405,7 @@ func _back_walls() -> void:
 	## Panelled back walls behind every tunnel so the sky never shows through.
 	var defs := [
 		["WallL1", 141, 11, 33, 3], ["WallL2", 164, 15, 29, 3], ["WallL3", 183, 19, 11, 3],
-		["WallTrench", 194, 10, 14, 12], ["WallVault", 293, 11, 20, 3], ["WallVaultStep", 313, 10, 2, 2],
+		["WallTrench", 194, 10, 14, 12], ["WallVault", 293, 11, 20, 3], ["WallVaultStep", 313, 10, 4, 4],
 	]
 	for d in defs:
 		var wall := BackWall.new()
@@ -419,7 +425,7 @@ func _signs() -> void:
 	_sign(board, "SignGateway", 29, G, PackedStringArray(["CHECKPOINT 7", "PRESENT CREDENTIAL"]), amber, 18.0)
 	_sign(board, "PlacardPhase", 34, G, PackedStringArray(["PHASE", "SHIFT: DASH THROUGH BEAMS"]), FXPalette.PHASE, 18.0)
 	_sign(board, "PlacardPhase2", 62, G, PackedStringArray(["BEAMS AHEAD", "DASH, DO NOT WALK"]), amber, 18.0)
-	_sign(board, "PlacardSpring", 116, G, PackedStringArray(["GUARDHOUSE ROOF", "NO GROUND ROUTE"]), amber, 18.0)
+	_sign(board, "PlacardSpring", 113, G, PackedStringArray(["GUARDHOUSE ROOF", "NO GROUND ROUTE"]), amber, 18.0)
 	_sign(board, "PlacardImpact", 135, G, PackedStringArray(["IMPACT", "DOWN IN MID-AIR: GROUND POUND"]), FXPalette.IMPACT, 18.0)
 	_sign(board, "SignGateClosed", 149, G, PackedStringArray(["GATE CLOSED", "SERVICE DUCT BELOW"]), amber, 18.0)
 	_sign(board, "PlacardArmour", 156, 14, PackedStringArray(["ARMOURED UNIT", "STUN FROM ABOVE"]), amber, 10.0)
@@ -502,12 +508,16 @@ func _place_actors() -> void:
 	_put(gem, "GemP2d", 108, G - 1)
 
 	# --- P3: Spring up the guardhouse, Phase through the fence on the roof. ---
-	_put(pad, "PadSpring1", 114, G, {"power": 2, "duration": 10.0, "cooldown": 3.0})
-	_put(pad, "PadPhase3", 120, 3, {"power": 3, "duration": 10.0, "cooldown": 3.0})
-	_put(fence, "FenceP3", 127, 3, {"height_tiles": 2, "timed": false, "solid_when_on": true})
+	# The pad stands 3 tiles from the wall face (col 118): charge and run-up are obvious,
+	# and the hint plays on the way to it. The turret (col 112) fires LEFT: its beam never
+	# reaches this run-up.
+	_mono("SpringHintRoof", "spring_hint_roof", _p(113, G), Vector2(96, 96))
+	_put(pad, "PadSpring1", 115, G, {"power": 2, "duration": 10.0, "cooldown": 3.0})
+	_put(pad, "PadPhase3", 120, 4, {"power": 3, "duration": 10.0, "cooldown": 3.0})
+	_put(fence, "FenceP3", 127, 4, {"height_tiles": 2, "timed": false, "solid_when_on": true})
 	_put(gem, "GemP3a", 117, G - 5)
-	_put(gem, "GemP3b", 122, 2)
-	_put(gem, "GemP3c", 131, 2)
+	_put(gem, "GemP3b", 122, 3)
+	_put(gem, "GemP3c", 131, 3)
 
 	# --- I1: Impact discovery. ---
 	_put(cp, "CheckpointB", 138, G, {"checkpoint_id": "cp_b"})
@@ -547,8 +557,9 @@ func _place_actors() -> void:
 	# --- F: the plaza and its three relays. ---
 	_put(cp, "CheckpointF", 211, G, {"checkpoint_id": "cp_f"})
 	_mono("RelaysIntro", "relays_intro", _p(213, G), Vector2(96, 96))
-	_put(pad, "PadSpring2", 217, G, {"power": 2, "duration": 10.0, "cooldown": 3.0})
-	_put_script("res://scripts/actors/power_relay.gd", "Relay1", 226, 3, {"index": 1})
+	_mono("SpringHintTower", "spring_hint_tower", _p(217, G), Vector2(96, 96))
+	_put(pad, "PadSpring2", 220, G, {"power": 2, "duration": 10.0, "cooldown": 3.0})   # 2 tiles from the tower face (col 222)
+	_put_script("res://scripts/actors/power_relay.gd", "Relay1", 226, 4, {"index": 1})
 	_put(cp, "CheckpointG", 233, G, {"checkpoint_id": "cp_g"})
 	var drone: Node = load("res://scripts/actors/search_drone.gd").new()
 	drone.name = "SearchDrone"

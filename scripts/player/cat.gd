@@ -37,7 +37,8 @@ signal died
 @export var dash_time := 0.16
 @export var dash_cooldown := 0.45
 @export var surge_mult := 1.5
-@export var spring_mult := 1.28
+@export var spring_mult := 1.48  # Spring's first jump: 211 px, 6.6 tiles (plain: 95 px)
+@export var spring_air_mult := 0.6  # Spring's second (air) jump: a small extra (Spring is the high first jump), so its double reach stays 255 px across, 238 px up
 @export_group("Health")
 @export var invulnerable_time := 1.4
 
@@ -197,7 +198,9 @@ func _can_stand() -> bool:
 
 func _start_actions(on_floor: bool, _dir: float) -> void:
 	var power := GameState.power
-	var spring := spring_mult if power == NanoPalette.Power.SPRING else 1.0
+	var is_spring := power == NanoPalette.Power.SPRING
+	var spring := spring_mult if is_spring else 1.0
+	var spring_air := spring_air_mult if is_spring else 1.0
 	if _jump_buf > 0.0 and not pounding:
 		if _coyote > 0.0 and (not crouched or _can_stand()):
 			if crouched:
@@ -209,7 +212,7 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 			Sfx.play(self, "jump")
 			_stretch(Vector2(0.85, 1.2))
 		elif _air_jumps > 0 and not on_floor:
-			velocity.y = -double_jump_velocity * spring
+			velocity.y = -double_jump_velocity * spring_air
 			_air_jumps -= 1
 			_jump_buf = 0.0
 			_jumping = true

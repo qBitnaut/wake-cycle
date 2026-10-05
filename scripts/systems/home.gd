@@ -174,6 +174,12 @@ func _enter_house() -> void:
 	cat.set_can_move(true)
 	beat = Beat.INSIDE
 	entered_house.emit()
+	# Indoors the street goes quiet: the birds and drips through the walls.
+	var amb := get_node_or_null("Ambience")
+	if amb:
+		for p in amb.get_children():
+			if p is AudioStreamPlayer and p.autoplay:
+				create_tween().tween_property(p, "volume_db", (p as AudioStreamPlayer).volume_db - 9.0, 2.0)
 
 
 func _swing_flap() -> void:
@@ -347,7 +353,7 @@ func _publish() -> void:
 	var glints := get_node_or_null("Glints") as WetGlints
 	var birds := get_node_or_null("Birds") as Birds
 	var d := {
-		"f": Engine.get_physics_frames(),
+		"f": Engine.get_physics_frames(), "fps": Engine.get_frames_per_second(),
 		"x": cat.global_position.x, "y": cat.global_position.y,
 		"vx": cat.velocity.x, "floor": cat.is_on_floor(),
 		"scene": scene_file_path, "beat": int(beat), "step": settle_step,

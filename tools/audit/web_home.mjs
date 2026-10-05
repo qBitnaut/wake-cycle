@@ -133,6 +133,7 @@ note('B sparrows take off', W.birdsFlown >= 3, `flown ${W.birdsFlown}`);
 await walkTo(1600);
 await sleep(400);
 await shot('big_puddle_glints');
+const fpsStreet = W.fps;
 note('B glints and drips', W.glints > 10 && W.drops > 1, `glints ${W.glints} drops ${W.drops}`);
 await walkTo(2780);
 await sleep(300);
@@ -197,6 +198,7 @@ for (let k = 0; k < want.length; k++) {
   await shot(`final_line_${k + 1}`);
   if (!ok) break;
 }
+console.log(`MEASURE  frame rate: street ${fpsStreet}, close-up ${W.fps}`);
 note('D home_final, every line in order', JSON.stringify(seen) === JSON.stringify(want), JSON.stringify(seen));
 note('D the close-up has eased in', W.cz > 2.0, `zoom ${W.cz.toFixed(2)}`);
 note('D the augments stay on, dimmed to a sleeping glow', W.aug && W.asleep && W.augE <= 0.35, `energy ${W.augE.toFixed(2)}`);

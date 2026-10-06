@@ -17,12 +17,12 @@ enum Kind { FISH, YARN, BELL, MOUSE, BONE, CHIP, MEMORY }
 
 const TABLE := {
 	Kind.FISH: {"id": "pickup_fish", "score": 0, "heal": 2, "sfx": "pickup_heal", "col": Color("e89a7a"), "name": "FISH"},
-	Kind.YARN: {"id": "pickup_yarn", "score": 100, "heal": 0, "sfx": "pickup_small", "col": Color("c98068"), "name": "YARN"},
+	Kind.YARN: {"id": "pickup_yarn", "score": 100, "heal": 0, "sfx": "pickup_small", "col": Color("ec7c9c"), "name": "YARN"},
 	Kind.BELL: {"id": "pickup_bell", "score": 250, "heal": 0, "sfx": "pickup_big", "col": Color("ffd23f"), "name": "BELL"},
 	Kind.MOUSE: {"id": "pickup_mouse", "score": 500, "heal": 0, "sfx": "pickup_big", "col": Color("e8a0a8"), "name": "MOUSE"},
 	Kind.BONE: {"id": "pickup_bone", "score": 2000, "heal": 0, "sfx": "pickup_rare", "col": Color("ffd23f"), "name": "BONE"},
 	Kind.CHIP: {"id": "pickup_chip", "score": 1000, "heal": 0, "sfx": "pickup_big", "col": Color("41b5c0"), "name": "CHIP"},
-	Kind.MEMORY: {"id": "pickup_memory", "score": 5000, "heal": 0, "sfx": "pickup_rare", "col": Color("e8dcff"), "name": "MEMORY"},
+	Kind.MEMORY: {"id": "pickup_memory", "score": 5000, "heal": 0, "sfx": "pickup_rare", "col": Color("dfe8ff"), "name": "MEMORY"},
 }
 const GLINT_PERIOD := 2.4
 const GLINT_TIME := 0.6

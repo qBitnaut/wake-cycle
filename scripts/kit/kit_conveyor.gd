@@ -34,7 +34,8 @@ func set_speed(v: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_frame += delta * absf(speed) / 8.0
+	# The belt art moves 2 px a frame, so a frame every 2 px keeps the cleats at the carry speed.
+	_frame += delta * absf(speed) / 2.0
 	queue_redraw()
 
 

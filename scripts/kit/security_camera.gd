@@ -47,6 +47,9 @@ func _init() -> void:
 
 
 func _setup() -> void:
+	# The swivel is the head part's offset in the manifest (where the mount's arm ends).
+	var off: Array = KitArt.part(actor_id, "head").get("offset", [0, -3])
+	_pivot_local = Vector2(off[0], off[1])
 	_head = KitArt.make_sprite(actor_id, "head", art_scale)
 	_head.name = "Head"
 	add_child(_head)
@@ -131,7 +134,8 @@ func _raise_alarm() -> void:
 func _apply_angle() -> void:
 	_head.position = _pivot_local * art_scale
 	_head.rotation = deg_to_rad(angle)
-	_head.flip_v = false
+	# Past straight down the housing would hang upside down: mirror it so the hood stays on top.
+	_head.flip_v = angle > 90.0
 
 
 func _on_stunned() -> void:

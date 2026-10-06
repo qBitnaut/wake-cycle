@@ -38,7 +38,7 @@ func _build() -> void:
 	_light = PointLight2D.new()
 	_light.texture = preload("res://assets/fx/light_soft.png")
 	_light.texture_scale = 1.4
-	_light.color = Color(0.3, 0.8, 1.0)
+	_light.color = Color(0.62, 0.71, 1.0)
 	_light.energy = 0.0
 	_light.position = Vector2(0, -10)
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
@@ -82,12 +82,14 @@ func _step(delta: float) -> void:
 	elif phase == Phase.IDLE:
 		_arcs.clear()
 	_light.energy = (1.2 + randf() * 0.6) if phase == Phase.LIVE else (0.4 * absf(sin(clock * 30.0)) if phase == Phase.WARN else 0.0)
-	_light.color = Color(0.3, 0.8, 1.0) if phase == Phase.LIVE else Color(1.0, 0.6, 0.2)
+	_light.color = Color(0.62, 0.71, 1.0) if phase == Phase.LIVE else Color(1.0, 0.6, 0.2)
 
 
 func _draw() -> void:
 	for pts in _arcs:
 		var live := phase == Phase.LIVE
-		var col := Color(0.6, 1.8, 2.2, 1.0) if live else Color(2.0, 1.2, 0.4, 0.9)
-		draw_polyline(pts, Color(col.r * 0.5, col.g * 0.7, col.b, 0.35), 3.0 if live else 2.0)
+		# Silver-white core, pale moon-blue halo: hostile electricity, not the PHASE cyan.
+		var col := Color(1.7, 1.8, 2.1, 1.0) if live else Color(2.0, 1.2, 0.4, 0.9)
+		var halo := Color(0.62, 0.71, 1.0, 0.35) if live else Color(col.r * 0.5, col.g * 0.7, col.b, 0.35)
+		draw_polyline(pts, halo, 3.0 if live else 2.0)
 		draw_polyline(pts, col, 1.0)

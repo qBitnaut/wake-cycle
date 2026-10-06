@@ -40,7 +40,10 @@ art and its collision boxes from the manifest:
   relative to the origin) and `parts` (sheet, cell size, pivot, animations).
 * `KitArt` builds `SpriteFrames` / `AnimatedSprite2D` from it. Colliders are
   `bounds * sprite_scale` (body shrunk a little, hit box +4 px).
-* Default scales put walkers at 40-50 px (patrol bot 0.7, mech 0.75, the rest 1.0).
+* All art is drawn at its in-game pixel size, so every default scale is 1.0: enemies
+  stand 32 to 44 px (1 to 1.35 tiles), destructibles and hazards sit on the 32 px grid,
+  pickups are 12 to 20 px. A `sprite_scale` other than 1 or a whole number gives
+  uneven pixels; prefer redrawing.
 
 To resize one actor in a room set `sprite_scale` on the instance. To resize the whole
 kit change the `scale` fields in the manifest (or `scale=` in `tools/art/kit_art.py`).
@@ -89,7 +92,7 @@ Shared API: `hit(source) -> "clank" | "stun" | "destroy" | "ignored"`, `stun(t)`
   `bolt_speed` (110), `aim_lock`, `dormant`. Tracks, charges (barrel glows, whine),
   locks aim for the last 25 % of the charge, fires one slow bolt. `alert(seconds)`
   wakes a dormant turret and speeds up all of them. Group `kit_turret`.
-* **KitPatrolBot** (`kit_patrol_bot.tscn`, the Legacy biped at 0.7). `speed`,
+* **KitPatrolBot** (`kit_patrol_bot.tscn`, the Legacy biped re-pixelled to 2/3). `speed`,
   `laser_range`, `aim_time` (0.7), `burst_time`, `cooldown`, `line_half_height`,
   `shoots`. Walks, turns at walls/edges; cat in its line: stops, eyes flare, fires a
   short `KitBeam` laser burst forward. (The room `PatrolBot` is unchanged except for
@@ -110,7 +113,7 @@ Shared API: `hit(source) -> "clank" | "stun" | "destroy" | "ignored"`, `stun(t)`
   `alarm_radius`, `shutters` (NodePaths of `KitShutter`s). Spots (lens turns amber,
   ticks), then the alarm: turrets in range `alert()`, `KitShutter`s `close_for()`.
   A phasing cat is not seen.
-* **HeavyMech** (`heavy_mech.tscn`, the Legacy mech at 0.75). `walk_speed`,
+* **HeavyMech** (`heavy_mech.tscn`, the Legacy mech re-pixelled to 2/3). `walk_speed`,
   `charge_speed`, `charge_time`, `tell_time` (0.9), `cooldown`, `daze_time`,
   `detect_range`; `armour_hits` 3. Charge: crouch + steam, then runs; a wall slam dazes
   it (the window to pound it).
@@ -226,21 +229,29 @@ Names: `turret_charge` `turret_fire` `laser_charge` `laser_zap` `drone_hover` (l
 
 ## The art pass
 
-Placeholder art is drawn by `tools/art/kit_art.py` in the palette. To replace an actor:
+All kit art is drawn by `tools/art/kit_art.py` (helpers in `tools/art/kit_pix.py`):
+the script **is** the art source, so re-running it reproduces the finished sprites
+and the manifest exactly. To change an actor, edit its drawing function and re-run;
+do not hand-edit the PNGs (the next run would overwrite them). Then
+`godot --headless --path . --import` for any new file.
 
-1. Draw a horizontal strip PNG with the same cell size and frame order and put it at
-   the `file` path in the manifest (`assets/sprites/kit/<actor>/<part>.png`), or point
-   the manifest `file` at a new path.
-2. Keep (or edit in the manifest) `cell`, `pivot` (origin inside a cell: feet for
-   walkers, centre for flyers) and each animation's `frames`.
-3. Update `bounds` (opaque pixels relative to the pivot: `tools/art/kit_art.py` computes
-   it; rerun it or edit by hand). Colliders follow.
-4. Set the actor's `scale` in the manifest (or `sprite_scale` on an instance).
+* Palette: `tools/art/palette.py`. World materials (barrels, walls, hazards) use
+  `RAMPS`; robots and pickups use `ACTOR_RAMPS` (amber armour, violet joints, red
+  sensors and lavender shells from the harmonised ansimuz robots; acid is a sickly
+  yellow-green well away from the SPRING green; one hue family per pickup).
+* Light from the upper left, 4 to 5 stops per ramp, a 1 px INK (`#161630`) outline on
+  actors and pickups; tiles and floor plates use bevels instead. Red is hostile (eyes,
+  bolts, alarm), the power hues stay reserved: hostile electricity (arcs, sparks) is
+  silver-white with a pale moon-blue halo, never the PHASE cyan.
+* `patrol_bot` and `heavy_mech` are the Legacy Collection sheets re-pixelled to 2/3 by
+  the same script (Scale2x, a 3x3 block vote, a re-inked edge, eyes and lamps stamped
+  back so they never flicker). The explosion fireball is Warped City's `enemy-explosion`.
+* `python3 tools/art/kit_art.py --preview DIR [ids]` writes 4x contact sheets without
+  touching the assets. `python3 tools/art/kit_sheet.py DIR [cat15_idle.png]` builds the
+  art sheet: every actor at 1x and 3x on a stage made from the room's own layers, beside
+  the HD cat and the B' cat, at the in-game ambient.
 
-Reusing existing CC0 art: `patrol_bot` and `heavy_mech` use the Legacy Collection
-sheets in `assets/art_hd/robots/`; the explosion fireball is Warped City's
-`enemy-explosion`. Everything else is scripted placeholder art that DaVinci should
-replace: turret (body + head), hover drone, hopper, crawler (walk + roll), camera,
-the three barrels, the three wall tiles, electric panel, crusher head and rod, spike
-trap, vent nozzles, acid pool, debris rock and crack, conveyor, platform, bolt, bomb,
-spark, debris chunks and the seven collectibles.
+The manifest contract is unchanged: a part's `cell`, `pivot` (origin inside a cell: feet
+for walkers, centre for flyers, the ceiling surface for the camera mount), `offset` (a
+child part's place: the turret head and the camera's swivel), animation frame lists, and
+`bounds` (opaque pixels relative to the pivot, which the colliders follow).

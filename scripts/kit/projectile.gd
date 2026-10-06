@@ -71,7 +71,9 @@ func _ready() -> void:
 	cs.shape = sh
 	cs.position = b.get_center() * s
 	add_child(cs)
-	_col = [Color(1.0, 0.55, 0.16), Color(1.0, 0.3, 0.2), Color(0.3, 0.9, 1.0)][kind]
+	# Bolt: hostile red (the laser). Spark: pale silver-blue, the kit's hostile electricity,
+	# kept off the PHASE cyan.
+	_col = [Color(1.0, 0.29, 0.23), Color(1.0, 0.3, 0.2), Color(0.62, 0.71, 1.0)][kind]
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
 	_light.texture_scale = 0.45

@@ -27,7 +27,8 @@ var bursts := 0
 var _edge: RayCast2D
 var _beam: KitBeam
 var _m_t := 0.0
-var _muzzle_art := Vector2(22, -30)
+## The gun's nozzle in art px from the feet (the 2/3 re-pixelled Legacy biped).
+var _muzzle_art := Vector2(15, -19)
 
 
 func _init() -> void:
@@ -90,7 +91,7 @@ func _tick(delta: float) -> void:
 
 
 func _walk() -> void:
-	_edge.position.x = dir * 16.0 * art_scale / 0.7
+	_edge.position.x = dir * 16.0 * art_scale
 	_edge.force_raycast_update()
 	var blocked := is_on_wall() and get_wall_normal().x * dir < 0.0
 	if is_on_floor() and (blocked or not _edge.is_colliding()):

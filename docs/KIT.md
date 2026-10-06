@@ -185,7 +185,7 @@ the fish with the fish sprite.
 | `pickup_mouse` | MOUSE | 500 | `pickup_big` | |
 | `pickup_chip` | CHIP | 1000 | `pickup_big` | robot loot (`Collectible.drop`) |
 | `pickup_bone` | BONE | 2000 | `pickup_rare` | golden fish bone |
-| `pickup_memory` | MEMORY | 5000 | `pickup_rare`, `memory_fragment` | plays `memory_id` (a Monologue set) or speaks `line` |
+| `pickup_memory` | MEMORY | 5000 | `pickup_rare`, `memory_fragment` | plays `memory_id` (a Monologue set, via `Monologue.play_memory`: music and ambience duck deep, a faint warm glow) or speaks `line` |
 
 `Collectible`: `kind`, `persist`, `sprite_scale`, `memory_id`, `line`; signal
 `collected(kind)`. Each has a sparkle (debris burst; a refracting ring for the rare

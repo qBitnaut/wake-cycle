@@ -1032,6 +1032,26 @@ func t_collectibles() -> void:
 			check("fish heals", hp() == 3, "hp=%d" % hp())
 		if row[1] == 6:
 			check("memory fragment triggers a monologue line", root.get_node("Monologue").is_speaking() or root.get_node("Monologue")._queue.size() > 0 or root.get_node("Monologue")._busy)
+	# Memory fragments: each id resolves to voiced lines, the duck deepens, the pickup is saved.
+	for mid in ["memory_warehouse", "memory_yard", "memory_stacks", "memory_perimeter"]:
+		var mono := root.get_node("Monologue")
+		var n: int = mono._sets.get(mid, []).size()
+		var voiced := n > 0
+		for i in n:
+			voiced = voiced and ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [mid, i])
+		check("%s: set exists and every line is voiced" % mid, mono.has_set(mid) and voiced, "lines=%d" % n)
+	await new_world()
+	var mem := spawn("pickup_memory", Vector2(300, FLOOR_Y - 8.0), {"persist": true, "memory_id": "memory_yard"})
+	var mem_id := str(mem.get_path())
+	place_cat(Vector2(300, FLOOR_Y))
+	await frames(4)
+	var mono2 := root.get_node("Monologue")
+	check("memory pickup: marked collected and flagged as a memory moment", gs().is_collected(mem_id) and mono2.memory_active)
+	await frames(90)
+	var director := root.get_node("AudioDirector")
+	var music_bus := AudioServer.get_bus_index(&"Music")
+	check("memory pickup: the duck is deeper than for a plain line", director.ducked() > 0.9 and AudioServer.get_bus_volume_db(music_bus) < director.BUS_DB["Music"] + director.DUCK_MUSIC - 3.0, "db=%.1f" % AudioServer.get_bus_volume_db(music_bus))
+	mono2.reset()
 	# Persistent ones stay gone once taken.
 	await new_world()
 	var p := spawn("pickup_yarn", Vector2(300, FLOOR_Y - 8.0), {"persist": true})

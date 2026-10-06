@@ -15,6 +15,8 @@ extends CanvasLayer
 ##   Monologue.play("awakening")        queue every line of a set
 ##   Monologue.play_once("exit_hint")   same, but only the first time
 ##   Monologue.say("Hmm.", 2.5)         one ad-hoc line (hold < 0 = by length)
+##   Monologue.play_memory("memory_yard")  a memory fragment: the set, with the music and
+##                                      ambience ducked deep and a faint warm glow pulse
 ##
 ## Over a CineZoom close-up the layer is handed to CineZoom's unmagnified overlay
 ## (CineZoom.attach_overlay), which covers the whole window, so lines show over
@@ -58,6 +60,16 @@ const MIN_HOLD := 2.0
 const VOICE_DIR := "res://assets/audio/voice/%s_%d.ogg"
 const VOICE_TAIL := 0.45  ## seconds the subtitle outlives its clip
 const TINT := Color(0.82, 0.90, 1.0)
+const GLOW_PEAK := 0.55  ## the memory vignette's strongest alpha factor
+const GLOW_SHADER := """
+shader_type canvas_item;
+uniform float amount = 0.0;
+void fragment() {
+	vec2 d = UV - vec2(0.5);
+	float v = smoothstep(0.25, 0.75, length(d * vec2(1.0, 1.2)));
+	COLOR = vec4(1.0, 0.78, 0.45, v * amount * 0.5);
+}
+"""
 const FOLD := {
 	"…": "...", "—": "-", "–": "-", "‘": "'", "’": "'",
 	"“": "\"", "”": "\"", " ": " ",
@@ -69,12 +81,19 @@ var history: Array = []
 var voice_log: Array = []
 ## True while a clip is playing.
 var voice_active := false
+## True from a memory fragment's first line to a moment after its last: AudioDirector ducks
+## deeper and the glow holds.
+var memory_active := false
 
 var _sets := {}
 var _played := {}
 var _queue: Array = []  # [id, text, hold, last_of_set, after]
 var _busy := false
 var _root: Control
+var _glow: ColorRect
+var _glow_mat: ShaderMaterial
+var _glow_tween: Tween
+var _memory_id := ""
 var _plate: Panel
 var _label: Label
 var _tween: Tween
@@ -88,6 +107,17 @@ var _opaque := {}            # frame texture -> its visible pixel bounds
 func _ready() -> void:
 	layer = 90  # above the HUD and the cinematic letterbox, below the title and the room fades
 	_load()
+	_glow = ColorRect.new()
+	_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = GLOW_SHADER
+	_glow_mat = ShaderMaterial.new()
+	_glow_mat.shader = sh
+	_glow.material = _glow_mat
+	_glow_mat.set_shader_parameter("amount", 0.0)
+	add_child(_glow)
+	set_finished.connect(_on_set_finished)
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -147,6 +177,36 @@ func play(id: String) -> void:
 		_next()
 
 
+## A memory fragment: play(id) with the music and ambience ducked deeper than for the
+## voice alone, and a faint warm glow that swells in and eases out after the last line.
+func play_memory(id: String) -> void:
+	if not has_set(id):
+		push_warning("Monologue: no lines for '%s'" % id)
+		return
+	_memory_id = id
+	memory_active = true
+	_glow_to(GLOW_PEAK, 1.2)
+	play(id)
+
+
+func _on_set_finished(id: String) -> void:
+	if id != _memory_id or not memory_active:
+		return
+	_memory_id = ""
+	_glow_to(0.0, 2.0)
+	# The duck is released a beat after the last line so the music returns gently.
+	get_tree().create_timer(0.8).timeout.connect(func():
+		if _memory_id == "":
+			memory_active = false)
+
+
+func _glow_to(v: float, secs: float) -> void:
+	if _glow_tween:
+		_glow_tween.kill()
+	_glow_tween = create_tween()
+	_glow_tween.tween_property(_glow_mat, "shader_parameter/amount", v, secs).set_trans(Tween.TRANS_SINE)
+
+
 ## Queue one line of the set `id` (0-based), e.g. the count-th line of a
 ## counting set. Out of range plays the last line.
 func play_line(id: String, index: int) -> void:
@@ -200,6 +260,10 @@ func reset() -> void:
 	voice_log.clear()
 	_stop_voice()
 	_busy = false
+	_memory_id = ""
+	memory_active = false
+	if _glow_mat:
+		_glow_mat.set_shader_parameter("amount", 0.0)
 	if _tween:
 		_tween.kill()
 	if _root:

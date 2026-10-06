@@ -324,6 +324,102 @@
 			"file": "home_final_4.ogg",
 			"text": "...Wake cycle complete.",
 			"seconds": 1.47
+		},
+		"memory_warehouse_0": {
+			"file": "memory_warehouse_0.ogg",
+			"text": "A food bowl with my name on it.",
+			"seconds": 1.91,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_warehouse_1": {
+			"file": "memory_warehouse_1.ogg",
+			"text": "Someone filled it every morning.",
+			"seconds": 1.97,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_yard_0": {
+			"file": "memory_yard_0.ogg",
+			"text": "A warm lap. A voice saying 'good boy.'",
+			"seconds": 3.58,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_yard_1": {
+			"file": "memory_yard_1.ogg",
+			"text": "I'd forgotten.",
+			"seconds": 1.0,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_stacks_0": {
+			"file": "memory_stacks_0.ogg",
+			"text": "A window seat. Rain on glass.",
+			"seconds": 2.84,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_stacks_1": {
+			"file": "memory_stacks_1.ogg",
+			"text": "Someone reading beside me.",
+			"seconds": 1.62,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_perimeter_0": {
+			"file": "memory_perimeter_0.ogg",
+			"text": "The front door opening at six. Footsteps I knew...",
+			"seconds": 3.65,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
+		},
+		"memory_perimeter_1": {
+			"file": "memory_perimeter_1.ogg",
+			"text": "They'll be worried.",
+			"seconds": 1.09,
+			"settings": {
+				"stability": 0.6,
+				"similarity_boost": 0.75,
+				"style": 0.12,
+				"use_speaker_boost": true,
+				"speed": 0.9
+			}
 		}
 	}
 }

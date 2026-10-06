@@ -227,6 +227,10 @@ async function runSteps(steps, label) {
       }
       await dir(0); await ticks(4);
     }
+    else if (op === 'key') note(st[1], W.keys.includes('brass'), JSON.stringify(W.keys));
+    else if (op === 'gone') note(st[1], !W.door, `x=${W.x.toFixed(0)}`);
+    else if (op === 'opendoor') { await dir(1); for (let n = 0; W.door && n < 400; n++) await frame(); await dir(0); await ticks(10); }
+    else if (op === 'pos') { /* dev only */ }
     else if (op === 'gorel') await goTo(W.x + st[1], 6);
     else if (op === 'hop') await hop(st[1], st[2], st[3] ?? 0, st[4] ?? 999);
     else if (op === 'runhop') await runHopD(st[1], st[2], st[3], st[4] ?? 0);
@@ -266,7 +270,7 @@ async function runSteps(steps, label) {
   }
   await shot(label);
 }
-for (const beat of ['crates', 'floor', 'racks', 'mezz', 'lift', 'roof', 'shaft', 'basement', 'tunnel', 'drain', 'lab']) {
+for (const beat of ['crates', 'floor', 'racks', 'mezz', 'lift', 'roof', 'office', 'shaft', 'basement', 'tunnel', 'drain', 'lab']) {
   await runSteps(ROUTE[beat], beat);
   if (beat === 'lab') await measureFps('the lab, before the pool');
 }

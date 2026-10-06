@@ -87,10 +87,8 @@
   ["go", 1860]
  ],
  "shaft": [
-  ["go", 1968],
-  ["cpcheck", "cp_d"],
-  ["go", 2000],
-  ["off", 1, 2034, -1, 20],
+  ["go", 2080],
+  ["off", -1, 2020, 0, 0],
   ["expect", "G the long drop: the catch ledge", 1980, 900, 70, 6],
   ["off", 1, 2060, 0, 0],
   ["expect", "G down in the basement", 2100, 1056, 60, 4]
@@ -134,10 +132,42 @@
   ["expect", "H up on the sill at the lip of the pool", 3680, 1024, 40, 5],
   ["nopower"]
  ],
- "lifttest": [
-  ["go", 1860],
-  ["snap"],
+ "office": [
   ["go", 1968],
-  ["snap"]
+  ["cpcheck", "cp_d"],
+  ["go", 2000],
+  ["waitlt", "RideB", 0, 2052],
+  ["go", 2040, 8],
+  ["waitgt", "RideB", 0, 2140],
+  ["go", 2200],
+  ["expect", "I across the shaft on the moving platform", 2200, 260, 30, 5],
+  ["go", 2300],
+  ["cpcheck", "cp_h"],
+  ["markscore"],
+  ["go", 2800],
+  ["hop", 1, 12],
+  ["hop", 0, 0],
+  ["expect", "I the barrel step-up: on the high ledge", 2806, 132, 30, 5],
+  ["go", 2870],
+  ["scoreup", "I the ledge loot (a bell and a mouse)", 750],
+  ["off", 1, 2925, -1, 8],
+  ["go", 3190],
+  ["key", "I the brass key on the upper deck"],
+  ["off", 1, 3245, -1, 8],
+  ["expect", "I down on the office floor", 3262, 544, 40, 5],
+  ["hop", 1, 34],
+  ["opendoor", "DoorOffice"],
+  ["gone", "I the brass door opens with the key", "DoorOffice"],
+  ["markscore"],
+  ["go", 3990],
+  ["scoreup", "I the vault loot", 1700],
+  ["go", 3410],
+  ["go", 3000],
+  ["wait", "PlateOffice", 4, true],
+  ["wait", "ShutterOffice", 4, true],
+  ["hop", -1, 34],
+  ["go", 2300],
+  ["off", -1, 2218, 0, 0],
+  ["expect", "I down the hatch into the machine corridor", 2200, 768, 60, 5]
  ]
 }

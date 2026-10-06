@@ -296,8 +296,8 @@ func _rect_arr(r: Rect2) -> Array:
 
 
 ## Named actors the route audits wait on: name -> [x, y, phase/mode, dangerous, open].
-const WATCH := ["Drone1", "Camera1", "ShutterMezz", "FreightLift", "FallA", "RideA", "SpikesG", "Electric1", "Electric2",
-	"Crusher1", "SpikesMachine", "Steam1", "Steam2", "Steam3", "BotDeck", "BotMezz", "BotMachine"]
+const WATCH := ["Drone1", "Camera1", "ShutterMezz", "FreightLift", "FallA", "RideA", "RideB", "SpikesG", "Electric1", "Electric2",
+	"Crusher1", "SpikesMachine", "PlateOffice", "ShutterOffice", "Steam1", "Steam2", "Steam3", "BotDeck", "BotMezz", "BotMachine"]
 
 
 func _watch() -> Dictionary:
@@ -318,6 +318,8 @@ func _watch() -> Dictionary:
 			ph = a.get("mode")
 		e[2] = ph if ph is int else (str(ph) if ph != null else 0)
 		var op = a.get("open")
+		if op == null:
+			op = a.get("active")
 		if op != null:
 			e[4] = op
 		out[n] = e
@@ -356,7 +358,7 @@ func _publish() -> void:
 		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
 		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),
 		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),
-		"n": _watch(), "lmask": GameState.letter_mask,
+		"door": get_node_or_null("DoorOffice") != null, "n": _watch(), "lmask": GameState.letter_mask,
 		"got": GameState.collected.map(func(c): return String(c).get_file()),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())

@@ -349,7 +349,7 @@ func _beat_intro() -> void:
 
 
 ## The route beats, in order (tools/audit/room1_route.json holds the steps).
-const BEATS := ["crates", "floor", "racks", "mezz", "lift", "roof", "shaft", "basement", "tunnel", "drain", "lab"]
+const BEATS := ["crates", "floor", "racks", "mezz", "lift", "roof", "office", "shaft", "basement", "tunnel", "drain", "lab"]
 var _route: Dictionary = {}
 var _score_mark := 0
 var _hp_mark := 3
@@ -459,6 +459,21 @@ func _run_steps(steps: Array, label: String) -> void:
 					n += 1
 				dir(0.0)
 				await ticks(4)
+			"key":
+				note(String(st[1]), gs().keys.has("brass"), str(gs().keys))
+			"gone":
+				note(String(st[1]), room.get_node_or_null(String(st[2])) == null, "x=%.0f" % x())
+			"opendoor":
+				dir(1.0)
+				var dn := 0
+				while room.get_node_or_null(String(st[1])) != null and dn < 400:
+					await ticks(1)
+					dn += 1
+				dir(0.0)
+				await ticks(10)
+			"pos":
+				var nd := room.get_node_or_null(String(st[1]))
+				print("   pos %s %s" % [st[1], str(nd.global_position) if nd else "gone"])
 			"gorel":
 				await go_to(x() + float(st[1]), 6.0)
 			"hp0":

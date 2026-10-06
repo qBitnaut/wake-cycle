@@ -14,7 +14,7 @@
       "pos": [200, 302],
       "landmark": "warehouse",
       "unlocks": ["yard"],
-      "collectibles": {"letters": ["C", "A", "T"], "gems": 51}
+      "collectibles": {"letters": ["C", "A", "T"], "gems": 66}
     },
     {
       "id": "yard",

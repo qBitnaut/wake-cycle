@@ -27,6 +27,10 @@
 ##   5 B       (cols 60-133) the flooded basement walked EAST: puddles and drips, a pipe crawl,
 ##                           electric floor puddles, steam vents in the goo storage lab, the pool
 ##                           (unavoidable, under a solid ceiling), the wrecked crate, the loading door
+##   office    (cols 69-125)  an optional upper tier in the east block: reached by a moving platform
+##                           across the shaft from the roof doorway. A deck (barrels to push under a
+##                           high ledge, the brass key), the floor below (a locked vault door, a crate
+##                           to push onto a pressure plate that opens the shutter to the exit hatch)
 ##   G east    (cols 64-105) the optional machine corridor: electric floor, crusher, a bot, spikes;
 ##                           a hatch drops into the lab (rejoins before the pool)
 ##   B west    (cols 3-59)   the drain tunnel under the racks: the fake dead end with a crawl gap
@@ -330,6 +334,9 @@ func _lamps() -> void:
 	_lamp("LampMachine", Vector2(75 * T + 16, G * T - 7), true, 1.4)
 	_lamp("LampLab", Vector2(98 * T + 16, B * T - 7), false, 1.5)
 	_lamp("LampPool", Vector2((POOL[0] - 2) * T + 16, (B - 1) * T - 7), true, 1.4)  # on the near sill
+	_lamp("LampOffice", Vector2(80 * T, R * T - 7), false, 1.5)
+	_lamp("LampOfficeFloor", Vector2(100 * T, 17 * T - 7), false, 1.4)
+	_lamp("LampVault", Vector2(118 * T, 17 * T - 7), false, 1.6)
 	_lamp("LampTunnel", Vector2(30 * T + 16, (B - 1) * T), false, 1.2)
 
 
@@ -372,6 +379,21 @@ func _build_walls(skylights: Array[Rect2]) -> void:
 	mach.floor_y = 7 * T
 	_own(mach)
 
+	# The office tier (rows 3-17): windows on the night, a band at its floor.
+	var off := BackWall.new()
+	off.name = "BackWallOffice"
+	off.position = Vector2(68 * T, 3 * T)
+	off.size = Vector2((126 - 68) * T, 14 * T)
+	off.floor_y = 14.0 * T
+	var ow: Array[Rect2] = []
+	for c in [74, 94, 104]:
+		ow.append(Rect2((c - 68) * T + 4, 36, 88, 100))
+	off.holes = ow
+	off.windows = ow
+	_own(off)
+	for r in ow:
+		_window_rain("OfficeRain%d" % int((r.position.x + off.position.x) / T), Rect2(r.position + off.position, r.size), 0.45)
+
 	# The basement and the drain tunnel (rows 27-33), with the loading door at the east end.
 	var base := BackWall.new()
 	base.name = "BackWallBase"
@@ -407,6 +429,15 @@ func _build_props() -> void:
 		["servers", 77 * T, G],
 		["terminal", 88 * T, G],
 		["servers", 94 * T, G],
+		["servers", 72 * T, 17],
+		["terminal", 78 * T, 17],
+		["big-computer", 84 * T, 17],
+		["servers", 100 * T, 17],
+		["servers", 114 * T, 17],
+		["big-computer", 117 * T + 8, 17],
+		["terminal", 122 * T, 17],
+		["servers", 76 * T, R],
+		["terminal", 93 * T, R],
 		["servers", 66 * T, B],
 		["terminal", 72 * T + 8, B],
 		["servers", 89 * T, B],
@@ -443,7 +474,7 @@ func _mass(x0: int, x1: int, y0: int, y1: int, mat := BULKHEAD) -> void:
 func _floor(x0: int, x1: int, row: int) -> void:
 	for x in range(x0, x1 + 1):
 		_cell(x, row, STEEL, BEVEL)
-		_cell(x, row + 1, MAROON, GIRDER_H)
+		_cell(x, row + 1, MAROON, CROSS)   # solid (a one-way strip here is a walkable slit at an exposed face)
 		_cell(x, row + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
 
 
@@ -549,6 +580,7 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	_deck(SHAFT0, SHAFT0 + 2, R)     # L0: the doorway's ledge
 	_deck(64, 65, 13)                # L1: a ledge on the right half
 	_mass(SHAFT1 + 1, COLS - 2, 2, 17)
+	_office()
 	_mass(106, COLS - 2, 18, 26)
 	_deck(SHAFT0, SHAFT0 + 3, B - 5)   # L4: the catch ledge at the foot of the left half
 	# The machine corridor's floor, cols 64-105 (row 24): a slab over the basement with a hatch.
@@ -579,6 +611,30 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	# Raised catwalks in the drain and over the electric floor (a bypass).
 	_deck(70, 73, B - 2, B)
 	_deck(87, 91, B - 2, B)
+
+
+func _office() -> void:
+	## The upper office tier: interior cols 69-125, rows 3-16, the doorway at col 68 (rows 3-7,
+	## its floor the row-8 girder). The hatch (col 69, row 17) drops into the machine corridor.
+	for x in range(69, 126):
+		for y in range(3, 17):
+			tiles.erase_cell(Vector2i(x, y))
+	for y in range(3, 8):
+		tiles.erase_cell(Vector2i(68, y))
+	_cell(68, 8, STEEL, GIRDER_H)
+	tiles.erase_cell(Vector2i(69, 17))
+	_deck(69, 100, R)              # the upper deck, level with the roof run
+	_deck(86, 90, 4)               # the high ledge: a pushed barrel is the step up
+	_hangers_office([74, 84, 96], R)
+	# The vault: a walled room (cols 111-125) with a 2-tile door at its foot, rows 15-16.
+	_mass(111, 111, 3, 14)
+	_mass(112, 125, 3, 13)
+
+
+func _hangers_office(xs: Array, row: int) -> void:
+	for x in xs:
+		for y in range(3, row):
+			_cell(x, y, STEEL, GIRDER_V)
 
 
 func _place_actors() -> void:
@@ -669,8 +725,8 @@ func _place_actors() -> void:
 	# ==== The machine corridor (optional) ====
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointG", 66, G, {"checkpoint_id": "cp_g"})
 	_kit("pickup_fish", "FishMachine", 68, G)
-	_kitx("electric_floor", "Electric2", _mid(70, 72), G * T, {"width_tiles": 3, "idle_time": 1.5, "warn_time": 0.9, "live_time": 1.0})
-	_gem("GemMachineBell1", "bell", 71, G, 100.0)
+	_kitx("electric_floor", "Electric2", _mid(71, 73), G * T, {"width_tiles": 3, "idle_time": 1.5, "warn_time": 0.9, "live_time": 1.0})
+	_gem("GemMachineBell1", "bell", 72, G, 100.0)
 	_kitx("conveyor", "Belt2", _mid(74, 77), G * T, {"width_tiles": 4, "speed": 55.0})
 	_kitx("crusher", "Crusher1", _mid(79, 80), 18 * T, {"width_tiles": 2, "stroke": 164.0})
 	_gem("GemMachineMouse1", "mouse", 82, G)
@@ -680,6 +736,39 @@ func _place_actors() -> void:
 	_kitx("spike_trap", "SpikesMachine", _mid(94, 95), G * T, {"width_tiles": 2})
 	_gem("GemMachineBell2", "bell", 94, G, 70.0)
 	_gem("GemMachineMouse2", "mouse", 102, G)
+	_place_office()
+
+
+func _place_office() -> void:
+	# The moving platform across the shaft, from the roof doorway ledge (L0) to the office doorway.
+	_kitx("platform_horizontal", "RideB", 2048.0, R * T + 4, {"width_tiles": 2, "travel": 96.0, "speed": 44.0, "pause": 0.9})
+	_gem("GemRideBBell", "bell", 65, R, 50.0)
+	# The upper deck.
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointH", 71, R, {"checkpoint_id": "cp_h"})
+	_gem("GemOffice1", "yarn", 74, R)
+	_gem("GemOffice2", "yarn", 77, R)
+	_put("res://scenes/kit/barrel_plain.tscn", "BarrelOffice1", 80, R, {"sprite_scale": 2.0})
+	_put("res://scenes/kit/barrel_plain.tscn", "BarrelOffice2", 82, R, {"sprite_scale": 2.0})
+	_gem("GemOfficeBell", "bell", 87, 4)
+	_gem("GemOfficeMouse", "mouse", 89, 4)
+	_put("res://scenes/actors/key.tscn", "KeyOffice", 99, R, {"key_color": "brass"})
+	_gem("GemOffice3", "yarn", 95, R)
+	# The floor below: fish, the crate and its plate, the shutter, the vault.
+	_kit("pickup_fish", "FishOffice", 104, 17)
+	_put("res://scenes/actors/crate_pushable.tscn", "CrateOffice", 102, 17)
+	_put("res://scenes/actors/floor_plate.tscn", "PlateOffice", 98, 17)
+	_put("res://scenes/actors/shutter.tscn", "ShutterOffice", 94, 17, {"height_tiles": 3, "controller": NodePath("../PlateOffice")})
+	_put("res://scenes/actors/locked_door.tscn", "DoorOffice", 111, 17, {"key_color": "brass"})
+	_gem("GemOffice4", "yarn", 90, 17)
+	_gem("GemOffice5", "yarn", 80, 17)
+	_gem("GemOfficeBell2", "bell", 72, 17)
+	_gem("GemVault1", "mouse", 114, 17)
+	_gem("GemVault2", "mouse", 122, 17)
+	_gem("GemVault3", "bell", 118, 17)
+	_gem("GemVault4", "bell", 124, 17)
+	_gem("GemVault5", "yarn", 116, 17)
+	_gem("GemVault6", "yarn", 120, 17)
+	_kit("pickup_fish", "FishVault", 113, 17)
 
 
 func _puddles() -> void:
@@ -826,6 +915,11 @@ func _stoppers() -> void:
 	_stopper("Stopper17", 17, G)
 	_stopper("Stopper25", 25, G)
 	_stopper("StopperX93", 93, G)
+	# The office: barrels stop short of the deck's end under the ledge; the crate rests on its plate
+	# (west) and cannot be shoved into the vault wall (east): the puzzle can never be locked.
+	_stopper("StopperOffice91", 91, R)
+	_stopper("StopperOfficePlate", 97, 17)
+	_stopper("StopperOfficeEast", 106, 17)
 
 
 func _roof_extensions(w: int) -> void:

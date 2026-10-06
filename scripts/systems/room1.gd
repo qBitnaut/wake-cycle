@@ -162,7 +162,8 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	super(delta)
 	_ease_pool_framing()
-	if beat == Beat.PLAY and not cat.dead and cat.is_on_floor() and cat.global_position.x >= pool_trigger_x:
+	if beat == Beat.PLAY and not cat.dead and cat.is_on_floor() and cat.global_position.x >= pool_trigger_x \
+			and (pool == null or absf(cat.global_position.y - pool.global_position.y) < 64.0):  # the tall room has other floors above it
 		_start_absorb()
 	if OS.has_feature("web"):
 		_publish()

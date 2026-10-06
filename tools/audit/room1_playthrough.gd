@@ -85,6 +85,8 @@ func go_to(target: float, tol := 6.0, limit := 900) -> bool:
 		dir(signf(target - x()))
 		await ticks(1)
 		n += 1
+		if OS.get_environment("GO_TRACE") != "" and n % 60 == 0:
+			print("   go %.0f: %s vx=%.0f" % [target, st(), cat.velocity.x])
 	dir(0.0)
 	await ticks(6)
 	return n < limit
@@ -289,6 +291,9 @@ func _beats(chained: bool) -> void:
 		await _route_beat(b)
 		await _after(b)
 	if only != "":
+		if only.split(",").has("pool"):
+			await _beat_pool()
+			await _beat_exit()
 		_finish()
 		return
 	await _beat_pool()

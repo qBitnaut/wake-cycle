@@ -226,6 +226,22 @@ func _setup_web() -> void:
 		cat.velocity = Vector2.ZERO)
 	_js_callbacks.append(cb)
 	win["wakeTeleport"] = cb
+	# wakeFx("pool", dx, dy): a spawned GooPool at the cat + (dx, dy) (tools/audit/web_particles_stress.mjs);
+	# wakeFx("poolfree"): free the spawned ones.
+	var fx := JavaScriptBridge.create_callback(func(a):
+		var kind := String(a[0])
+		if kind == "pool":
+			var gp := GooPool.new()
+			gp.z_index = 6
+			gp.width = 160.0
+			gp.add_to_group("wake_fx_pool")
+			add_child(gp)
+			gp.global_position = cat.global_position + Vector2(float(a[1]), float(a[2]))
+		elif kind == "poolfree":
+			for n in get_tree().get_nodes_in_group("wake_fx_pool"):
+				n.queue_free())
+	_js_callbacks.append(fx)
+	win["wakeFx"] = fx
 
 
 ## Web audit deep links: index.html?start=room2 / room3 / room4 / home skips ahead

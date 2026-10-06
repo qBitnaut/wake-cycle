@@ -5,7 +5,10 @@
 // and a death -> checkpoint respawn (scene reload) with effects alive. Passes with 0 console
 // errors, 0 pageerrors and a game that keeps publishing frames.
 //
-//   node tools/audit/web_particles_stress.mjs <export_dir> [minutes=4] [--gpu=swiftshader]
+//   node tools/audit/web_particles_stress.mjs <export_dir> [minutes=4] [--room1] [--gpu=swiftshader]
+//
+// --room1 runs the Room 1 variant instead: the static GooPool (BackBufferCopy era, z_index 6) with
+// far camera jumps across it, plus spawned pools (wakeFx 'pool') jumped away from and freed.
 //
 // Needs the playwright package (PW_DIR env) and /usr/bin/chromium. Serves the export on PORT
 // (default 10710).
@@ -47,13 +50,14 @@ const errors = [];
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-await page.goto(`http://127.0.0.1:${port}/index.html?start=room4`);
+const room1 = flags.includes('--room1');
+await page.goto(`http://127.0.0.1:${port}/index.html${room1 ? '' : '?start=room4'}`);
 let W = null;
 const poll = async () => (W = await page.evaluate(() => window.__wake || null));
 async function ready() {
   for (let i = 0; i < 1200; i++) {
     await poll();
-    if (W && W.scene.endsWith('room4.tscn') && W.f > 0 && !W.dead) return true;
+    if (W && W.scene.endsWith(room1 ? 'room1.tscn' : 'room4.tscn') && W.f > 0 && !W.dead) return true;
     await sleep(50);
   }
   return false;
@@ -61,6 +65,21 @@ async function ready() {
 if (!await ready()) { console.log('FAIL game never started'); process.exit(1); }
 await sleep(1500);
 
+if (room1) {
+  const tp = (x, y) => page.evaluate(([x, y]) => window.wakeTeleport(x, y), [x, y]);
+  const t1 = Date.now() + +minutes * 60000;
+  let m = 0;
+  while (Date.now() < t1 && !errors.length) {
+    m++;
+    await tp(200, 300); await sleep(150); await tp(4300, 300); await sleep(150); await tp(200, 300); await sleep(60); await tp(4500, 300); await sleep(100);
+    await page.evaluate(() => { window.wakeFx('pool', 3000, 0); window.wakeFx('pool', -1500, 0); window.wakeFx('pool', 0, 0); });
+    await sleep([0, 16, 100, 400][m % 4]); await tp(m % 2 ? 200 : 3000, 300); await sleep(200); await tp(m % 2 ? 3000 : 200, 300); await sleep(150);
+    await page.evaluate(() => window.wakeFx('poolfree')); await sleep(100); await tp(1000, 300); await sleep(100);
+    await poll();
+  }
+  console.log(`${errors.length ? 'FAIL' : 'PASS'}  room1 pool stress, ${m} iterations, ${errors.length} console errors`, errors.slice(0, 3));
+  await browser.close(); server.close(); process.exit(errors.length ? 1 : 0);
+}
 const kinds = ['shock', 'bell', 'explode'];
 const spots = [112, 3000, 700, 5200, 1600, 3600].map(x => [x, 384]);
 const t0 = Date.now();

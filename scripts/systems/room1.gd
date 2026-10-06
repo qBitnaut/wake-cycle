@@ -229,6 +229,7 @@ func _setup_web() -> void:
 
 
 ## Web audit deep links: index.html?start=room2 / room3 / room4 / home skips ahead
+## (and ?start=kit, the actor kit lab, in debug builds only)
 ## and arrives the way the previous room's exit would leave the cat (mind awake, no
 ## powers, auto-save); room4 and home also have the shockwave, which the Room 3
 ## conduit grants.
@@ -254,6 +255,16 @@ func _web_start_override() -> void:
 	if start == "map":
 		# ?start=map&completed=<id>[&letters=n]: the world map as an exit opens it.
 		WorldMap.web_deep_link()
+		return
+	if start == "kit" and OS.is_debug_build():
+		# ?start=kit: the actor kit test gallery (debug builds only).
+		intro_done = true
+		GameState.new_game()
+		GameState.awaken_mind()
+		Monologue.reset()
+		SaveSystem.session_scene = ""
+		SaveSystem.session_checkpoint = ""
+		get_tree().change_scene_to_file.call_deferred("res://scenes/lab/kit_lab.tscn")
 		return
 	if not WEB_STARTS.has(start):
 		return

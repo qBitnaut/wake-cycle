@@ -26,6 +26,14 @@ Area2Ds on layer 6 with mask 2.
 | `pushable` | RigidBody2D crates; also counted by floor plates |
 | `enemy` | Patrol bots |
 | `checkpoint` | Checkpoint pads |
+| `kit_enemy` | Actor-kit robots (also in `enemy`); see `docs/KIT.md` |
+| `kit_turret` | Sentry turrets (a security camera's alarm calls `alert()` on them) |
+| `explosive` | Barrels with `trigger(delay)`: the chain reaction |
+| `blast_receiver` | Walls and crates with `on_blast(origin, radius)` |
+| `projectile_target` | Things a `Projectile` may set off (`on_projectile_hit`) |
+| `kit_projectile` | Live `Projectile`s |
+| `alarm_shutter` | `KitShutter`s a camera can close |
+| `collectible` | Kit collectibles |
 
 ## TileSet (`assets/tiles/wake_hd.tres`)
 

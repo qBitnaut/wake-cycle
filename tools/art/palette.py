@@ -86,6 +86,30 @@ RAMPS = {
     },
 }
 
+# Actor-kit ramps (tools/art/kit_art.py), dark to light, 4-6 stops each. Kept out
+# of RAMPS so the tile recolour (one block per RAMPS entry) is unaffected.
+# The robot family comes from the harmonised ansimuz Legacy robots: amber armour,
+# violet-navy joints, red sensors, lavender shells (drones, camera, turret).
+ACTOR_RAMPS = {
+    "amber": ["#3f0401", "#7a1b04", "#a13800", "#c4660a", "#ffb134", "#ffd081"],
+    "joint": ["#230632", "#492c52", "#764f84", "#b391be"],
+    "sensor": ["#5a1c2c", "#a8302e", "#d8403a", "#ff7a5a"],
+    "shell": ["#3a2c5e", "#5e5590", "#9a98c8", "#c4c6e2", "#eef0f6"],
+    # Acid is a hazard, not nanotech: a sickly yellow-green (hue ~67 deg), well
+    # away from the SPRING green (hue ~145 deg).
+    "acid": ["#1c2108", "#4b5512", "#8c9a1c", "#bfcb2e", "#e4ec6a", "#f8fbc8"],
+    # Explosive barrel paint: a duller red than the laser, so a barrel is never
+    # mistaken for a live beam.
+    "paint_red": ["#3a0d1c", "#6e1a2a", "#a02a2e", "#cc4436", "#f07a52"],
+    # Pickups: one hue family each, so every item reads by colour as well as shape.
+    "coral": ["#5a1f2a", "#a8434a", "#e0735a", "#f5a27a", "#ffd8b8"],
+    "rose": ["#4a1438", "#8a2858", "#c84a78", "#ec7c9c", "#ffc6d6"],
+    "brass": ["#4a2410", "#8a4e14", "#cc8a1e", "#f2bc3a", "#fff0a8"],
+    "gold": ["#6a4410", "#b8821a", "#f0c440", "#ffe680", "#fffbe0"],
+    "mouse": ["#2e2e46", "#5a5a78", "#8e8ea8", "#c0bfd0", "#ecebf2"],
+    "crystal": ["#3a4660", "#6a7a98", "#a8b6cc", "#d8e0ec", "#ffffff"],
+}
+
 # Non-ramp colours.
 SINGLES = {
     "laser_core": "#fff0e0",   # beam centre line (emissive, x1.0-1.2 in Godot)

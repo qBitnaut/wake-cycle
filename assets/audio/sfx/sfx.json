@@ -6,6 +6,20 @@
 		],
 		"jitter": 0.04
 	},
+	"acid_hiss": {
+		"db": -11,
+		"files": [
+			"acid_hiss.ogg"
+		],
+		"jitter": 0.04
+	},
+	"acid_splash": {
+		"db": -10,
+		"files": [
+			"acid_splash.ogg"
+		],
+		"jitter": 0.04
+	},
 	"augment_click": {
 		"db": -12,
 		"files": [
@@ -20,10 +34,47 @@
 		],
 		"jitter": 0.04
 	},
+	"barrel_explode": {
+		"db": -5,
+		"files": [
+			"barrel_explode_1.ogg",
+			"barrel_explode_2.ogg"
+		],
+		"jitter": 0.05
+	},
+	"barrel_fuse": {
+		"db": -11,
+		"files": [
+			"barrel_fuse.ogg"
+		],
+		"jitter": 0.04
+	},
+	"bomb_drop": {
+		"db": -9,
+		"files": [
+			"bomb_drop.ogg"
+		],
+		"jitter": 0.04
+	},
 	"bot_stomp": {
 		"db": -7,
 		"files": [
 			"bot_stomp_clank.ogg"
+		],
+		"jitter": 0.04
+	},
+	"camera_alarm": {
+		"db": -14,
+		"files": [
+			"camera_alarm.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"camera_spot": {
+		"db": -10,
+		"files": [
+			"camera_spot.ogg"
 		],
 		"jitter": 0.04
 	},
@@ -33,6 +84,14 @@
 			"checkpoint_chime.ogg"
 		],
 		"jitter": 0.04
+	},
+	"conveyor_hum": {
+		"db": -15,
+		"files": [
+			"conveyor_hum.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
 	},
 	"crate_break": {
 		"db": -6,
@@ -48,12 +107,41 @@
 		],
 		"jitter": 0.04
 	},
+	"crawler_drop": {
+		"db": -11,
+		"files": [
+			"crawler_drop.ogg"
+		],
+		"jitter": 0.04
+	},
 	"credential_accepted": {
 		"db": -8,
 		"files": [
 			"credential_accepted.ogg"
 		],
 		"jitter": 0.04
+	},
+	"crusher_slam": {
+		"db": -5,
+		"files": [
+			"crusher_slam.ogg"
+		],
+		"jitter": 0.04
+	},
+	"crusher_warn": {
+		"db": -9,
+		"files": [
+			"crusher_warn.ogg"
+		],
+		"jitter": 0.04
+	},
+	"debris": {
+		"db": -8,
+		"files": [
+			"debris_1.ogg",
+			"debris_2.ogg"
+		],
+		"jitter": 0.07
 	},
 	"door_open": {
 		"db": -8,
@@ -88,6 +176,28 @@
 		],
 		"jitter": 0.12
 	},
+	"electric_arc": {
+		"db": -14,
+		"files": [
+			"electric_arc.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"electric_warn": {
+		"db": -10,
+		"files": [
+			"electric_warn.ogg"
+		],
+		"jitter": 0.04
+	},
+	"flame_burst": {
+		"db": -8,
+		"files": [
+			"flame_burst.ogg"
+		],
+		"jitter": 0.04
+	},
 	"gate_grind": {
 		"db": -8,
 		"files": [
@@ -102,6 +212,21 @@
 		],
 		"jitter": 0.0,
 		"loop": true
+	},
+	"hopper_land": {
+		"db": -9,
+		"files": [
+			"hopper_land_1.ogg",
+			"hopper_land_2.ogg"
+		],
+		"jitter": 0.07
+	},
+	"hopper_squat": {
+		"db": -12,
+		"files": [
+			"hopper_squat.ogg"
+		],
+		"jitter": 0.04
 	},
 	"hurt": {
 		"db": -8,
@@ -138,6 +263,13 @@
 		],
 		"jitter": 0.04
 	},
+	"laser_charge": {
+		"db": -9,
+		"files": [
+			"laser_charge.ogg"
+		],
+		"jitter": 0.04
+	},
 	"laser_hum": {
 		"db": -14,
 		"files": [
@@ -164,6 +296,28 @@
 		"db": -14,
 		"files": [
 			"map_step.ogg"
+		],
+		"jitter": 0.04
+	},
+	"mech_charge": {
+		"db": -8,
+		"files": [
+			"mech_charge.ogg"
+		],
+		"jitter": 0.04
+	},
+	"mech_slam": {
+		"db": -4,
+		"files": [
+			"mech_slam_1.ogg",
+			"mech_slam_2.ogg"
+		],
+		"jitter": 0.05
+	},
+	"memory_fragment": {
+		"db": -9,
+		"files": [
+			"memory_fragment.ogg"
 		],
 		"jitter": 0.04
 	},
@@ -216,6 +370,13 @@
 		],
 		"jitter": 0.04
 	},
+	"pickup_heal": {
+		"db": -8,
+		"files": [
+			"pickup_heal.ogg"
+		],
+		"jitter": 0.04
+	},
 	"pickup_letter": {
 		"db": -6,
 		"files": [
@@ -251,6 +412,20 @@
 		],
 		"jitter": 0.04
 	},
+	"platform_fall": {
+		"db": -8,
+		"files": [
+			"platform_fall.ogg"
+		],
+		"jitter": 0.04
+	},
+	"platform_shake": {
+		"db": -12,
+		"files": [
+			"platform_shake.ogg"
+		],
+		"jitter": 0.04
+	},
 	"power_up": {
 		"db": -8,
 		"files": [
@@ -275,6 +450,14 @@
 		],
 		"jitter": 0.05
 	},
+	"robot_clank": {
+		"db": -8,
+		"files": [
+			"robot_clank_1.ogg",
+			"robot_clank_2.ogg"
+		],
+		"jitter": 0.07
+	},
 	"robot_debris": {
 		"db": -8,
 		"files": [
@@ -282,12 +465,42 @@
 		],
 		"jitter": 0.04
 	},
+	"robot_explode": {
+		"db": -5,
+		"files": [
+			"robot_explode_1.ogg",
+			"robot_explode_2.ogg"
+		],
+		"jitter": 0.05
+	},
 	"robot_explosion": {
 		"db": -5,
 		"files": [
 			"robot_explosion.ogg"
 		],
 		"jitter": 0.04
+	},
+	"robot_stun": {
+		"db": -9,
+		"files": [
+			"robot_stun.ogg"
+		],
+		"jitter": 0.04
+	},
+	"rock_fall": {
+		"db": -9,
+		"files": [
+			"rock_fall.ogg"
+		],
+		"jitter": 0.04
+	},
+	"rock_land": {
+		"db": -8,
+		"files": [
+			"rock_land_1.ogg",
+			"rock_land_2.ogg"
+		],
+		"jitter": 0.07
 	},
 	"scanner_sweep": {
 		"db": -10,
@@ -310,6 +523,20 @@
 		],
 		"jitter": 0.04
 	},
+	"spike_pop": {
+		"db": -9,
+		"files": [
+			"spike_pop.ogg"
+		],
+		"jitter": 0.04
+	},
+	"spike_warn": {
+		"db": -11,
+		"files": [
+			"spike_warn.ogg"
+		],
+		"jitter": 0.04
+	},
 	"splash": {
 		"db": -12,
 		"files": [
@@ -321,6 +548,13 @@
 		"db": -8,
 		"files": [
 			"spring_boost.ogg"
+		],
+		"jitter": 0.04
+	},
+	"steam_hiss": {
+		"db": -11,
+		"files": [
+			"steam_hiss.ogg"
 		],
 		"jitter": 0.04
 	},
@@ -404,6 +638,21 @@
 			"vein_rise.ogg"
 		],
 		"jitter": 0.04
+	},
+	"wall_break": {
+		"db": -6,
+		"files": [
+			"wall_break.ogg"
+		],
+		"jitter": 0.04
+	},
+	"wall_clank": {
+		"db": -9,
+		"files": [
+			"wall_clank_1.ogg",
+			"wall_clank_2.ogg"
+		],
+		"jitter": 0.07
 	},
 	"wing_flap": {
 		"db": -18,

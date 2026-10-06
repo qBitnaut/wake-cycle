@@ -69,6 +69,50 @@ add("map_node_unlock", "a map location unlocking, a soft magical rising chime wi
 add("map_step", "a small light step marker tick, a soft wooden-glass tap", 0.5)
 add("wing_flap", "a bird flapping its wings once, taking off", 0.6)
 
+# Actor-kit sounds (KitSfx logical names). Variants are _1/_2 files.
+add("laser_charge", "a sci-fi laser emitter charging, a tightening rising whine with a capacitor flutter and a bright electric peak", 1.2)
+for i in range(1, 3):
+    add("barrel_explode_%d" % i, "an explosive barrel detonating, a fiery boom with a metal shell rupture, a low sub thump and debris", 1.8)
+add("barrel_fuse", "a short fuse burning and sizzling, a hissing crackle with spitting sparks", 1.5)
+add("acid_hiss", "acid eating through metal, a corrosive fizzing hiss with small wet bubbles", 1.2)
+add("acid_splash", "a splash of acid droplets landing on a floor, a wet sizzling splat", 0.8)
+add("electric_warn", "an electrical hazard warning, a rising buzzing crackle with a few sharp sparks", 0.9)
+add("electric_arc", "a continuous electric arc between two terminals, a steady crackling buzz with sharp snaps", 3.0, loop=True)
+add("crusher_warn", "a heavy hydraulic crusher priming, a low mechanical groan and a pneumatic hiss", 1.0)
+add("crusher_slam", "a heavy hydraulic press slamming down, a massive metallic impact with a deep boom and a short ring", 1.0)
+add("spike_warn", "metal spikes arming under a floor, a quick mechanical ratchet and a small rattle", 0.7)
+add("spike_pop", "metal spikes shooting up out of a floor, a sharp snapping thunk and a metallic ring", 0.6)
+add("steam_hiss", "a burst of pressurised steam venting from a pipe, a sharp clean hiss that fades", 1.2)
+add("flame_burst", "a short burst of flame from a nozzle, a whooshing roar with a soft ignition thump", 1.2)
+add("bomb_drop", "a small bomb dropping through the air, a falling whistle ending in a metallic clunk", 1.0)
+for i in range(1, 3):
+    add("robot_explode_%d" % i, "a security robot blowing up, a hard electric pop, a fireball whump and shrapnel pinging away", 1.6)
+add("robot_stun", "a robot being electrically stunned, a zapping buzz with a short-circuit stutter and a power-down wind", 1.0)
+for i in range(1, 3):
+    add("robot_clank_%d" % i, "a heavy robot foot clanking down on a metal floor, a hollow metallic clank with a short ring", 0.6)
+for i in range(1, 3):
+    add("debris_%d" % i, "chunks of concrete and metal debris falling and bouncing on a floor, a short clatter", 1.0)
+add("hopper_squat", "a spring-legged robot crouching, a compressing hydraulic creak and a short coil squeak", 0.6)
+for i in range(1, 3):
+    add("hopper_land_%d" % i, "a spring-legged robot landing, a hard metallic thump with a springy boing and rattle", 0.7)
+add("crawler_drop", "a small crawler robot dropping from a ceiling onto a floor, a light metallic thud and skitter", 0.7)
+add("camera_alarm", "a security camera alarm, a steady rhythmic electronic alarm beeping pulse", 3.0, loop=True)
+add("camera_spot", "a security camera spotting a target, a sharp electronic lock-on blip and a servo whirr", 0.8)
+add("mech_charge", "a big combat mech charging a weapon, a deep rising electric hum with servo whine and a heavy thrum", 1.5)
+for i in range(1, 3):
+    add("mech_slam_%d" % i, "a giant combat mech slamming its fist into the ground, a huge heavy boom with a metal crunch and rumbling debris", 1.4)
+add("wall_break", "a brittle wall bursting apart, a crunching crack with concrete chunks collapsing", 1.4)
+for i in range(1, 3):
+    add("wall_clank_%d" % i, "a hard clank against a thick metal wall, a short dull metallic hit with a ring", 0.6)
+add("platform_shake", "a metal platform trembling before it falls, a rattling creak with loose bolts shaking", 1.2)
+add("platform_fall", "a metal platform breaking loose and falling, a screeching wrench then a whoosh", 1.2)
+add("conveyor_hum", "a factory conveyor belt running, a steady low motor hum with a soft rhythmic rolling clatter", 3.0, loop=True)
+add("rock_fall", "a rock breaking loose and tumbling down, a short rumbling scrape and clatter", 1.0)
+for i in range(1, 3):
+    add("rock_land_%d" % i, "a heavy rock landing on stone ground, a solid thud with a gravel scatter", 0.7)
+add("pickup_heal", "a nanotech healing pickup, a warm soft restorative shimmer with a gentle rising chime", 1.2)
+add("memory_fragment", "a soft magical crystalline chime, delicate glass-like bell tones with a faint digital nanotech shimmer and a gentle tail", 2.0)
+
 AMBIENCE = [
     dict(name="amb_warehouse", sec=25, prompt="rain falling on a metal roof far above, occasional slow drips echoing in a huge empty warehouse, a distant low machine hum, lonely, seamless loop"),
     dict(name="amb_yard", sec=25, prompt="steady heavy rain on an open concrete yard at night with gusting wind, seamless loop"),

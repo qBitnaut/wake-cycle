@@ -54,14 +54,9 @@ const STAND_INS := {
 	"electric_arc": ["laser_hum", 0.0, 2.2], "camera_alarm": ["laser_hum", 0.0, 3.0],
 	"conveyor_hum": ["laser_hum", -6.0, 0.8],
 }
-## Kit names the library (sfx.json) has no dedicated sound for yet: stand-ins play.
-const NO_DEDICATED_SOUND := [
-	"laser_charge", "bomb_drop", "robot_explode", "robot_stun", "robot_clank", "debris", "barrel_explode",
-	"barrel_fuse", "acid_hiss", "acid_splash", "electric_warn", "electric_arc", "crusher_warn", "crusher_slam",
-	"spike_warn", "spike_pop", "steam_hiss", "flame_burst", "hopper_squat", "hopper_land", "crawler_drop",
-	"camera_alarm", "camera_spot", "mech_charge", "mech_slam", "wall_break", "wall_clank", "platform_shake",
-	"platform_fall", "conveyor_hum", "rock_fall", "rock_land", "pickup_heal", "memory_fragment",
-]
+## Kit names the library (sfx.json) has no dedicated sound for yet: stand-ins play. Empty now: every
+## name has a dedicated sound; STAND_INS stays as the fallback if a library file goes missing.
+const NO_DEDICATED_SOUND := []
 
 static var _lib := {}
 static var _lib_loaded := false

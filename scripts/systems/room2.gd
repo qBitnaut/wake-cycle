@@ -132,6 +132,9 @@ func _publish() -> void:
 		"drone": _flag("SearchDrone", "state"), "droneX": _flag("SearchDrone", "global_position"),
 		"lit": _flag("SearchDrone", "lit"), "alarm": _flag("SearchDrone", "alarmed"),
 		"dock": _flag("DockBot", "wake"), "dockReacted": _flag("DockBot", "has_reacted"),
+		"barrelGone": get_node_or_null("BarrelVault") == null, "hatchGone": get_node_or_null("VaultHatch") == null,
+		"closetGone": get_node_or_null("SupplyHatch") == null, "spurMode": _flag("DroneSpur", "mode"), "camAlarms": _flag("DockCamera", "alarms"),
+		"shutterOpen": _flag("HutShutter", "open"), "collected": GameState.collected.size(),
 		"thunders": thunders, "flash": _lightning._level if _lightning else 0.0,
 		# Probes for the audit's reactive runner: a wall 34 px ahead, floor within 80 px below, bots.
 		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),

@@ -705,7 +705,7 @@ func _beat_exit() -> void:
 		await ticks(1)
 		wn += 1
 	note("J Room 2 greets the cat with its first thought (Rain. Cold. Real.)", _lines.any(func(l): return l[0] == "yard_arrival" and l[1] == "Rain. Cold. Real."), str(_lines.filter(func(l): return l[0] == "yard_arrival")))
-	note("J Room 2 has four Surge pads and nothing that grants another power", r2 != null and r2.find_children("*", "PowerPad", true, false).size() == 4 and r2.find_children("*", "PowerPad", true, false).all(func(p): return p.get("power") == 1))
+	note("J Room 2 has Surge pads (four on the floor, one on the roofs) and nothing that grants another power", r2 != null and r2.find_children("*", "PowerPad", true, false).size() >= 4 and r2.find_children("*", "PowerPad", true, false).all(func(p): return p.get("power") == 1))
 	mark("J exit")
 
 

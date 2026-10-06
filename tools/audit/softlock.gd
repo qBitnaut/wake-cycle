@@ -63,9 +63,6 @@ const EPS := 0.001
 const MAXF := 300               ## frames of one flight
 const INF_T := 1.0e9
 const POUND_RADIUS := 46.0
-## Rooms still to be redesigned on the tall layout: their slits are reported but not failed (remove
-## the id when the redesign lands).
-const SLIT_PENDING := ["room4"]
 
 var results: Array = []
 var _cat_values := {}
@@ -125,8 +122,7 @@ func audit(note_cb: Callable, ids: Array, validate := false, show_map := false) 
 		var pockets := groups.filter(func(g): return g["kind"] == "POCKET").size()
 		var gated := groups.size() - pockets
 		note_cb.call("SOFTLOCK %s: zero soft-locks, zero pockets" % id, groups.is_empty(), "%d standing positions, %d pockets, %d power-gated, %d ms" % [m.entered_count, pockets, gated, Time.get_ticks_msec() - t0])
-		var slit_ok: bool = m.slits.is_empty() or SLIT_PENDING.has(id)
-		note_cb.call("SLIT %s: no one-way tile inside a slab interior is exposed sideways" % id, slit_ok, "%d cells %s%s" % [m.slits.size(), str(m.slits.slice(0, 6)), " (known: redesign pending)" if not m.slits.is_empty() and slit_ok else ""])
+		note_cb.call("SLIT %s: no one-way tile inside a slab interior is exposed sideways" % id, m.slits.is_empty(), "%d cells %s" % [m.slits.size(), str(m.slits.slice(0, 6))])
 		for g in groups:
 			print("   %s  %s" % [id, m.describe(g)])
 		if show_map:

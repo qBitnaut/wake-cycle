@@ -79,7 +79,7 @@ const T_STAND := 0.6
 const T_MIND := 1.5
 const T_RELEASE := 1.1
 ## The cat's height above its feet, px (centres the close-up on what shows).
-const CAT_HEIGHT := 30.0
+const CAT_HEIGHT := 23.0
 ## Struggle: [animation, speed, lift px] beats, each STRUGGLE_BEAT s long.
 const STRUGGLE := [["walk", 2.2, 0.0], ["jump", 1.0, -2.0], ["walk", 2.2, 0.0], ["meow", 1.4, 0.0], ["jump", 1.0, -1.0], ["walk", 2.0, 0.0]]
 const STRUGGLE_BEAT := 0.42
@@ -90,16 +90,19 @@ const STRUGGLE_BEAT := 0.42
 ## CAMERA: the Camera2D's own zoom at the internal resolution; fractional
 ## steps there give uneven pixels that shimmer. Kept for comparison.
 @export var zoom_mode := ZoomMode.MAGNIFIER
+## The zooms are framed on the cat's size: it is 1.5x its 1x art (about
+## 31x23 px), so each is 4/3 of what framed the 2x cat (2.4, 4.0, 4.6) and
+## the cat fills the close-up as it did.
 ## The dolly-in while the cat is caught: it ends centred and close enough
 ## to watch the goo creep.
-@export_range(1.0, 5.0, 0.05) var zoom_caught := 2.4
+@export_range(1.0, 6.0, 0.05) var zoom_caught := 3.2
 ## Close-up magnification once the veins have reached the eyes (the slow
 ## creep from zoom_caught gets there).
-@export_range(1.0, 6.0, 0.05) var zoom_max := 4.0
+@export_range(1.0, 8.0, 0.05) var zoom_max := 5.35
 ## The extra push-in for the awakened mind.
-@export_range(1.0, 6.0, 0.05) var zoom_mind := 4.6
+@export_range(1.0, 8.0, 0.05) var zoom_mind := 6.15
 ## Where the view centres on the cat, relative to its origin (feet), px.
-@export var focus_offset := Vector2(0, -16)
+@export var focus_offset := Vector2(0, -12)
 @export var letterbox := true
 ## Low hum under the veins (a loop, played pitched down).
 @export var hum_stream: AudioStream = preload("res://assets/audio/sfx/goo_bubble.ogg")
@@ -107,9 +110,9 @@ const STRUGGLE_BEAT := 0.42
 @export_range(-60.0, 0.0, 0.5) var hum_volume_db := -11.0
 ## The feet sink until they are this deep in the goo (never below the
 ## pool's bottom), px. A cat already wading deeper does not sink at all.
-@export var sink_to_px := 8.0
+@export var sink_to_px := 6.0
 ## Most the sprite may sink, px.
-@export var sink_px := 4.0
+@export var sink_px := 3.0
 
 var cat: Cat
 var phase: StringName = &""
@@ -216,7 +219,7 @@ func start() -> void:
 	pulse.chain().tween_property(_nano, "flash", 0.0, 0.45).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	pulse.parallel().tween_property(_hd, "flash", 0.0, 0.45).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	_hd.pulse(1.0)
-	_cine.shake(0.75, 0.5)
+	_cine.shake(0.65, 0.5)  # the shake is in game px: a little less at the closer zoom
 	if zoom_mode == ZoomMode.MAGNIFIER:
 		var punch := create_tween()
 		punch.tween_property(_cine, "zoom", zoom_max * 1.06, 0.07)
@@ -396,7 +399,7 @@ func _setup() -> void:
 	_vein_light.texture = preload("res://assets/fx/light_soft.png")
 	_vein_light.color = FXPalette.NANO_BLUE.lerp(FXPalette.NANO_GREEN, 0.4)
 	_vein_light.energy = 0.0
-	_vein_light.texture_scale = 0.55  # the glow stays on and around the cat
+	_vein_light.texture_scale = 0.42  # the glow stays on and around the cat
 	_vein_light.position = _visible_focus()
 	cat.add_child(_vein_light)
 	_take_camera()

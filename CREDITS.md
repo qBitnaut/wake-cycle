@@ -8,11 +8,11 @@ as a courtesy.
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| Pet Cats Pack (Cat-6: recoloured to a brown tabby by `tools/recolor_cat.py`, doubled with Scale2x and outlined by `tools/art/cat_hd.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
+| Pet Cats Pack (Cat-6: recoloured to a brown tabby by `tools/recolor_cat.py`, scaled 1.5x with Scale3x and outlined by `tools/art/cat_hd.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
 | Sci-fi platformer tiles 32x32 (recoloured to the Wake Cycle palette by `tools/art/recolor_tiles.py`) | bart | https://opengameart.org/content/sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
 | Extension for Sci-fi platformer tiles 32x32 (the 16-colour variant sheet the recolour reads) | rubberduck | https://opengameart.org/content/extension-for-sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
-| Legacy Collection (Warped sci-fi interior wall, Scifi lab support column, cyberpunk detective props, bipedal and mech units), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/ ("Legacy Collection" free download) | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/props/`, `assets/art_hd/robots/` |
-| Warped City (night skyline layers, towers, drone, turret), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/robots/` |
+| Legacy Collection (Warped sci-fi interior wall, Scifi lab support column, cyberpunk detective props, bipedal and mech units), harmonised by `tools/art/harmonize_bg.py`; the room robots' mech re-pixelled to 2/3 by `tools/art/repixel.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/ ("Legacy Collection" free download) | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/props/`, `assets/art_hd/robots/` |
+| Warped City (night skyline layers, towers, drone, turret), harmonised by `tools/art/harmonize_bg.py`; the two room drones redrawn by hand at 2/3 in `tools/art/repixel.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/robots/` |
 | Warped City explosion frames (`enemy-explosion`), used by the kit's ExplosionFX; the heavy mech and the patrol bot reuse the Legacy Collection art above, re-pixelled to 2/3 by `tools/art/kit_art.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/sprites/kit/fx/explosion.png`, `assets/sprites/kit/patrol_bot/`, `assets/sprites/kit/heavy_mech/` |
 | Actor kit art (turret, drone, hopper, crawler, camera, barrels, walls, hazards, platforms, projectiles, collectibles), drawn by `tools/art/kit_art.py` in the palette | none (scripted) | - | - | `assets/sprites/kit/` |
 

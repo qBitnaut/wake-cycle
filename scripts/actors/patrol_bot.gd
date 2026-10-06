@@ -3,6 +3,11 @@ extends CharacterBody2D
 ## Patrol robot (ansimuz Warped bipedal unit, harmonised: red glow = hostile).
 ## Turns at walls, edges and bot-stoppers, hurts on side contact.
 ##
+## B' size: the art is the kit's 2/3 re-pixel of the bipedal unit (whole pixels,
+## re-inked, sensors stamped; tools/art/kit_art.py), 53x42 cells, about 34x38
+## visible, a little over a tile tall. Every box is 2/3 of the old robot's, except
+## the stomp band (TOP), which a falling cat needs at its full depth.
+##
 ## A plain cat cannot hurt it: stomping bounces the cat off its head with a
 ## clank and a flinch, nothing more, and it keeps patrolling. Once the cat has
 ## powers (`can_be_harmed()`: the shockwave, or any enhancement; later the
@@ -16,9 +21,16 @@ extends CharacterBody2D
 
 enum State { PATROL, STUNNED, FRIENDLY }
 
-const SHEET := "res://assets/art_hd/robots/bipedal.png"
-const CELL := Vector2i(80, 64)
+const SHEET := "res://assets/sprites/kit/patrol_bot/body.png"
+const CELL := Vector2i(53, 42)
 const BOUNDS_MASK := 64
+## The edge ray looks this far ahead of the centre, px (at sprite_scale 1).
+const EDGE_AHEAD := 13.0
+## A cat whose feet are this far above the bot's feet is on top of it, px: the
+## top 18 px of the 36 px hit box. The overlap is seen a physics frame late and a
+## falling cat moves up to 8 px a frame (max_fall 480), so the band must stay
+## over 16 px however small the art gets.
+const TOP := 18.0
 
 @export var speed := 46.0
 @export var stun_time := 3.0
@@ -28,8 +40,9 @@ const BOUNDS_MASK := 64
 ## True: plated against everything but the ground pound. Stomps and the
 ## double-jump shockwave only clank off the plating (Room 4's armoured bot).
 @export var shielded := false
-## 1 = the size the rooms use. Smaller shrinks the art and every box with it (the kit
-## runs patrol bots at about 0.7, 1.3 tiles tall). Boxes follow the art.
+## 1 = the B' size the rooms use (the 2/3 art at whole pixels, as the kit's patrol
+## bot). Anything else scales the art and every box with it, fractionally (uneven
+## pixels): leave it at 1 unless a robot must differ.
 @export var sprite_scale := 1.0
 
 var state := State.PATROL
@@ -47,8 +60,8 @@ var _flinch := 0.0
 
 
 ## Box centre (offset from origin) and half size, used for shockwave range checks.
-var shock_offset := Vector2(0, -26)
-var shock_half := Vector2(16, 26)
+var shock_offset := Vector2(0, -17)
+var shock_half := Vector2(11, 17)
 
 
 func _ready() -> void:
@@ -71,7 +84,7 @@ func _apply_scale() -> void:
 		return
 	var k := sprite_scale
 	sprite.scale = Vector2(k, k)
-	sprite.position.y = -32.0 * k
+	sprite.position.y = -CELL.y / 2.0 * k
 	for cs: CollisionShape2D in [$Shape, $Hitbox/Shape]:
 		var r := (cs.shape as RectangleShape2D).duplicate() as RectangleShape2D
 		r.size *= k
@@ -110,7 +123,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y = minf(velocity.y + 1600.0 * delta, 533.0)
 	match state:
 		State.PATROL:
-			edge.position.x = dir * 20.0 * sprite_scale
+			edge.position.x = dir * EDGE_AHEAD * sprite_scale
 			edge.force_raycast_update()
 			var blocked := is_on_wall() and get_wall_normal().x * dir < 0.0
 			if is_on_floor() and (blocked or not edge.is_colliding()):
@@ -145,13 +158,13 @@ func _physics_process(delta: float) -> void:
 func _touch(cat: Cat) -> void:
 	if cat.is_phasing() or cat.dead:
 		return
-	var above := cat.global_position.y <= global_position.y - 40.0 * sprite_scale and cat.velocity.y > 0.0
+	var above := cat.global_position.y <= global_position.y - TOP * sprite_scale and cat.velocity.y > 0.0
 	if above:
 		if _stomp_lock <= 0.0:
 			_stomp(cat)
 	elif state == State.PATROL:
 		# Hopping over an armoured bot is free: only the sides hurt.
-		if not can_be_harmed() and cat.global_position.y <= global_position.y - 40.0 * sprite_scale:
+		if not can_be_harmed() and cat.global_position.y <= global_position.y - TOP * sprite_scale:
 			return
 		cat.hurt(global_position)
 
@@ -223,5 +236,6 @@ func _draw() -> void:
 		return
 	var a := 0.55 if state == State.PATROL else 0.0
 	var c := Color(NanoPalette.SHOCKWAVE, a * (0.7 + 0.3 * sin(_t * 5.0)))
-	draw_arc(Vector2(0, -26), 31.0, -PI * 0.9, PI * 0.9, 18, c, 2.0)
-	draw_arc(Vector2(0, -26), 27.0, -PI * 0.7, PI * 0.7, 14, Color(c, c.a * 0.5), 1.0)
+	var k := sprite_scale
+	draw_arc(Vector2(0, -17) * k, 21.0 * k, -PI * 0.9, PI * 0.9, 18, c, 2.0)
+	draw_arc(Vector2(0, -17) * k, 18.0 * k, -PI * 0.7, PI * 0.7, 14, Color(c, c.a * 0.5), 1.0)

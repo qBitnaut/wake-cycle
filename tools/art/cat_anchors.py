@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Per-frame anatomy for the HD cat, and the nanotech map it drives.
 
-Each frame of every cat sheet (assets/sprites/cat/cat_*.png, 100x100 frames)
+Each frame of every cat sheet (assets/sprites/cat/cat_*.png, 75x75 frames)
 is analysed on its own silhouette, so new frames or sheets only need a rerun:
 
   eye    the yellow eye pixels (#e8d82a); the rightmost cluster in a front
@@ -43,13 +43,16 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cat_hd  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 CAT_DIR = ROOT / "assets" / "sprites" / "cat"
 NANO_DIR = ROOT / "assets" / "fx" / "cat_nano"
 ANCHORS = CAT_DIR / "augments" / "anchors.json"
 VEINS = NANO_DIR / "veins.json"
-FRAME = 100
-SPACING = 5          # max fur distance from a vein, px
+FRAME = cat_hd.FRAME
+SPACING = 4          # max fur distance from a vein, px (the cat is 1.5x its 1x art)
 MAX_LEAVES = 14
 
 INK = (0x16, 0x16, 0x30)   # the HD cat's outline (palette.md cat_outline)
@@ -154,7 +157,7 @@ def find_ear(a, inner, eye_px, view, bbox):
     if eye_px:
         ex = round(sum(p[0] for p in eye_px) / len(eye_px))
         ey = min(p[1] for p in eye_px)
-        cols = range(ex - 2, ex + 6) if view == "front" else range(ex - 7, ex + 4)
+        cols = range(ex - 2, ex + 5) if view == "front" else range(ex - 5, ex + 3)
     else:
         ex, ey = bbox[2], bbox[3]
         cols = range((bbox[0] + bbox[2]) // 2, bbox[2] + 1)
@@ -180,14 +183,14 @@ def find_tail(a, inner, bbox, eye_px):
     ex = sum(p[0] for p in eye_px) / len(eye_px) if eye_px else None
     best = None
     for c in components(thin):
-        if len(c) < 8:
+        if len(c) < 6:
             continue
         xs = [p[0] for p in c]
         ys = [p[1] for p in c]
         w, h = max(xs) - min(xs) + 1, max(ys) - min(ys) + 1
         if max(ys) >= bbox[3] - 1 and h >= w:
             continue  # a leg
-        if ex is not None and sum(xs) / len(xs) > ex - 4:
+        if ex is not None and sum(xs) / len(xs) > ex - 3:
             continue  # tails trail behind the head
         if best is None or len(c) > len(best):
             best = c
@@ -227,7 +230,7 @@ def find_back(a, tail, eye_px, view):
         return {}
     ex = min(p[0] for p in eye_px)
     x0 = max(tail["base"][0], min(p[0] for p in tail["line"][:4])) + 2
-    x1 = ex - 9
+    x1 = ex - 7
     body = a & ~dilate(tail["mask"])
     back = {}
     for x in range(x0, x1 + 1):
@@ -525,7 +528,7 @@ def write_debug(rows, out_path, z=4):
     """Contact sheet: veins coloured by arrival (blue early, green late),
     eye red, ear magenta, tail base/tip orange, back contour white."""
     cols = max(len(r[1]) for r in rows)
-    cell = 64
+    cell = 48
     sheet = Image.new("RGBA", (cols * cell, len(rows) * cell), (40, 44, 60, 255))
     for r, (name, frames, infos) in enumerate(rows):
         for c, (f, info) in enumerate(zip(frames, infos)):
@@ -541,7 +544,7 @@ def write_debug(rows, out_path, z=4):
                     fr[y, x] = (*col, 255)
             for x, y in info["eye_px"]:
                 fr[y, x] = (255, 40, 40, 255)
-            x0, y0 = 18, 22
+            x0, y0 = 13, 16
             sheet.alpha_composite(Image.fromarray(fr).crop((x0, y0, x0 + cell, y0 + cell)), (c * cell, r * cell))
     sheet.resize((sheet.width * z, sheet.height * z), Image.NEAREST).save(out_path)
 

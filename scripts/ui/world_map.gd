@@ -562,13 +562,13 @@ func _build_cat() -> void:
 	var sh := Sprite2D.new()
 	sh.name = "Shadow"
 	sh.texture = CAT_SHADOW
-	sh.scale = Vector2(0.26, 0.06)
+	sh.scale = Vector2(0.2, 0.05)  # under the paws of the 31 px cat
 	sh.modulate = Color(0, 0, 0, 0.55)
 	cat.add_child(sh)
 	cat_sprite = AnimatedSprite2D.new()
 	cat_sprite.name = "Sprite"
 	cat_sprite.sprite_frames = CatFrames.build()
-	cat_sprite.position = Vector2(0, -15)
+	cat_sprite.position = Vector2(0, CatFrames.SPRITE_Y)
 	cat_sprite.play("idle")
 	cat.add_child(cat_sprite)
 	if GameState.intelligence:
@@ -1214,8 +1214,8 @@ func enter_level(id: String) -> bool:
 	Sfx.play(self, "door_open", -6.0)
 	cat_sprite.play("jump")
 	var tw := create_tween()
-	tw.tween_property(cat_sprite, "position:y", -23.0, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.tween_property(cat_sprite, "position:y", -15.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(cat_sprite, "position:y", CatFrames.SPRITE_Y - 6.0, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(cat_sprite, "position:y", CatFrames.SPRITE_Y, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(cat_sprite.play.bind("sit"))
 	if load_levels:
 		_go_in(scene)

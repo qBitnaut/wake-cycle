@@ -113,12 +113,12 @@ func _build_room() -> void:
 	add_child(back)
 	_cat = Node2D.new()
 	_cat.name = "SleepyCat"
-	_cat.position = Vector2(120, 165)  # sunk into the cushion, as in the house
+	_cat.position = Vector2(120, 163)  # sunk into the cushion, as in the house, its back clear of the rim
 	add_child(_cat)
 	var spr := AnimatedSprite2D.new()
 	spr.name = "Sprite"
 	spr.sprite_frames = CatFrames.build()
-	spr.position = Vector2(0, -15)
+	spr.position = Vector2(0, CatFrames.SPRITE_Y)
 	spr.play("sleep1")
 	_cat.add_child(spr)
 	_aug = CatAugments.attach(_cat, true)
@@ -137,7 +137,7 @@ func _process(delta: float) -> void:
 	var spr := _cat.get_node("Sprite") as AnimatedSprite2D
 	var s := 1.0 + 0.035 * (0.5 + 0.5 * sin(TAU * _t / 4.4))
 	spr.scale = Vector2(1.0, s)
-	spr.position.y = -15.0 * s
+	spr.position.y = CatFrames.SPRITE_Y * s
 	match step:
 		Step.ROLL:
 			_roll_step(delta)

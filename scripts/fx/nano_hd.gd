@@ -21,6 +21,10 @@ extends Node
 
 const VEINS := "res://assets/fx/cat_nano/veins.json"
 const MAX_SPARKS := 220
+## Every size and speed here was tuned on the cat at 2x its 1x art; the cat is
+## CatFrames.SCALE x now and the close-up zooms in to match, so they are all
+## scaled by this to keep the same look on screen.
+const K := CatFrames.SCALE / 2.0
 
 var cine: CineZoom
 var sprite: AnimatedSprite2D
@@ -70,7 +74,7 @@ func pulse(strength := 1.0) -> void:
 	for i in int(70 * strength):
 		var a := _rng.randf() * TAU
 		var sp := _rng.randf_range(30.0, 110.0)
-		_spark(c + Vector2.from_angle(a) * _rng.randf_range(2.0, 10.0), Vector2.from_angle(a) * sp,
+		_spark(c + Vector2.from_angle(a) * _rng.randf_range(2.0, 10.0) * K, Vector2.from_angle(a) * sp,
 			_rng.randf_range(0.4, 0.9), _rng.randf_range(0.8, 1.6), vein_color.lerp(vein_color_alt, _rng.randf()))
 
 
@@ -113,7 +117,7 @@ func _process(delta: float) -> void:
 		var gy := (sprite.get_viewport().get_canvas_transform() * Vector2(0, clip_world_y)).y
 		var cy := cine.game_to_window(Vector2(0, gy)).y
 		cine.clip_fx(_item, Rect2(wr.position, Vector2(wr.size.x, maxf(cy - wr.position.y, 0.0))))
-	var s := cine.window_scale()
+	var s := cine.window_scale() * K
 	var fr := _frame()
 	if not fr.is_empty():
 		if vein_progress > 0.0 and vein_fade > 0.0:
@@ -309,14 +313,14 @@ func _age(delta: float) -> void:
 	for sp in _sparks:
 		sp[2] += delta
 		sp[0] += sp[1] * delta
-		sp[1] = sp[1] * (1.0 - 1.6 * delta) + Vector2(0.0, -6.0 * delta)
+		sp[1] = sp[1] * (1.0 - 1.6 * delta) + Vector2(0.0, -6.0 * K * delta)
 	_sparks = _sparks.filter(func(sp): return sp[2] < sp[3])
 
 
 func _spark(g: Vector2, v: Vector2, life: float, size: float, c: Color) -> void:
 	if _sparks.size() >= MAX_SPARKS:
 		_sparks.pop_front()
-	_sparks.append([g, v, 0.0, life, size, c, _rng.randf() * 10.0])
+	_sparks.append([g, v * K, 0.0, life, size, c, _rng.randf() * 10.0])
 
 
 func _draw_rings(s: float) -> void:

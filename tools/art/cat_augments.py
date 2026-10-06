@@ -58,7 +58,7 @@ LIGHT = P.hex_to_rgb(P.RAMPS["steel"]["light"])
 HIGH = P.hex_to_rgb(P.RAMPS["steel"]["high"])
 LENS = P.hex_to_rgb(P.RAMPS["teal"]["ink"])
 
-PLATE = 4   # plate length, px
+PLATE = 3   # plate length, px
 SEAM = 1
 
 # Reveal windows on the shared 0..1 schedule; plates count from the neck.
@@ -123,7 +123,7 @@ def ear_piece(cv, info):
     front = info["view"] == "front"
     pts = [(ex, ey)]
     for dy in (1, 2, 3):
-        row = [x for x in range(ex - 3, ex + 4) if cv.inner[ey + dy, x]]
+        row = [x for x in range(ex - 2, ex + 3) if cv.inner[ey + dy, x]]
         if not row:
             break
         pts.append((max(row) if front else min(row), ey + dy))
@@ -159,11 +159,11 @@ def eye_ring(cv, info):
 
 def spine_plates(cv, info, prev_start):
     back = {x: y for x, y in info["back"]}
-    if len(back) < 12:
+    if len(back) < 9:
         return None
     xs = sorted(back)
     span = xs[-1] - xs[0]
-    n = 3 if span >= 22 else 2
+    n = 3 if span >= 16 else 2
     total = n * PLATE + (n - 1) * SEAM
     start = round(xs[0] + 0.55 * span - total / 2)
     if prev_start is not None and abs(start - prev_start) <= 1:
@@ -201,7 +201,7 @@ def spine_plates(cv, info, prev_start):
 
 def tail_band(cv, info):
     line = [tuple(p) for p in info["tail_line"]]
-    if len(line) < 8:
+    if len(line) < 6:
         return
     k = max(3, min(round(len(line) * 0.4), len(line) - 3))
     core = line[k - 1:k + 2]
@@ -260,7 +260,7 @@ def run(preview=None):
         write_preview(previews, preview)
 
 
-def write_preview(rows, out_path, z=4, cell=64):
+def write_preview(rows, out_path, z=4, cell=48):
     """Cat + metal, emitters painted SURGE blue, at z x zoom."""
     cols = max(r[1].shape[1] // FRAME for r in rows)
     sheet = Image.new("RGBA", (cols * cell, len(rows) * cell), (40, 44, 60, 255))
@@ -275,7 +275,7 @@ def write_preview(rows, out_path, z=4, cell=64):
             glow[em, 3] = 255
             fr.alpha_composite(Image.fromarray(metal))
             fr.alpha_composite(Image.fromarray(glow))
-            sheet.alpha_composite(fr.crop((18, 22, 18 + cell, 22 + cell)), (c * cell, r * cell))
+            sheet.alpha_composite(fr.crop((13, 16, 13 + cell, 16 + cell)), (c * cell, r * cell))
     sheet.resize((sheet.width * z, sheet.height * z), Image.NEAREST).save(out_path)
 
 

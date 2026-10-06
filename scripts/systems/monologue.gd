@@ -485,7 +485,12 @@ func cat_screen_rect() -> Rect2:
 	if tex == null:
 		return Rect2()
 	var sz := tex.get_size()
-	var local := Rect2(spr.offset - sz * 0.5 if spr.centered else spr.offset, sz)
-	local.position += _opaque_rect(tex).position  # the frames are padded: use the drawn pixels
-	local.size = _opaque_rect(tex).size
-	return (spr.get_global_transform_with_canvas() * local).abs()
+	var corner := spr.offset - sz * 0.5 if spr.centered else spr.offset
+	if spr.centered and spr.get_viewport().snap_2d_transforms_to_pixel:
+		corner = (corner + Vector2(0.5, 0.5)).floor()  # as Godot draws it (75 px frames start at -37)
+	var used := _opaque_rect(tex)  # the frames are padded: use the drawn pixels
+	if spr.flip_h:
+		used.position.x = sz.x - used.end.x
+	if spr.flip_v:
+		used.position.y = sz.y - used.end.y
+	return (spr.get_global_transform_with_canvas() * Rect2(corner + used.position, used.size)).abs()

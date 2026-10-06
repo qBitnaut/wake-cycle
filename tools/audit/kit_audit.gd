@@ -238,7 +238,7 @@ func t_manifest_and_scale() -> void:
 	rbot.global_position = Vector2(1600, FLOOR_Y)
 	await frames(2)
 	check("the room PatrolBot has the emissive glow too", rbot.sprite.get_node_or_null("Glow") != null)
-	# The room's patrol bot: same size by default, shrinks with sprite_scale, compatibly.
+	# The room's patrol bot: the B' size by default (the kit's 2/3 art at scale 1), shrinks with sprite_scale, compatibly.
 	var room_bot: Node = load("res://scenes/actors/patrol_bot.tscn").instantiate()
 	world.add_child(room_bot)
 	room_bot.global_position = Vector2(1300, FLOOR_Y)
@@ -247,8 +247,8 @@ func t_manifest_and_scale() -> void:
 	world.add_child(small)
 	small.global_position = Vector2(1400, FLOOR_Y)
 	await frames(2)
-	check("room PatrolBot unchanged at scale 1", room_bot.get_node("Shape").shape.size == Vector2(30, 52))
-	check("room PatrolBot shrinks with sprite_scale", absf(small.get_node("Shape").shape.size.y - 52.0 * 0.7) < 0.1 and small.get_node("Shape").shape.size.y < room_bot.get_node("Shape").shape.size.y)
+	check("room PatrolBot at the B' size at scale 1 (whole-pixel art, unscaled)", room_bot.get_node("Shape").shape.size == Vector2(20, 35) and room_bot.sprite.scale == Vector2.ONE)
+	check("room PatrolBot shrinks with sprite_scale", absf(small.get_node("Shape").shape.size.y - 35.0 * 0.7) < 0.1 and small.get_node("Shape").shape.size.y < room_bot.get_node("Shape").shape.size.y)
 
 
 func t_sfx() -> void:

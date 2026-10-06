@@ -1,9 +1,15 @@
 class_name CatFrames
 extends RefCounted
-## Builds the cat's SpriteFrames from the recoloured Cat-6 sheets (100x100 frames: Scale2x plus outline, see tools/art/cat_hd.py).
+## Builds the cat's SpriteFrames from the recoloured Cat-6 sheets (75x75 frames: the
+## 1x art at 1.5x plus a 1 px outline, see tools/art/cat_hd.py).
 
 const DIR := "res://assets/sprites/cat/cat_%s.png"
-const FRAME := 100
+const FRAME := 75
+## Game px per pixel of the 1x Cat-6 art.
+const SCALE := 1.5
+## Where the Sprite sits under the cat's origin (its feet): the frames are drawn
+## centred, so this puts the outline under the paws (row 48) on the floor line.
+const SPRITE_Y := -12.0
 
 # name: [sheet, fps, loop, frame indices (empty = all)]
 const ANIMS := {
@@ -13,9 +19,9 @@ const ANIMS := {
 	"jump": ["run", 1.0, false, [3]],
 	"fall": ["run", 1.0, false, [5]],
 	"crouch": ["laying", 6.0, true, [6, 7]],
-	# Derived poses (tools/art/cat_poses.py). Planted paws travel 2 px a
-	# frame in all three: speed_scale = |vx| / (2 * fps) keeps them from
-	# sliding.
+	# Derived poses (tools/art/cat_poses.py). Planted paws travel one 1x
+	# pixel (SCALE game px) a frame in all three: speed_scale =
+	# |vx| / (SCALE * fps) keeps them from sliding.
 	"crawl": ["crawl", 16.0, true, []],
 	"crouch_idle": ["crouch_idle", 6.0, true, []],
 	"push": ["push", 9.0, true, []],

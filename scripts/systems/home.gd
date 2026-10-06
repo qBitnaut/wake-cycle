@@ -37,7 +37,9 @@ const MASK_INTERIOR := 8
 ## The middle of the cushion (world x) and how far up its top sits.
 @export var spot_x := 3500.0
 @export var spot_rise := 3.0
-@export var final_zoom := 2.6
+## Framed on the cat (1.5x its 1x art): close enough that it reads as it did,
+## loose enough that the window stays in the shot.
+@export var final_zoom := 2.9
 @export var zoom_time := 12.0
 ## How long the arrival fades up from black (out of the dark, into the sun).
 @export var arrival_fade := 2.4
@@ -263,8 +265,9 @@ func _start_zoom() -> void:
 	cine.name = "CineZoom"
 	add_child(cine)
 	cine.target = cat
-	# Frame the room above the cat (the window, the wall), not the street below.
-	cine.target_offset = Vector2(14, -44)
+	# Frame the room above the cat (the window, the wall), not the street below,
+	# with the sleeping cat low and left, clear of the subtitle.
+	cine.target_offset = Vector2(14, -40)
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(cine, "zoom", final_zoom, zoom_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(cine, "bars", 0.45, zoom_time * 0.6).set_trans(Tween.TRANS_SINE)

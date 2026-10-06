@@ -13,6 +13,7 @@ extends CharacterBody2D
 ## built from it cannot soft-lock. It counts as a weight for FloorPlate (group
 ## "pushable"; its physics layer is 2 so the plate's mask sees it, and the cat,
 ## whose mask is 1 and 5, walks through it). Origin = the floor under its feet.
+## B' size: the 2/3 mech (assets/art_hd/robots/mech_23.png), a 27x44 body.
 ##
 ## API
 ##   wake_range, wake_dy  distances (px) at which the augmented cat wakes it
@@ -23,14 +24,14 @@ extends CharacterBody2D
 
 signal woke
 
-const SHEET := preload("res://assets/art_hd/robots/mech.png")
-const FRAME := Vector2i(96, 80)
+const SHEET := preload("res://assets/art_hd/robots/mech_23.png")
+const FRAME := Vector2i(64, 53)
 const FRAMES := 10
 const HALO := preload("res://assets/fx/halo.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 const ASLEEP := Color(0.34, 0.37, 0.52)
 const AWAKE := Color(0.62, 0.66, 0.84)
-const STRIDE := 10.0   ## px travelled per animation frame
+const STRIDE := 6.7   ## px travelled per animation frame
 
 @export var wake_range := 150.0
 @export var wake_dy := 300.0
@@ -61,9 +62,9 @@ func _ready() -> void:
 	_home = global_position
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(40, 66)
+	r.size = Vector2(27, 44)
 	cs.shape = r
-	cs.position = Vector2(0, -33)
+	cs.position = Vector2(0, -22)
 	add_child(cs)
 	_atlas = AtlasTexture.new()
 	_atlas.atlas = SHEET
@@ -80,14 +81,14 @@ func _ready() -> void:
 	add.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	_halo = Sprite2D.new()
 	_halo.texture = HALO
-	_halo.scale = Vector2(0.7, 0.7)
-	_halo.position = Vector2(0, -55)
+	_halo.scale = Vector2(0.47, 0.47)
+	_halo.position = Vector2(0, -37)
 	_halo.material = add
 	add_child(_halo)
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
-	_light.texture_scale = 1.0
-	_light.position = Vector2(0, -52)
+	_light.texture_scale = 0.67
+	_light.position = Vector2(0, -35)
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD
 	add_child(_light)
 	_apply(0.0)

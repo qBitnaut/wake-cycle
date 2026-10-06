@@ -108,8 +108,8 @@ def stage(w, h, floor_y, ceiling=True):
 # ---- cats --------------------------------------------------------------------------
 
 def cat_hd():
-    im = Image.open(os.path.join(ROOT, "assets/sprites/cat/cat_idle.png")).convert("RGBA").crop((0, 0, 100, 100))
-    return im, (50, 65)   # Sprite at (0, -15), centred: the feet are 15 px under the frame centre
+    im = Image.open(os.path.join(ROOT, "assets/sprites/cat/cat_idle.png")).convert("RGBA").crop((0, 0, 75, 75))
+    return im, (37, 49)   # Sprite at (0, -12), centred (drawn from -37): the feet are 12 px under the frame centre
 
 
 def cat_bprime(path):

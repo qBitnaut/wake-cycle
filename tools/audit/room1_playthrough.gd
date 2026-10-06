@@ -443,6 +443,22 @@ func _run_steps(steps: Array, label: String) -> void:
 				note("%s letters %d" % [label, int(st[1])], gs().letters == int(st[1]) or gs().letter_mask == int(st[1]), "mask %d" % gs().letter_mask)
 			"mask":
 				note(String(st[1]), gs().letter_mask == int(st[2]), "mask %d" % gs().letter_mask)
+			"board":
+				# Step onto the moving lift only while it is down at the catwalk's level.
+				var n := 0
+				while n < 3000:
+					var ly: float = float(watch(String(st[1]), 1))
+					var lx: float = float(watch(String(st[1]), 0))
+					if cat.is_on_floor() and absf(y() - ly) < 8.0 and absf(x() - lx) < 28.0:
+						break
+					if x() > 392.0 and ly < 500.0 and absf(y() - 516.0) < 6.0:
+						dir(0.0)   # the lift is away: wait on the catwalk
+					else:
+						dir(-1.0 if x() > float(st[2]) else 1.0)
+					await ticks(1)
+					n += 1
+				dir(0.0)
+				await ticks(4)
 			"gorel":
 				await go_to(x() + float(st[1]), 6.0)
 			"hp0":

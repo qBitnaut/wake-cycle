@@ -47,7 +47,7 @@
  ],
  "lift": [
   ["waitgt", "FreightLift", 1, 505],
-  ["go", 352],
+  ["board", "FreightLift", 352],
   ["waitlt", "FreightLift", 1, 264],
   ["go", 470],
   ["expect", "E up the freight lift onto the roof girders", 470, 260, 20, 5],

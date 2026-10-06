@@ -216,6 +216,17 @@ async function runSteps(steps, label) {
   for (const st of steps) {
     const op = st[0];
     if (op === 'go') await goTo(st[1], st[2] ?? 6);
+    else if (op === 'board') {
+      // Step onto the moving lift only while it is down at the catwalk's level.
+      for (let n = 0; n < 3000; n++) {
+        const ly = watch(st[1], 1), lx = watch(st[1], 0);
+        if (W.floor && Math.abs(W.y - ly) < 8 && Math.abs(W.x - lx) < 28) break;
+        if (W.x > 392 && ly < 500 && Math.abs(W.y - 516) < 6) await dir(0);
+        else await dir(W.x > st[2] ? -1 : 1);
+        await frame();
+      }
+      await dir(0); await ticks(4);
+    }
     else if (op === 'gorel') await goTo(W.x + st[1], 6);
     else if (op === 'hop') await hop(st[1], st[2], st[3] ?? 0, st[4] ?? 999);
     else if (op === 'runhop') await runHopD(st[1], st[2], st[3], st[4] ?? 0);

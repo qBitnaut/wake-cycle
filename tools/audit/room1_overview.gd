@@ -24,6 +24,9 @@ func _initialize() -> void:
 
 
 func _start() -> void:
+	# Render at a larger size than the 640 x 360 game frame (no content scaling).
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	root.size = Vector2i(2128, 576)
 	root.get_node("SaveSystem").delete_save()
 	root.get_node("GameState").new_game()
 	root.get_node("GameState").awaken_mind()

@@ -34,18 +34,18 @@
 		"The fence goes on forever. There has to be a way through."
 	],
 	"yard_roof": [
-		"Those rooftops go on for a while. If I stay fast, I can run them."
+		{"text": "Those rooftops go on for a while. If I stay fast, I can run them.", "text_only": true}
 	],
 	"yard_underpass": [
-		"Down here it's dry... almost. A drain, running right under the yard."
+		{"text": "Down here it's dry... almost. A drain, running right under the yard.", "text_only": true}
 	],
 	"yard_vault": [
-		"A panel in the floor, stamped for blasts. And a turret that would love a shot at me...",
-		"If only something big were in the way."
+		{"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me...", "text_only": true},
+		{"text": "If only something big were in the way.", "text_only": true}
 	],
 	"yard_closet": [
-		"Another blast-rated hatch. And a drone that drops bombs on whatever is under it.",
-		"I should not still be under it when it lands."
+		{"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it.", "text_only": true},
+		{"text": "I should not still be under it when it lands.", "text_only": true}
 	],
 	"stacks_arrival": [
 		"The rain's easing up.",
@@ -82,16 +82,16 @@
 		"It thinks I'm in charge. Maybe the goo made me something they recognise."
 	],
 	"stacks_lift": [
-		"A lift. Slow, but it knows the way up."
+		{"text": "A lift. Slow, but it knows the way up.", "text_only": true}
 	],
 	"stacks_crack": [
-		"Cracks in that wall. My shockwave might finish it."
+		{"text": "Cracks in that wall. My shockwave might finish it.", "text_only": true}
 	],
 	"stacks_barrels": [
-		"A sealed hatch, and a row of barrels. They look... touchy."
+		{"text": "A sealed hatch, and a row of barrels. They look... touchy.", "text_only": true}
 	],
 	"stacks_vent_top": [
-		"Up here the whole city glows. And something glows closer."
+		{"text": "Up here the whole city glows. And something glows closer.", "text_only": true}
 	],
 	"stacks_exit": [
 		"There, past the fences. Trees. Rooftops. Little lights in windows.",
@@ -169,16 +169,16 @@
 		{"text": "...Wake cycle complete.", "hold": 4.6}
 	],
 	"warehouse_climb": [
-		"The way on is blocked. The racks climb. So do I."
+		{"text": "The way on is blocked. The racks climb. So do I.", "text_only": true}
 	],
 	"warehouse_roof": [
-		"The moon is close up here. Quiet, and very high."
+		{"text": "The moon is close up here. Quiet, and very high.", "text_only": true}
 	],
 	"warehouse_shaft": [
-		"A vent shaft. The air below smells of water. Down is the way."
+		{"text": "A vent shaft. The air below smells of water. Down is the way.", "text_only": true}
 	],
 	"warehouse_lab": [
-		"Pipes, tanks, a low hum. Something was kept down here."
+		{"text": "Pipes, tanks, a low hum. Something was kept down here.", "text_only": true}
 	],
 	"memory_warehouse": [
 		"A food bowl with my name on it.",

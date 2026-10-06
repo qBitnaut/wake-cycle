@@ -22,11 +22,6 @@
 extends SceneTree
 
 const HumanSweep := preload("res://tools/audit/human_sweep.gd")
-## Monologue sets added by the level redesigns without a narration clip yet (text only until the
-## voice pass): Room 1 warehouse_*, Room 2 yard_*, Room 3 stacks_*.
-const TEXT_ONLY_UNTIL_VOICE := ["warehouse_climb", "warehouse_roof", "warehouse_shaft", "warehouse_lab",
-	"yard_roof", "yard_underpass", "yard_vault", "yard_closet",
-	"stacks_lift", "stacks_crack", "stacks_barrels", "stacks_vent_top"]
 const ROOM1 := "res://scenes/levels/room1.tscn"
 const ROOM2 := "res://scenes/levels/room2.tscn"
 const ROOM3 := "res://scenes/levels/room3.tscn"
@@ -561,8 +556,6 @@ func _voice_check() -> void:
 	var lines := 0
 	var text_only := 0
 	for id in sets:
-		if TEXT_ONLY_UNTIL_VOICE.has(id):
-			continue   # new hint lines: they play text-only until a voice pass
 		for i in sets[id].size():
 			var entry: Variant = sets[id][i]
 			if entry is Dictionary and bool(entry.get("text_only", false)):

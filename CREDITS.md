@@ -13,6 +13,8 @@ as a courtesy.
 | Extension for Sci-fi platformer tiles 32x32 (the 16-colour variant sheet the recolour reads) | rubberduck | https://opengameart.org/content/extension-for-sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
 | Legacy Collection (Warped sci-fi interior wall, Scifi lab support column, cyberpunk detective props, bipedal and mech units), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/ ("Legacy Collection" free download) | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/props/`, `assets/art_hd/robots/` |
 | Warped City (night skyline layers, towers, drone, turret), harmonised by `tools/art/harmonize_bg.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/robots/` |
+| Warped City explosion frames (`enemy-explosion`), used by the kit's ExplosionFX; the heavy mech and the patrol bot reuse the Legacy Collection art above | Luis Zuno (ansimuz) | https://ansimuz.itch.io/warped-city | CC0 1.0 | `assets/sprites/kit/fx/explosion.png` |
+| Actor kit placeholder art (turret, drone, hopper, crawler, camera, barrels, walls, hazards, platforms, collectibles), drawn by `tools/art/kit_art.py` in the palette | none (scripted) | - | - | `assets/sprites/kit/` |
 
 The ansimuz packs ship a `public-license.pdf` stating CC0; copies are in
 `assets/art_hd/`. The warning lamp (`lamp_base.png`, `lamp_glass.png`) is cut from the

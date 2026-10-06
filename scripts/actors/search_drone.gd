@@ -17,6 +17,7 @@ signal seen
 @export var end_x := 0.0
 @export var speed := 120.0
 @export var height := 160.0         ## lamp height above the floor line
+@export var floor_y := 320.0        ## the floor line the drone flies over (world y)
 @export var half_angle := 14.0      ## degrees, half the cone's opening
 @export var sway := 12.0            ## degrees the beam rocks either side of straight down
 @export var sway_period := 2.4
@@ -83,7 +84,7 @@ func _ready() -> void:
 
 
 func height_y() -> float:
-	return 320.0 - height
+	return floor_y - height
 
 
 func _physics_process(delta: float) -> void:

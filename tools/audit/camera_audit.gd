@@ -6,7 +6,8 @@
 ## fall keeps the cat on screen, looks ahead, moves smoothly, lands settled within the rest band;
 ## the view centre is whole pixels at every frame; a locking CameraZone holds the screen and
 ## releases it; a CineZoom-style limit lift leaves the camera alone and the driver resumes;
-## rooms 1-4, home and the test room are not driven (managed == false, offset unchanged).
+## rooms 1-4, home and the test room are not driven (managed == false, offset unchanged) unless
+## they are tall (camera_follow TIERS): those are driven and walked through their tiers.
 ## Exit code 1 if a check fails. Deletes user://save.json.
 extends SceneTree
 
@@ -126,19 +127,42 @@ func _main() -> void:
 	await ticks(60)
 	note("the driver resumes after the cutscene", cam.limit_top == saved[1] and absf(centre().y - (cat.global_position.y - 25.0)) < 90.0, str(centre()))
 
-	# The 360 px rooms and Room 3 are untouched.
+	# The 360 px rooms and Room 3 are untouched; a redesigned tall room (camera_follow TIERS) is
+	# driven, with the exact view rect, and gets a walk through its tiers.
 	for id in ["room1", "room2", "room3", "room4", "home", "test_room"]:
 		await load_room("res://scenes/levels/%s.tscn" % id)
 		await ticks(30)
 		var r = room.camera_rig
 		if room.camera_tiers():
-			# A redesigned tall room: the driver runs and keeps the view inside the room's limits.
+			# A redesigned tall room: the driver runs, the limits are the exact view rect, and the
+			# view stays inside them; then a walk through its tiers.
 			var c: Vector2 = cat.camera.get_screen_center_position()
 			var lim: Rect2i = room.limits
-			note("%s: a tall room, the tier driver is active and the view stays inside the limits" % id, r.managed and c.x >= lim.position.x + 319.0 and c.x <= lim.end.x - 319.0 and c.y >= lim.position.y + 179.0 and c.y <= lim.end.y - 179.0, "centre %s limits %s" % [c, lim])
+			note("%s: a tall room, the tier driver is active, limits are the exact view rect and the view stays inside" % id, r.managed and lim.position == Vector2i.ZERO and lim.size.y > 360 and c.x >= lim.position.x + 319.0 and c.x <= lim.end.x - 319.0 and c.y >= lim.position.y + 179.0 and c.y <= lim.end.y - 179.0, "managed %s centre %s limits %s" % [r.managed, c, lim])
+			await _tour_tiers(id)
 			continue
 		note("%s: camera driver idle, vertical offset unchanged" % id, not r.managed and cat.camera.offset.y == -25.0, "managed %s offset %s" % [r.managed, cat.camera.offset])
 	_finish()
+
+
+## Spots in a tall room's tiers: the cat is placed, the view settles, and the cat must be on screen
+## (not at the edge) with the view inside the room's rect.
+const TIER_SPOTS := {
+	"room2": [["yard floor", 400.0, 768.0], ["roof", 3300.0, 512.0], ["crane cab", 4250.0, 256.0], ["underpass", 2400.0, 1024.0],
+		["vault floor", 1520.0, 1152.0], ["under the pit", 5900.0, 1024.0], ["the lift's foot", 4368.0, 768.0]],
+}
+
+
+func _tour_tiers(id: String) -> void:
+	for sp in TIER_SPOTS.get(id, []):
+		room.zone_ease_px = 12.0
+		place(Vector2(sp[1], sp[2]))
+		await ticks(200)
+		var c := centre()
+		var sy: float = cat.global_position.y - (c.y - 180.0)
+		var sx: float = cat.global_position.x - (c.x - 320.0)
+		var inside: bool = c.y - 180.0 >= room.limits.position.y - 1.0 and c.y + 180.0 <= room.limits.end.y + 1.0
+		note("%s: the %s is framed (cat on screen, view inside the room)" % [id, sp[0]], sy > 40.0 and sy < 320.0 and absf(sx - 320.0) < 120.0 and inside, "screen (%.0f, %.0f) view centre %s" % [sx, sy, str(c)])
 
 
 func _finish() -> void:

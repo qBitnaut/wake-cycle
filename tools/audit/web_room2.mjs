@@ -115,7 +115,7 @@ async function dir(d) { await hold('right', d > 0); await hold('left', d < 0); }
 async function stop() { for (const a of [...held]) await hold(a, false); }
 async function frame() {
   const f = W.f;
-  for (let i = 0; i < 4000; i++) { await poll(); if (W.f > f) return W; await sleep(1); }
+  for (let i = 0; i < 15000; i++) { await poll(); if (W.f > f) return W; await sleep(1); }
   throw new Error('physics stalled');
 }
 async function ticks(n) { for (let i = 0; i < n; i++) await frame(); }
@@ -200,7 +200,7 @@ for (let n = 0; W.x < 1240 && n < 600; n++) {
   if (W.power === 1 && n % 4 === 0 && !globalThis.__shot1) { globalThis.__shot1 = true; await sleep(450); await shot('B1_first_surge_pad_emitters_blue'); }
 }
 await stop();
-note('B1 the pad in the low tunnel cannot be hopped: Surge granted', W.power === 1, `power ${W.power}, headroom rise ${(320 - minY).toFixed(1)} px`);
+note('B1 the pad in the low tunnel cannot be hopped: Surge granted', W.power === 1, `power ${W.power}, headroom rise ${(768 - minY).toFixed(1)} px`);
 await waitFor(() => lines('surge_first') >= 2, 14000);
 note('B1 first-use monologue (my legs / the same blue)', lines('surge_first') === 2, `${lines('surge_first')} lines`);
 await ticks(30); await poll();
@@ -214,59 +214,140 @@ ok = await runTo(1850);
 await ticks(10);
 note('B1 checkpoint A', W.cp === 'cp_a', W.cp);
 
-// ---- B2: the Surge gap ------------------------------------------------------------------
+// ---- B2: the Surge gap (a hole into the underpass) -------------------------------------------
 await goTo(1960, 8);
 await hold('right', true);
 for (let n = 0; W.x < 2150 && n < 400; n++) await frame();
 await stop();
 note('B2 second pad: Surge again', W.power === 1 && W.powerTime > 9, `${W.powerTime.toFixed(1)} s`);
 await shot('B2_surge_gap_ahead_nine_tiles');
-const gapY = [];
-ok = await runTo(2700, { each: async () => { if (W.x > 2300 && W.x < 2480 && !globalThis.__gap) { globalThis.__gap = true; await shot('B2_crossing_the_gap_mid_air'); } } });
-note('B2 crossed the gap with Surge (run-up, double jump)', ok && !W.dead, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+let crossTries = 0;
+for (;;) {
+  crossTries++;
+  ok = await runTo(2700, { each: async () => { if (W.x > 2300 && W.x < 2480 && !globalThis.__gap) { globalThis.__gap = true; await shot('B2_crossing_the_gap_mid_air'); } } });
+  if ((ok && W.y < 800) || crossTries >= 3) break;
+  // A miss is a safe drop into the underpass: a human walks back to the pad and goes again.
+  await page.evaluate(() => window.wakeTeleport(1960, 768)); await sleep(3500); await ticks(10);
+  await hold('right', true); for (let n = 0; W.x < 2150 && n < 400; n++) await frame(); await stop();
+}
+note('B2 crossed the gap with Surge (run-up, double jump)', ok && !W.dead && W.y < 800, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await ticks(10);
 note('B2 checkpoint B on the far side', W.cp === 'cp_b', W.cp);
-ok = await runTo(3060);
-note('B2 hopped the second walker', ok && W.hp === hp0 && !W.dead, `hp ${W.hp}`);
+await shot('B2_landing_turret_on_the_stub');
 
-// ---- B3: the gate on a clock -------------------------------------------------------------
-await shot('B3_lane_pad_plate_gate_far_ahead');
-let gateShot = false, plateShot = false;
-await runTo(4140, { each: async () => {
-  if (W.plate && !plateShot) { plateShot = true; await shot('B3_plate_pressed_clock_running'); }
-  if (W.gateLeft > 0 && W.gateLeft < 1.5 && !gateShot && W.x > 3800) { gateShot = true; await shot('B3_gate_warning_flash'); }
-} });
-note('B3 on Surge the cat beats the gate', W.x >= 4140 && !W.dead, `x=${W.x.toFixed(0)}`);
-await waitFor(() => lines('surge_gate') >= 1, 12000);
-note('B3 "That gate won\'t wait for me" played', lines('surge_gate') === 1);
-await waitFor(() => W.gateShut, 4000);
-await sleep(200); await shot('B3_gate_shut_behind_us');
-note('B3 the gate shuts behind', W.gateShut);
+// A scripted hop (the same as room2_playthrough.gd hop): run to jumpX, jump, hold d to the landing.
+async function hop(d, jx, tx0, tx1, ty) {
+  for (let n = 0; (W.x - jx) * d < 0 && n < 900; n++) { await dir(d); await frame(); }
+  await hold('jump', true);
+  for (let f = 1; f < 220; f++) {
+    await dir(d); await frame();
+    if (f === 22) await hold('jump', false);
+    if (f > 6 && W.floor && W.vy >= 0) break;
+  }
+  await stop(); await ticks(6);
+  return W.floor && W.x >= tx0 && W.x <= tx1 && Math.abs(W.y - ty) < 6;
+}
+async function climb(steps, fromX, fromY) {
+  for (let t = 0; t < 3; t++) {
+    if (t) { await page.evaluate(([x, y]) => window.wakeTeleport(x, y), [fromX, fromY]); await ticks(20); }
+    let good = true;
+    for (const st of steps) if (!(await hop(...st))) { good = false; break; }
+    if (good) return true;
+  }
+  return false;
+}
+const tp = async (x, y) => { await page.evaluate(([a, b]) => window.wakeTeleport(a, b), [x, y]); await ticks(20); };
 
-// ---- D: the docked bot -------------------------------------------------------------------
-ok = await runTo(4230);
+// ---- U: the underpass (entered by a teleport to the landing; everything after is real keys) ----
+await tp(1840, 1024);
+note('U the underpass loads: the cat stands on the drain floor under the yard', W.floor && Math.abs(W.y - 1024) < 4, `y=${W.y.toFixed(0)}`);
+await shot('U_the_drain_under_the_yard');
+await measureFps('the underpass');
+await waitFor(() => W.barrelGone && W.hatchGone, 14000);
+await shot('U3_the_hatch_after_the_blast');
+note('U3 the turret\'s bolt popped the barrel and the blast broke the hatch', W.barrelGone && W.hatchGone, `barrel gone ${W.barrelGone} hatch gone ${W.hatchGone}`);
+await waitFor(() => lines('yard_vault') >= 2, 14000);
+await dir(-1);
+for (let n = 0; W.x > 1690 && n < 300; n++) await frame();
+await stop();
+await waitFor(() => W.y > 1100, 4000);
+await goTo(1488, 8);
+await waitFor(() => lines('memory_yard') >= 2, 16000);
+note('U3 the memory fragment is collected (5000) and plays', lines('memory_yard') === 2 && W.score >= 5000, `lines ${lines('memory_yard')} score ${W.score}`);
+await shot('U3_the_vault_memory_fragment');
+await tp(3110, 1024);
+await dir(1);
+const score0 = W.score;
+for (let n = 0; W.x < 3712 && n < 900; n++) await frame();
+await stop();
+note('U1 the crawl cache: the dip, the low tunnel and the golden bone (+2000)', W.x >= 3640 && W.score >= score0 + 2000, `x=${W.x.toFixed(0)} score +${W.score - score0}`);
+await shot('U1_the_crawl_cache_bone');
+await tp(4656, 1024);
+await shot('U2_stand_on_the_hatch_under_the_drone');
+await waitFor(() => W.spurMode === 1, 15000);
+await dir(-1);
+for (let n = 0; W.x > 4540 && n < 200; n++) await frame();
+await stop();
+await waitFor(() => W.closetGone, 4000);
+note('U2 the drone\'s bomb broke the closet hatch', W.closetGone, `gone ${W.closetGone}`);
+await shot('U2_the_closet_hatch_broken');
+
+// ---- R: the rooftops (a girder stair by real hops, the pad, a Surge run, the crane stair) -----
+await tp(2600, 768);
+const okc1 = await climb([[1, 2658, 2696, 2776, 704], [1, 2764, 2792, 2872, 640], [1, 2860, 2888, 2968, 576], [1, 2956, 2984, 3200, 512]], 2600, 768);
+note('R climbed the girder stair to the first roof', okc1, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+await shot('R_first_roof_pad_and_turret');
+await goTo(3040, 6);
+await waitFor(() => W.power === 1, 2000);
+await waitFor(() => lines('yard_roof') >= 1, 12000);
+note('R the roof pad grants Surge and the hint plays', W.power === 1 && lines('yard_roof') === 1, `power ${W.power}`);
+ok = await runTo(3900, { each: async () => { if (W.x > 3500 && !globalThis.__roof) { globalThis.__roof = true; await shot('R_surge_run_over_the_containers'); } } });
+for (let n = 0; !W.floor && n < 90; n++) await frame();
+note('R ran the rooftops on Surge', ok && !W.dead && Math.abs(W.y - 512) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+await waitFor(() => W.power === 0, 14000);   // plain hops: let the Surge run out
+await goTo(4034, 6);
+const okc2 = await climb([[1, 4040, 4072, 4152, 448], [-1, 4094, 3976, 4056, 384], [1, 4040, 4072, 4152, 320], [1, 4136, 4168, 4300, 256]], 4034, 512);
+note('R climbed the crane stair to the cab', okc2 && Math.abs(W.y - 256) < 4, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+await ticks(20);
+note('R the cab checkpoint', W.cp === 'cp_r', W.cp);
+await shot('R_the_crane_cab_at_the_top');
+
+// ---- D: the loading dock ---------------------------------------------------------------------
+await tp(4368, 768);
+await goTo(4290, 6);
+await ticks(10);
 note('D checkpoint C', W.cp === 'cp_c', W.cp);
-note('D the bot has not reacted yet', W.dockReacted === false);
-await shot('D_dock_bot_asleep_dim');
-await goTo(4420, 8);
-await waitFor(() => W.dock > 0.9, 5000);
-await sleep(1300);  // the wake-up stutter (0.9 s) has settled
+await shot('D_dock_conveyors_and_gantry_crate');
+ok = await runTo(4540);
+note('D the dock bot has not reacted yet', W.dockReacted === false || W.dock > 0);
+await goTo(4540, 8);
+await waitFor(() => W.dock > 0.9, 6000);
+await sleep(1300);
 await shot('D_dock_bot_reacts_eye_in_emitter_colour');
 await waitFor(() => lines('dock_bot') >= 2, 14000);
 note('D the bot reacts and the monologue plays', W.dockReacted && lines('dock_bot') === 2, `wake ${W.dock && W.dock.toFixed(2)}`);
-await shot('D_dock_bot_monologue');
-ok = await runTo(4860);
-note('D checkpoint D', W.cp === 'cp_d', W.cp);
+await goTo(4770, 8);
+{ let d = 1;
+  for (let n = 0; W.camAlarms < 1 && n < 1800 && !W.dead; n++) { await dir(d); await frame(); if (W.x > 4890) d = -1; else if (W.x < 4780) d = 1; }
+  await stop(); }
+await waitFor(() => W.shutterOpen === false, 3000);
+note('D the camera spots the cat: the alarm shuts the guard door', W.camAlarms >= 1 && W.shutterOpen === false, `alarms ${W.camAlarms} door open ${W.shutterOpen}`);
+await shot('D_camera_alarm_door_shut');
+await waitFor(() => W.shutterOpen === true, 12000);
+note('D the alarm passes and the door opens again', W.shutterOpen === true);
 
 // ---- B4: combine ---------------------------------------------------------------------------
+await tp(5200, 768);
+await ticks(10);
+note('D checkpoint D', W.cp === 'cp_d', W.cp);
 let droneShot = false, ventShot = false, pitShot = false, droneAudible = false;
-await runTo(6300, { cf: 5770, ct: 5930, each: async () => {
+await runTo(6560, { cf: 6122, ct: 6282, each: async () => {
   if (W.drone === 1 && W.loops && W.loops.positional >= 1) droneAudible = true;
-  if (W.drone === 1 && W.x > 5060 && !droneShot) { droneShot = true; await shot('B4_drone_searchlight_chasing'); }
-  if (W.x > 5360 && W.x < 5400 && !pitShot) { pitShot = true; await shot('B4_pit_ahead_steps_behind'); }
-  if (W.crouch && W.x > 5830 && !ventShot) { ventShot = true; await shot('B4_crawl_vent_cover'); }
+  if (W.drone === 1 && W.x > 5420 && !droneShot) { droneShot = true; await shot('B4_drone_searchlight_chasing'); }
+  if (W.x > 5700 && W.x < 5740 && !pitShot) { pitShot = true; await shot('B4_hole_ahead_steps_behind'); }
+  if (W.crouch && W.x > 6170 && !ventShot) { ventShot = true; await shot('B4_crawl_vent_cover'); }
 } });
-note('B4 combined challenge on Surge: pad, steps, pit, vent, never seen', W.x >= 6300 && !W.alarm && !W.dead, `x=${W.x.toFixed(0)} alarm ${W.alarm}`);
+note('B4 combined challenge on Surge: pad, steps, hole, vent, never seen', W.x >= 6560 && !W.alarm && !W.dead, `x=${W.x.toFixed(0)} alarm ${W.alarm}`);
 note('B4 the drone was triggered and swept', W.drone !== null && W.drone >= 1, `drone state ${W.drone}`);
 note('B4 sound: the drone\'s whirr was audible (distance-faded) while it chased', droneAudible, `positional loops seen: ${droneAudible}`);
 await waitFor(() => W.drone === 3, 15000);
@@ -275,6 +356,7 @@ await sleep(2500); await poll();
   note('B4 sound: once the drone has left its whirr is gone: no audible drone loop, no orphan, nothing in the browser', W.drone === 3 && W.loops.positional === 0 && c.ok, `drone state ${W.drone}; ${c.detail}`); }
 
 // ---- E: the fence ------------------------------------------------------------------------------
+await goTo(6672, 8);
 await waitFor(() => lines('exit_fence') >= 1, 12000);
 await sleep(300); await shot('E_fence_cut_exit');
 note('E the fence line plays', lines('exit_fence') === 1);

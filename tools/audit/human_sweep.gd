@@ -64,6 +64,10 @@ func prepare() -> void:
 	cat.set("death_y", 1e9)
 	for pad in room.find_children("*", "PowerPad", true, false):
 		pad.set("_cd", 1e9)
+	# Breakable walls count as already broken: their gaps are the (optional) way on, and an
+	# intact one would only get in the way of a climb that starts on the far side of it.
+	for w in room.get_tree().get_nodes_in_group("kit_wall"):
+		w.queue_free()
 	for n in room.find_children("*", "Node", true, false):
 		var path := String(n.get_script().resource_path) if n.get_script() != null else ""
 		if n.get("phase_through") != null:

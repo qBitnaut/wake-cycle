@@ -91,17 +91,75 @@ static func room1() -> Array:
 
 
 static func room2() -> Array:
-	var g := 320.0
-	return [
+	## Rows (surface y): yard floor 768, underpass floor 1024, vault floor 1152, roofs 512. A
+	## tread is 3 tiles (96 px): a held-direction hop of 64 px lands 28..82 px past the face.
+	var g := 320.0 + 448.0
+	var u := 1024.0
+	var out := [
 		{"name": "R2 Surge gap (9 tiles)", "sx": 2064.0, "sy": g, "d": 1.0, "edge": 70.0 * T, "kind": "gap",
 			"tx0": 79.0 * T - 10.0, "tx1": 90.0 * T, "ty": g,
 			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false], [2, "single", null], [2, "double", null]]},
-		{"name": "R2 pit (5 tiles)", "sx": 165.0 * T + 20.0, "sy": g, "d": 1.0, "edge": 169.0 * T, "kind": "gap",
-			"tx0": 174.0 * T - 10.0, "tx1": 190.0 * T, "ty": g,
+		{"name": "R2 pit (5 tiles)", "sx": 177.0 * T + 8.0, "sy": g, "d": 1.0, "edge": 180.0 * T, "kind": "gap",
+			"tx0": 185.0 * T - 10.0, "tx1": 191.0 * T, "ty": g,
 			"moves": [[0, "double", true], [0, "single", false], [1, "single", null], [1, "double", null], [2, "single", null], [2, "double", null]]},
-		{"name": "R2 crate steps (floor -> 1 tile -> 2 tiles)", "sx": 5000.0, "sy": g, "d": 1.0, "edge": 161.0 * T, "kind": "wall",
-			"tx0": 161.0 * T + 8.0, "tx1": 165.0 * T - 8.0, "ty": g - 32.0, "moves": [[0, "single", null]]},
+		{"name": "R2 crate steps 1 (floor -> 1 tile)", "sx": 5300.0, "sy": g, "d": 1.0, "edge": 172.0 * T, "kind": "wall",
+			"tx0": 172.0 * T + 8.0, "tx1": 174.0 * T - 8.0, "ty": g - 32.0, "moves": [[0, "single", null]]},
+		{"name": "R2 crate steps 2 (1 tile -> 2 tiles)", "sx": 172.0 * T + 16.0, "sy": g - 32.0, "d": 1.0, "edge": 174.0 * T, "kind": "wall",
+			"tx0": 174.0 * T + 8.0, "tx1": 177.0 * T - 8.0, "ty": g - 64.0, "moves": PLAIN_HOP},
+		# --- the high route ---
+		{"name": "R2 roof stair 1 (floor -> girder, 2 tiles)", "sx": 84.0 * T - 80.0, "sy": g, "d": 1.0, "edge": 84.0 * T, "kind": "wall",
+			"tx0": 84.0 * T + 8.0, "tx1": 87.0 * T - 8.0, "ty": g - 64.0, "moves": PLAIN_HOP},
+		{"name": "R2 roof stair 2 (girder -> girder, 2 tiles)", "sx": 84.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 87.0 * T, "kind": "wall",
+			"tx0": 87.0 * T + 8.0, "tx1": 90.0 * T - 8.0, "ty": g - 128.0, "moves": PLAIN_HOP},
+		{"name": "R2 roof stair 3 (girder -> girder, 2 tiles)", "sx": 87.0 * T + 16.0, "sy": g - 128.0, "d": 1.0, "edge": 90.0 * T, "kind": "wall",
+			"tx0": 90.0 * T + 8.0, "tx1": 93.0 * T - 8.0, "ty": g - 192.0, "moves": PLAIN_HOP},
+		{"name": "R2 roof step (girder -> first roof, 2 tiles)", "sx": 90.0 * T + 16.0, "sy": g - 192.0, "d": 1.0, "edge": 93.0 * T, "kind": "wall",
+			"tx0": 93.0 * T + 8.0, "tx1": 101.0 * T, "ty": g - 256.0, "moves": PLAIN_HOP},
+		{"name": "R2 roof gap 1 (5 tiles, Surge run or a double jump)", "sx": 98.0 * T + 8.0, "sy": g - 256.0, "d": 1.0, "edge": 102.0 * T, "kind": "gap",
+			"tx0": 107.0 * T - 10.0, "tx1": 114.0 * T, "ty": g - 256.0,
+			"moves": [[0, "double", true], [1, "single", true], [0, "single", false]]},
+		{"name": "R2 roof gap 2 (5 tiles: the hanging bridge fills it, a landing on it counts)", "sx": 108.0 * T, "sy": g - 256.0, "d": 1.0, "edge": 115.0 * T, "kind": "gap",
+			"tx0": 115.0 * T + 4.0, "tx1": 126.0 * T, "ty": g - 256.0,
+			"moves": [[0, "double", true], [1, "single", true], [0, "single", null]]},
+		{"name": "R2 crane stair 1 (roof -> girder, 2 tiles)", "sx": 122.0 * T, "sy": g - 256.0, "d": 1.0, "edge": 127.0 * T, "kind": "wall",
+			"tx0": 127.0 * T + 8.0, "tx1": 130.0 * T - 8.0, "ty": g - 320.0, "moves": PLAIN_HOP},
+		{"name": "R2 crane stair 2 (girder -> girder, 2 tiles, leftwards)", "sx": 129.0 * T - 8.0, "sy": g - 320.0, "d": -1.0, "edge": 127.0 * T, "kind": "wall",
+			"tx0": 124.0 * T + 8.0, "tx1": 127.0 * T - 8.0, "ty": g - 384.0, "moves": PLAIN_HOP},
+		{"name": "R2 crane stair 3 (girder -> girder, 2 tiles)", "sx": 124.0 * T + 16.0, "sy": g - 384.0, "d": 1.0, "edge": 127.0 * T, "kind": "wall",
+			"tx0": 127.0 * T + 8.0, "tx1": 130.0 * T - 8.0, "ty": g - 448.0, "moves": PLAIN_HOP},
+		{"name": "R2 crane cab (girder -> cab floor, 2 tiles)", "sx": 127.0 * T + 16.0, "sy": g - 448.0, "d": 1.0, "edge": 130.0 * T, "kind": "wall",
+			"tx0": 130.0 * T + 8.0, "tx1": 134.0 * T, "ty": g - 512.0, "moves": PLAIN_HOP},
+		{"name": "R2 dock detour 1 (floor -> girder, 2 tiles)", "sx": 141.0 * T + 20.0, "sy": g, "d": 1.0, "edge": 143.0 * T, "kind": "wall",
+			"tx0": 143.0 * T + 8.0, "tx1": 146.0 * T - 8.0, "ty": g - 64.0, "moves": [[0, "single", null]]},
+		{"name": "R2 dock detour 2 (girder -> girder, 2 tiles)", "sx": 143.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 146.0 * T, "kind": "wall",
+			"tx0": 146.0 * T + 8.0, "tx1": 149.0 * T - 8.0, "ty": g - 128.0, "moves": PLAIN_HOP},
+		{"name": "R2 dock detour 3 (girder -> canopy roof, 2 tiles)", "sx": 146.0 * T + 16.0, "sy": g - 128.0, "d": 1.0, "edge": 149.0 * T, "kind": "wall",
+			"tx0": 149.0 * T + 8.0, "tx1": 154.0 * T, "ty": g - 192.0, "moves": PLAIN_HOP},
+		# --- the underpass: the vault (S3), the crawl cache (S1) ---
+		{"name": "R2 vault stair 1 (floor -> girder, 1 tile)", "sx": 1500.0, "sy": 1152.0, "d": 1.0, "edge": 49.0 * T, "kind": "wall",
+			"tx0": 49.0 * T - 4.0, "tx1": 54.0 * T - 8.0, "ty": 1120.0, "moves": PLAIN_HOP},
+		{"name": "R2 vault stair 2 (girder -> girder, 2 tiles)", "sx": 49.0 * T + 16.0, "sy": 1120.0, "d": 1.0, "edge": 51.0 * T, "kind": "wall",
+			"tx0": 51.0 * T + 8.0, "tx1": 54.0 * T - 8.0, "ty": 1056.0, "moves": PLAIN_HOP},
+		{"name": "R2 vault exit (girder -> the floor, 1 tile)", "sx": 51.0 * T + 16.0, "sy": 1056.0, "d": 1.0, "edge": 54.0 * T, "kind": "wall",
+			"tx0": 54.0 * T + 8.0, "tx1": 58.0 * T, "ty": u, "moves": PLAIN_HOP},
+		{"name": "R2 crawl cache exit (dip -> the floor, 2 tiles)", "sx": 99.0 * T + 8.0, "sy": 1088.0, "d": -1.0, "edge": 98.0 * T, "kind": "wall",
+			"tx0": 94.0 * T, "tx1": 98.0 * T - 8.0, "ty": u, "moves": PLAIN_HOP},
 	]
+	# The three grate shafts (zigzag rungs, 2 tiles apart, then the flush grate in the yard floor).
+	var names := ["west", "dock", "pit"]
+	var k := 0
+	for c in [83.0, 128.0, 186.0]:
+		var n: String = names[k]
+		k += 1
+		out.append({"name": "R2 %s shaft 1 (floor -> rung, 2 tiles)" % n, "sx": c * T - 90.0, "sy": u, "d": 1.0, "edge": c * T, "kind": "wall",
+			"tx0": c * T + 8.0, "tx1": (c + 3.0) * T - 8.0, "ty": u - 64.0, "moves": PLAIN_HOP})
+		out.append({"name": "R2 %s shaft 2 (rung -> rung, 2 tiles)" % n, "sx": c * T + 16.0, "sy": u - 64.0, "d": 1.0, "edge": (c + 2.0) * T, "kind": "wall",
+			"tx0": (c + 2.0) * T + 8.0, "tx1": (c + 5.0) * T - 8.0, "ty": u - 128.0, "moves": PLAIN_HOP})
+		out.append({"name": "R2 %s shaft 3 (rung -> rung, 2 tiles, leftwards)" % n, "sx": (c + 5.0) * T - 16.0, "sy": u - 128.0, "d": -1.0, "edge": (c + 3.0) * T, "kind": "wall",
+			"tx0": c * T + 8.0, "tx1": (c + 3.0) * T - 8.0, "ty": u - 192.0, "moves": PLAIN_HOP})
+		out.append({"name": "R2 %s shaft 4 (rung -> the grate, 2 tiles)" % n, "sx": c * T + 16.0, "sy": u - 192.0, "d": 1.0, "edge": (c + 3.0) * T, "kind": "wall",
+			"tx0": c * T + 8.0, "tx1": (c + 6.0) * T - 8.0, "ty": g, "moves": PLAIN_HOP})
+	return out
 
 
 static func room3() -> Array:

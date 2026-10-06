@@ -33,6 +33,20 @@
 	"exit_fence": [
 		"The fence goes on forever. There has to be a way through."
 	],
+	"yard_roof": [
+		"Those rooftops go on for a while. If I stay fast, I can run them."
+	],
+	"yard_underpass": [
+		"Down here it's dry... almost. A drain, running right under the yard."
+	],
+	"yard_vault": [
+		"A panel in the floor, stamped for blasts. And a turret that would love a shot at me...",
+		"If only something big were in the way."
+	],
+	"yard_closet": [
+		"Another blast-rated hatch. And a drone that drops bombs on whatever is under it.",
+		"I should not still be under it when it lands."
+	],
 	"stacks_arrival": [
 		"The rain's easing up.",
 		"From up here I can see the whole district... and not one person. Just machines, working."

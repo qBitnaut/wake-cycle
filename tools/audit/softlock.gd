@@ -36,6 +36,9 @@
 ##     region whose ONLY exit is dying (a hollow tunnel under a floor whose mouth opens onto a
 ##     pit) is flagged ("the only way out is dying"); falling out of the world from a spot the cat
 ##     can walk away from is fine.
+##  4b. A static "slit" check (SLIT line per room): a one-way girder strip directly under a solid tile
+##     (inside a slab) whose row is open to the side lets the cat walk into the slab. Fix: make that
+##     cell solid (CROSS), as Rooms 1 and 3 do under their floors.
 ##  5. Each group of connected soft-lock positions is reported with its tile box, how the cat gets in
 ##     and its kind: POCKET (no power helps: a 1-2 tile gap under a lip or floor, an overhang, a dead
 ##     end) or POWER-GATED (a power would get the cat out, but no pad is reachable from there).
@@ -60,6 +63,9 @@ const EPS := 0.001
 const MAXF := 300               ## frames of one flight
 const INF_T := 1.0e9
 const POUND_RADIUS := 46.0
+## Rooms still to be redesigned on the tall layout: their slits are reported but not failed (remove
+## the id when the redesign lands).
+const SLIT_PENDING := ["room4"]
 
 var results: Array = []
 var _cat_values := {}
@@ -119,6 +125,8 @@ func audit(note_cb: Callable, ids: Array, validate := false, show_map := false) 
 		var pockets := groups.filter(func(g): return g["kind"] == "POCKET").size()
 		var gated := groups.size() - pockets
 		note_cb.call("SOFTLOCK %s: zero soft-locks, zero pockets" % id, groups.is_empty(), "%d standing positions, %d pockets, %d power-gated, %d ms" % [m.entered_count, pockets, gated, Time.get_ticks_msec() - t0])
+		var slit_ok: bool = m.slits.is_empty() or SLIT_PENDING.has(id)
+		note_cb.call("SLIT %s: no one-way tile inside a slab interior is exposed sideways" % id, slit_ok, "%d cells %s%s" % [m.slits.size(), str(m.slits.slice(0, 6)), " (known: redesign pending)" if not m.slits.is_empty() and slit_ok else ""])
 		for g in groups:
 			print("   %s  %s" % [id, m.describe(g)])
 		if show_map:
@@ -310,6 +318,11 @@ func selftest(note_cb: Callable) -> void:
 		m.make_test_world(c[1], c[2], c[3], c[4])
 		m.analyze()
 		note_cb.call("SOFTLOCK selftest: %s" % c[0], m.groups.size() == c[5], "%d regions, want %d" % [m.groups.size(), c[5]])
+	# The slit check: a girder row under the floor open at the pit is a slit, plated at its ends it is not.
+	for c in [["an exposed one-way row inside the floor slab is a slit", 1, true], ["the same row sealed by solid at both ends is not", 2, false], ["a solid slab has no slit", 0, false]]:
+		var m := Model.new(cat_values())
+		m.make_test_world(0, false, false, c[1])
+		note_cb.call("SLIT selftest: %s" % c[0], m.slits.is_empty() != c[2], "%d cells" % m.slits.size())
 
 
 func calibrate() -> void:
@@ -404,6 +417,7 @@ class Model extends RefCounted:
 	var entered := {}                      ## node key -> true (reached in any state)
 	var entered_count := 0
 	var groups: Array = []
+	var slits: Array = []                  ## Vector2i cells: a girder-strip tile in a slab interior with an exposed side
 	var parent := {}                       ## state key -> state key it was reached from
 	var flat_edge := 600.0
 	var flat_y := 400.0
@@ -485,6 +499,7 @@ class Model extends RefCounted:
 			pads.append({"rect": Rect2(10 * T, 10 * T - 10, 44, 10), "power": 2, "dur": 10.0})
 		if pad_inside:
 			pads.append({"rect": Rect2(21 * T, (10 + deep) * T - 10, 44, 10), "power": 2, "dur": 10.0})
+		find_slits()
 
 	func load_room(id: String) -> void:
 		room_id = id
@@ -510,6 +525,7 @@ class Model extends RefCounted:
 				grid[(c.y - gy0) * gw + (c.x - gx0)] = v
 		_walk(scene, Vector2.ZERO)
 		base_grid = grid.duplicate()
+		find_slits()
 		var start_node := scene.get_node_or_null("PlayerStart")
 		if start_node != null:
 			starts.append(start_node.position)
@@ -602,6 +618,25 @@ class Model extends RefCounted:
 	func _set_cell(cx: int, cy: int, v: int) -> void:
 		if cx >= gx0 and cx < gx0 + gw and cy >= gy0 and cy < gy0 + gh:
 			grid[(cy - gy0) * gw + (cx - gx0)] = v
+
+	## The "slit" check: a one-way girder strip (value 3) directly under a solid tile is inside a slab,
+	## not on a face; if its row is open to the side (air, or a plain walkable girder) the cat can enter
+	## that thin gap sideways and be hidden or stuck in the floor. A run of such cells sealed at both
+	## ends by solid is a hollow the cat can not enter and is fine.
+	func find_slits() -> void:
+		slits = []
+		for cy in range(gy0, gy0 + gh):
+			for cx in range(gx0, gx0 + gw):
+				if not _is_slit_cell(cx, cy):
+					continue
+				for dx in [-1, 1]:
+					var n := cell(cx + dx, cy)
+					if n != 1 and not _is_slit_cell(cx + dx, cy):
+						slits.append(Vector2i(cx, cy))
+						break
+
+	func _is_slit_cell(cx: int, cy: int) -> bool:
+		return cell(cx, cy) == 3 and cell(cx, cy - 1) == 1
 
 	func cell(cx: int, cy: int) -> int:
 		if cx < gx0 or cx >= gx0 + gw:

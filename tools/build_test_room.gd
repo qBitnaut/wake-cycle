@@ -296,6 +296,10 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 		tiles.erase_cell(Vector2i(x, G))
 		tiles.erase_cell(Vector2i(x, G + 1))
 		_cell(x, G + 2, MAROON, FLAT)
+	# The truss row beside the chamber is plated too: a one-way row open to the chamber's air is a
+	# slit the cat could walk into (softlock.gd, the SLIT check).
+	for x in [141, 144]:
+		_cell(x, G + 1, MAROON, FLAT)
 	# Ceiling: bulkhead with the skylight gaps.
 	var sky_cols := {}
 	for sk in skylights:

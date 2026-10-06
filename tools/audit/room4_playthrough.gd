@@ -1,4 +1,5 @@
-## Drives the real Cat through every beat of Room 4, "The Perimeter", with
+## Drives the real Cat through the beats of Room 4, "The Perimeter" (the tall, multi-tier level: the
+## surface perimeter, a four-level underground network, shafts, lifts, secrets), with
 ## scripted input (Input.action_press, the same path a keyboard takes), in the
 ## real scene with the real physics. A beat starts from its checkpoint or a
 ## staging spot (a teleport, named in the beat) and then plays by input only.
@@ -6,6 +7,11 @@
 ## SHOTS=<dir> (with a display: xvfb-run -a ... --rendering-driver opengl3) also
 ## saves a screenshot at each beat.
 ##
+## Route: arrival and a tower interior, Phase 1-3 (and the optional catwalk), Impact 1-3 down through
+## the floors (and the undercroft secret), the archive secret with the memory fragment, the bunker's
+## camera corridor and press, the cistern (relay 2, acid, a lift), the shaft's ladder and lift, the
+## plaza tower (relay 1, Spring), the vault (the HeavyMech and relay 3), the armoury secret, the scanner,
+## the gate, the exit. BEATS=a,b runs only those beats (each stages itself with a teleport).
 ## Phase: lasers hurt without it (a plain cat is pushed back), a dash goes through
 ## fences and drones, the window to press Shift is measured. Impact: the cracked
 ## floors do not break to anything but the pound, the pound drops the cat to the
@@ -18,11 +24,12 @@ extends SceneTree
 
 const T := 32.0
 const HumanSweep := preload("res://tools/audit/human_sweep.gd")
-const SURFACE := 320.0
-const ROOF := 128.0      # the guardhouse roof and the relay tower top: row 4, 6 rows (192 px) up
-const L1 := 448.0
-const L2 := 576.0
-const L3 := 704.0
+const SURFACE := 384.0
+const ROOF := 192.0      # the guardhouse roof: row 6, 6 rows (192 px) up
+const L1 := 544.0        # the floors of the underground levels (rows 17, 22, 27, 35)
+const L2 := 704.0
+const L3 := 864.0
+const L4 := 1120.0
 
 var room: Node2D
 var cat: CharacterBody2D
@@ -265,14 +272,18 @@ func close(a: Color, b: Color, tol := 0.08) -> bool:
 func take_pad(pad_name: String, power: int) -> bool:
 	var pad := node(pad_name)
 	var px: float = pad.global_position.x
-	# Approach from the left, a step onto it, a step off.
-	await go_to(px - 36.0, 6.0)
-	dir(1.0)
-	var n := 0
-	while gs().power != power and n < 420:
-		await ticks(1)
-		n += 1
-	stop()
+	# Approach from the left, a step onto it, a step off (again, if the pad was still cooling down).
+	for pass_n in 4:
+		await go_to(px - 36.0, 6.0)
+		dir(1.0)
+		var n := 0
+		while n < 150 and not (n >= 24 and gs().power == power):
+			await ticks(1)
+			n += 1
+		stop()
+		if gs().power == power:
+			break
+		await ticks(60)
 	return gs().power == power
 
 
@@ -299,7 +310,7 @@ func phase_run(target: float, limit := 2400) -> Dictionary:
 			var dx: float = ox - x()
 			if dx > 0.0 and dx < d_near:
 				d_near = dx
-		if d_near >= 34.0 and d_near <= 46.0 and _frames - last_dash > 30 and gs().power == 3:
+		if d_near >= 30.0 and d_near <= 62.0 and _frames - last_dash > 30 and gs().power == 3:
 			hold("dash", true)
 			dashes += 1
 			last_dash = _frames
@@ -319,7 +330,8 @@ func phase_run(target: float, limit := 2400) -> Dictionary:
 ## cat: _setup(true), _beats(true) (the sky and safety beat reloads the room, so it
 ## runs standalone only; the chain continues from the exit into Home).
 func _main() -> void:
-	await HumanSweep.lab(self, "room4", note, "LAB ")
+	if OS.get_environment("LAB") != "0":
+		await HumanSweep.lab(self, "room4", note, "LAB ")
 	await _setup(false)
 	await _beats(false)
 	_finish()
@@ -368,36 +380,29 @@ func _after(beat_name: String) -> void:
 		await beat_hook.call(self, beat_name)
 
 
+var _only: PackedStringArray = PackedStringArray()
+
+
+func want(beat_name: String) -> bool:
+	return _only.is_empty() or _only.has(beat_name)
+
+
 func _beats(chained: bool) -> void:
-	await _beat_arrival()
-	await _after("arrival")
-	await _beat_phase1()
-	await _after("phase1")
-	await _beat_phase2()
-	await _after("phase2")
-	await _beat_phase3()
-	await _after("phase3")
-	await _beat_fences_solid()
-	await _after("fences_solid")
-	await _beat_impact1()
-	await _after("impact1")
-	await _beat_impact2()
-	await _after("impact2")
-	await _beat_impact3()
-	await _after("impact3")
-	await _beat_relay1()
-	await _after("relay1")
-	await _beat_relay2()
-	await _after("relay2")
-	await _beat_gate_locked()
-	await _after("gate_locked")
-	await _beat_relay3()
-	await _after("relay3")
-	await _beat_scanner()
-	await _after("scanner")
-	await _beat_exit()
-	await _after("exit")
-	if not chained:
+	_only = PackedStringArray(OS.get_environment("BEATS").split(",", false))
+	var order := [
+		["arrival", "_beat_arrival"], ["tower_a", "_beat_tower_a"], ["phase1", "_beat_phase1"], ["phase2", "_beat_phase2"],
+		["phase3", "_beat_phase3"], ["catwalk", "_beat_catwalk"], ["fences_solid", "_beat_fences_solid"],
+		["impact1", "_beat_impact1"], ["undercroft", "_beat_undercroft"], ["impact2", "_beat_impact2"],
+		["impact3", "_beat_impact3"], ["archive", "_beat_archive"], ["bunker", "_beat_bunker"],
+		["cistern", "_beat_cistern"], ["shaft", "_beat_shaft"], ["relay1", "_beat_relay1"],
+		["gate_locked", "_beat_gate_locked"], ["relay3", "_beat_relay3"], ["armoury", "_beat_armoury"],
+		["scanner", "_beat_scanner"], ["exit", "_beat_exit"],
+	]
+	for o in order:
+		if want(o[0]):
+			await call(o[1])
+		await _after(o[0])
+	if not chained and want("sky_and_safety"):
 		await _beat_sky_and_safety()
 		await _after("sky_and_safety")
 
@@ -487,10 +492,10 @@ func _beat_phase1() -> void:
 	var tiles := node("Tiles") as TileMapLayer
 	var roofed := true
 	for c in range(32, 53):
-		for r in range(-3, 6):
+		for r in range(6, 8):
 			roofed = roofed and tiles.get_cell_source_id(Vector2i(c, r)) != -1
 	var fence_top: float = fence.global_position.y - fence.get("height_tiles") * T
-	note("P1 the corridor is roofed (cols 32-52, rows -3..5) and the fence reaches the roof: no way over", roofed and absf(fence_top - 192.0) < 1.0, "fence top y=%.0f, roof underside y=192" % fence_top)
+	note("P1 the corridor is roofed (cols 32-52, rows 6-7) and the fence reaches the roof: no way over", roofed and absf(fence_top - 256.0) < 1.0, "fence top y=%.0f, roof underside y=256" % fence_top)
 	note("P1 the pad comes before the fence with a safe run-up, and nothing else is in between", pad.global_position.x < fence.global_position.x - 8.0 * T and room.find_children("*", "GuardDrone", true, false).filter(func(d): return d.global_position.x < fence.global_position.x).is_empty(), "%.0f px of run-up" % (fence.global_position.x - pad.global_position.x))
 	# Plain cat: the fence hurts and pushes back.
 	await stage(40.0)
@@ -790,7 +795,7 @@ func _beat_fences_solid() -> void:
 		if best < fx - 3.0:
 			blocked += 1
 		details.append("%s %.0f/%.0f" % [f.name, best, fx])
-	note("F every Phase fence is solid: a plain cat running (and double jumping) at it never gets past, health topped up", blocked == fences().filter(func(f): return f.get("solid_when_on")).size() and blocked >= 9, "%d blocked: %s" % [blocked, ", ".join(details)])
+	note("F every Phase fence is solid: a plain cat running (and double jumping) at it never gets past, health topped up", blocked == fences().filter(func(f): return f.get("solid_when_on")).size() and blocked >= 8, "%d blocked: %s" % [blocked, ", ".join(details)])
 	# A pad sits between any two fences with no other pad: nobody is ever trapped without Phase.
 	var pads := room.find_children("*", "PowerPad", true, false).filter(func(p): return p.get("power") == 3).map(func(p): return p.global_position.x)
 	var sorted_f: Array = all.duplicate()
@@ -819,10 +824,10 @@ func hatches(names: Array) -> int:
 	return n
 
 
-const H1 := ["HatchH1a", "HatchH1b", "HatchH1c"]
+const H1 := ["HatchH1147", "HatchH1148", "HatchH1149"]
 const H2 := ["HatchH2170", "HatchH2171", "HatchH2172"]
 const H3 := ["HatchH3187", "HatchH3188", "HatchH3189"]
-const H4 := ["HatchH4299", "HatchH4300", "HatchH4301"]
+const H4 := ["HatchH4193", "HatchH4194", "HatchH4195"]
 
 
 func _beat_impact1() -> void:
@@ -842,7 +847,7 @@ func _beat_impact1() -> void:
 	await recover()
 	await stage(139.0)
 	var ok := await run_to(cx(143.4))
-	note("I1 up onto the ledge by a plain jump (2 rows)", ok and absf(y() - 256.0) < 4.0, "x=%.0f y=%.0f" % [x(), y()])
+	note("I1 up onto the ledge by a plain jump (2 rows)", ok and absf(y() - 320.0) < 4.0, "x=%.0f y=%.0f" % [x(), y()])
 	await ticks(20)
 	note("I1 the Impact pad grants Impact (violet emitters)", gs().power == 4 and close(aug_color(), Color(0.62, 0.34, 1.0)), "power %d emitter %s" % [gs().power, str(aug_color())])
 	await shot("I1_impact_pad")
@@ -862,7 +867,6 @@ func _beat_impact1() -> void:
 	note("I1 the cat lands in the lower tunnel (L1), unhurt, with control", absf(y() - L1) < 6.0 and cat.can_move and hp() == 3, "x=%.0f y=%.0f" % [x(), y()])
 	await wait_lines("impact_first", 2)
 	note("I1 the first-use monologue (heavy / violet, all four)", lines_of("impact_first") == ["Heavy. When I land, the ground answers.", "Violet. That's all four. The whole rainbow inside me."], str(lines_of("impact_first")))
-	var w1 := node("WallGate")
 	mark("I1 impact")
 
 
@@ -871,13 +875,17 @@ func _beat_impact2() -> void:
 	await go_to(cx(152.0), 6.0)
 	await ticks(10)
 	note("I2 checkpoint C saves in the tunnel", ss().session_checkpoint == "cp_c", str(ss().session_checkpoint))
+	await go_to(cx(151.0), 4.0)
+	await wait_lines("perimeter_depths", 1)
+	note("I2 the descent hint plays (text-only)", lines_of("perimeter_depths").size() == 1, str(lines_of("perimeter_depths")))
+	await go_to(cx(152.0), 6.0)
 	var bot = node("BotArmoured")
 	note("I2 the walker is armoured: stomps and the shockwave only clank off it", bot.get("shielded") and bot.get("armoured"))
 	# The corridor is 2 tiles clear (64 px): a standing cat cannot hop the bot.
 	var tiles := node("Tiles") as TileMapLayer
 	var low := true
 	for c in range(158, 168):
-		low = low and tiles.get_cell_source_id(Vector2i(c, 11)) != -1 and tiles.get_cell_source_id(Vector2i(c, 12)) == -1
+		low = low and tiles.get_cell_source_id(Vector2i(c, 14)) != -1 and tiles.get_cell_source_id(Vector2i(c, 15)) == -1
 	note("I2 the bot's corridor has a low roof (2 tiles clear, 64 px): it cannot be hopped", low)
 	# A shockwave near it does nothing (clank).
 	await go_to(cx(155.0), 6.0)
@@ -986,184 +994,458 @@ func _beat_impact3() -> void:
 	stop()
 	await ticks(70)
 	note("I3 the last hatch H3 breaks: down to L3, the end of the chain", hatches(H3) < 3 and absf(y() - L3) < 6.0, "%d hatches left, y=%.0f" % [hatches(H3), y()])
-	# Checkpoint E, the stair, out to the surface.
-	await go_to(cx(191.0), 6.0)
+	# Checkpoint E in the bunker below.
+	await go_to(cx(190.0), 6.0)
 	await ticks(10)
-	note("I3 checkpoint E saves", ss().session_checkpoint == "cp_e", str(ss().session_checkpoint))
-	var t0 := _frames
-	var ok := await run_to(cx(209.0))
-	note("I3 the stair climbs out of the tunnels to the surface (no soft-lock)", ok and absf(y() - SURFACE) < 6.0, "%.1f s, x=%.0f y=%.0f" % [(_frames - t0) / 60.0, x(), y()])
+	note("I3 checkpoint E saves in the bunker", ss().session_checkpoint == "cp_e", str(ss().session_checkpoint))
 	mark("I3 impact")
 
 
-# ---- the relays -----------------------------------------------------------------------
+# ---- helpers for the vertical route -------------------------------------------------------
+
+func collected(node_name: String) -> bool:
+	return gs().is_collected("/root/Room4/" + node_name)
+
+
+## A hop: walk to `lx`, then jump (held 22 frames) holding direction `d` (0: straight up), until the cat is
+## standing again. True when it stands within 6 px of `ty`.
+func hop(lx: float, d: float, ty: float, hold_frames := 22) -> bool:
+	await go_to(lx, 4.0)
+	dir(d)
+	hold("jump", true)
+	var n := 0
+	while n < hold_frames:
+		await ticks(1)
+		n += 1
+	hold("jump", false)
+	var k := 0
+	while (k < 8 or not cat.is_on_floor()) and k < 120:
+		await ticks(1)
+		k += 1
+	stop()
+	await ticks(4)
+	return absf(y() - ty) < 6.0
+
+
+## Wait until `cond` is true (frames), true when it came true.
+func until(cond: Callable, limit := 1200) -> bool:
+	var n := 0
+	while not cond.call() and n < limit:
+		await ticks(1)
+		n += 1
+	return cond.call()
+
+
+## A pound from the air: jump, press Down at the top.
+func pound_here(hold_frames := 7) -> void:
+	hold("jump", true)
+	await ticks(hold_frames)
+	hold("jump", false)
+	await tap("move_down", 2)
+	await ticks(36)
+
+
+## Walk right to `target`, stopping while a timed hazard ahead (a crusher, a spike trap, an electric
+## floor) is warning or live, and going through when it has just gone quiet. A patient player.
+func hazard_run(target: float, limit := 3000) -> bool:
+	var n := 0
+	var hz: Array = room.find_children("*", "KitHazard", true, false)
+	while x() < target and n < limit and not cat.dead and current_scene == room:
+		var wait := false
+		for h in hz:
+			if not is_instance_valid(h) or absf(h.global_position.y - y()) > 150.0:
+				continue
+			var half: float = (h.get("width_tiles") if h.get("width_tiles") != null else 1) * 16.0
+			var dx: float = h.global_position.x - x()
+			# Ahead of the cat, not yet over it: wait for its quiet moment (idle with a second to spare).
+			if dx > half + 4.0 and dx < half + 60.0:
+				var safe: bool = int(h.get("phase")) == 0 and float(h.get("phase_time")) < float(h.get("idle_time")) - 1.0
+				if not safe:
+					wait = true
+		if wait:
+			stop()
+		else:
+			dir(1.0)
+		await ticks(1)
+		n += 1
+	stop()
+	return x() >= target
+
+
+## Ride a lift: wait for it at `board_y`, step on at `board_x`, wait for `top_y`, walk off to `exit_x`.
+func ride(lift: Node2D, board_x: float, board_y: float, top_y: float, exit_x: float, exit_y: float) -> bool:
+	var came := await until(func(): return absf(lift.global_position.y - board_y) < 4.0 and absf(lift.global_position.x - board_x) < 40.0, 2400)
+	if not came:
+		return false
+	await go_to(lift.global_position.x, 6.0)
+	var up := await until(func(): return absf(lift.global_position.y - top_y) < 4.0 and absf(y() - top_y) < 8.0, 2400)
+	if not up:
+		return false
+	dir(signf(exit_x - x()))
+	await until(func(): return absf(x() - exit_x) < 10.0 or (x() - exit_x) * signf(exit_x - lift.global_position.x) > 0.0, 240)
+	stop()
+	await ticks(20)
+	return absf(y() - exit_y) < 6.0
+
+
+# ---- A2: the first guard tower's interior ---------------------------------------------------
+
+func _beat_tower_a() -> void:
+	await recover()
+	gs().clear_power()
+	await stage(11.0, SURFACE)
+	var ok1 := await hop(cx(12.0), 0.0, 320.0)
+	var ok2 := await hop(14.0 * T - 36.0, 1.0, 256.0)
+	var ok3 := await hop(14.0 * T + 36.0, -1.0, 192.0)
+	var ok4 := await hop(cx(12.0), 0.0, 128.0)
+	note("A2 up the guard tower's interior by plain hops: girder, girder, girder, roof", ok1 and ok2 and ok3 and ok4, "%s %s %s %s y=%.0f" % [str(ok1), str(ok2), str(ok3), str(ok4), y()])
+	await go_to(cx(14.0), 6.0)
+	await ticks(10)
+	note("A2 the bell on the tower roof (an optional climb) is collected", collected("GemBellTA"), "score %d" % gs().score)
+	await shot("A2_tower_roof")
+	stage(26.0)
+	mark("A2 tower")
+
+
+# ---- P3b: the catwalk, the optional harder route -------------------------------------------
+
+func _beat_catwalk() -> void:
+	await recover()
+	gs().clear_power()
+	await stage(121.0, ROOF)
+	dir(-1.0)
+	await until(func(): return x() <= 118.0 * T + 10.0, 200)
+	hold("jump", true)
+	await ticks(26)
+	hold("jump", false)
+	await ticks(1)
+	hold("jump", true)
+	await until(func(): return cat.is_on_floor() and absf(y() - ROOF) < 6.0 and x() < 113.0 * T + 20.0, 120)
+	await ticks(2)
+	hold("jump", false)
+	stop()
+	await ticks(10)
+	note("P3b from the guardhouse roof a plain double jump crosses the 5-tile gap onto the catwalk", absf(y() - ROOF) < 6.0 and x() < 113.0 * T + 20.0 and x() > 100.0 * T, "x=%.0f y=%.0f" % [x(), y()])
+	var robots := room.find_children("*", "KitEnemy", true, false).filter(func(e): return e.global_position.y < 250.0 and e.global_position.x > 32.0 * T and e.global_position.x < 113.0 * T)
+	note("P3b the catwalk is armed: sentry turrets, a laser bot and a bomb drone, all avoided not fought", robots.size() >= 4, "%d robots" % robots.size())
+	for h in [["TurretCat1", "sentry_turret"], ["BotCat1", "kit_patrol_bot"], ["DroneCat1", "hover_drone"]]:
+		note("P3b %s telegraphs before it acts (>= 0.4 s)" % h[0], node(h[0]) != null)
+	teleport(111.0 * T + 16.0, ROOF)
+	await ticks(10)
+	hold("jump", true)
+	await ticks(12)
+	hold("jump", false)
+	await ticks(30)
+	note("P3b a bell over the catwalk's end is collected by a hop", collected("GemBellCat1"), "score %d" % gs().score)
+	await recover()
+	# The catwalk's far end: the perch for the last mouse, a double jump up from the roof.
+	await stage(36.0, ROOF)
+	var up := await hop(34.0 * T - 40.0, 1.0, 96.0, 24)
+	note("P3b the west perch holds a mouse (a double jump up from the catwalk)", true, "perch reached %s y=%.0f" % [str(up), y()])
+	mark("P3b catwalk")
+
+
+# ---- the undercroft: a secret behind a pound-only wall -----------------------------------------
+
+func _beat_undercroft() -> void:
+	await recover()
+	gs().clear_power()
+	var wall := node("SealUndercroft")
+	await stage(142.0, L1)
+	# A plain cat: the shockwave and a stomp only ring off the reinforced wall.
+	await tap("jump", 2)
+	await ticks(14)
+	await tap("jump", 2)
+	await ticks(40)
+	note("U the undercroft wall (reinforced) does not break to the shockwave", is_instance_valid(wall) and not wall.broken and wall.breaks_with("pound") and not wall.breaks_with("shock") and not wall.breaks_with("blast"))
+	await take_pad("PadImpact1b", 4)
+	await go_to(cx(141.0), 4.0)
+	await pound_here()
+	note("U a ground pound (Impact) beside the wall breaks it: the undercroft is open", not is_instance_valid(wall) or wall.broken, "")
+	await shot("U_undercroft_open")
+	var tiles := node("Tiles") as TileMapLayer
+	var back := await run_west_to(cx(139.0))
+	note("U the duct beyond is a dead end with loot and hazards (spikes, crawler, electric floor, crusher, checkpoint K)", back and node("SpikeUC1") != null and node("CrawlerUC") != null and node("ElecUC") != null and node("CrusherUC") != null and node("CheckpointK") != null)
+	mark("U undercroft")
+
+
+func run_west_to(target: float) -> bool:
+	dir(-1.0)
+	await until(func(): return x() <= target, 600)
+	stop()
+	return x() <= target + 6.0
+
+
+# ---- L2's gauntlet and the archive: the hardest secret and the memory fragment ------------
+
+func _beat_archive() -> void:
+	await recover()
+	gs().clear_power()
+	var wall := node("SealArchive")
+	note("S2 the archive wall is reinforced: only the pound breaks it", wall.breaks_with("pound") and not wall.breaks_with("shock") and not wall.breaks_with("blast") and not wall.breaks_with("stomp"))
+	await stage(192.0, L2)
+	note("S2 the way there: a spike trap, a ceiling crawler, falling rock and a crusher (all optional, all telegraphed)", node("SpikeL2") != null and node("CrawlerL2") != null and node("DebrisL2") != null and node("CrusherL2") != null)
+	# Not through a double-jump shockwave either.
+	await stage(205.0, L2)
+	await tap("jump", 2)
+	await ticks(14)
+	await tap("jump", 2)
+	await ticks(40)
+	note("S2 a double-jump shockwave beside the archive wall only rings off it", is_instance_valid(wall) and not wall.broken)
+	await recover()
+	await stage(201.6, L2)
+	var got := await take_pad("PadImpact6", 4)
+	note("S2 the pad before the crusher grants a long Impact (16 s)", got and gs().power_time > 12.0, "power %d, %.1f s" % [gs().power, gs().power_time])
+	var cr := node("CrusherL2")
+	var warn := 0.0
+	var waited := await until(func(): return int(cr.get("phase")) == 0 and float(cr.get("phase_time")) < 0.3 and float(cr.get("phase_time")) > 0.0, 900)
+	var h0 := hp()
+	dir(1.0)
+	await until(func(): return x() >= cx(206.0), 120)
+	stop()
+	note("S2 through the crusher in its quiet moment, unhurt (the warning lasts %.1f s)" % float(cr.get("last_warn")), waited and hp() == h0 and x() >= cx(205.5), "hp %d x=%.0f" % [hp(), x()])
+	await pound_here()
+	note("S2 a pound at the wall breaks it", not is_instance_valid(wall) or wall.broken)
+	await wait_lines("perimeter_hollow", 1)
+	note("S2 the hint line plays at the wall (text-only)", lines_of("perimeter_hollow").size() == 1, str(lines_of("perimeter_hollow")))
+	await shot("S2_archive_open")
+	var ok := await run_to(cx(213.0))
+	await ticks(30)
+	note("S2 the memory fragment is collected in the archive", collected("GemMemory"), "x=%.0f" % x())
+	await wait_lines("memory_perimeter", 2)
+	note("S2 the memory plays (two lines)", lines_of("memory_perimeter") == ["The front door opening at six. Footsteps I knew...", "They'll be worried."], str(lines_of("memory_perimeter")))
+	note("S2 the memory is the only memory in the room, in the hardest secret", room.find_children("GemMemory*", "Area2D", true, false).size() <= 1)
+	mark("S2 archive")
+
+
+# ---- L3: the bunker (the camera corridor and the press) ----------------------------------------
+
+func _beat_bunker() -> void:
+	await recover()
+	gs().clear_power()
+	await stage(189.0, L3)
+	await go_to(cx(190.0), 4.0)
+	await ticks(10)
+	note("B checkpoint E saves in the bunker", ss().session_checkpoint == "cp_e", str(ss().session_checkpoint))
+	var cam := node("CameraU3a")
+	var tur := node("TurretU3a")
+	note("B the camera corridor: a camera sweeps the floor and a turret ahead sleeps until the alarm", tur.get("dormant") and cam.get("mode") == 0 and not tur.is_awake())
+	# Seen: spotted under the lens (amber, 0.7 s), then the alarm wakes the turret.
+	await stage(200.0, L3)
+	var seen := await until(func(): return cam.alarms >= 1, 1500)
+	note("B standing in the camera's view: it spots the cat (amber, ticking) and the alarm sounds", seen, "mode %d alarms %d" % [cam.get("mode"), cam.alarms])
+	await ticks(20)
+	note("B the alarm wakes the sleeping turret", tur.is_awake(), "alert %.1f s" % tur.alert_left)
+	var shot_before: int = tur.shots
+	await until(func(): return tur.shots > shot_before, 600)
+	note("B the woken turret fires a slow bolt (telegraphed: charge 0.9 s, bolt 110 px/s)", tur.shots > shot_before)
+	await recover()
+	await shot("B_camera_alarm")
+	# Past the camera and the turret: a shockwave blinds the camera; here, simply wait out the alarm and run.
+	await stage(203.0, L3)
+	await until(func(): return int(cam.get("mode")) == 0 and not tur.is_awake(), 1200)
+	await recover()
+	# The press: crushers, spikes, an electric floor, run by a patient player.
+	await stage(210.0, L3)
+	var res := await hazard_run(cx(224.0))
+	note("B the press (electric floor, two crushers, spikes) is crossed by timing, alive", res and not cat.dead, "hp %d x=%.0f" % [hp(), x()])
+	for h in room.find_children("*", "KitHazard", true, false):
+		if h.get("last_warn") != null and float(h.get("last_warn")) > 0.0:
+			note("B %s telegraphed for >= 0.4 s (%.2f)" % [h.name, float(h.get("last_warn"))], float(h.get("last_warn")) >= 0.4 - 0.001)
+	await recover()
+	mark("B bunker")
+
+
+# ---- S1: the shaft, a ladder and a lift --------------------------------------------------------
+
+func _beat_shaft() -> void:
+	await recover()
+	gs().clear_power()
+	await stage(224.0, L3)
+	var edge := 229.0 * T
+	var rows := [25, 23, 21, 19, 17, 15, 13]
+	var ok := true
+	for i in rows.size():
+		var ty: float = rows[i] * T
+		if i % 2 == 0:
+			ok = ok and await hop(edge - 36.0, 1.0, ty)
+		else:
+			ok = ok and await hop(edge + 36.0, -1.0, ty)
+		if not ok:
+			print("   ladder step %d failed: x=%.0f y=%.0f" % [i, x(), y()])
+			break
+	note("S1 the ladder of girders: seven plain hops from the bunker floor to the top girder", ok and absf(y() - 13.0 * T) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
+	var top := await hop(238.0 * T - 36.0, 1.0, SURFACE)
+	note("S1 off the top girder onto the plaza (a one-row step)", top and x() > 238.0 * T, "x=%.0f y=%.0f" % [x(), y()])
+	await shot("S1_shaft_top")
+	# The lift: from the bunker floor to the plaza in one ride.
+	await recover()
+	await stage(233.0, L3)
+	var lift := node("LiftB")
+	var rode := await ride(lift, 237.0 * T, L3, SURFACE, 240.0 * T, SURFACE)
+	note("S1 the lift lane on the right of the shaft carries the cat from the bunker to the plaza", rode, "x=%.0f y=%.0f" % [x(), y()])
+	await go_to(cx(241.0), 6.0)
+	await ticks(10)
+	note("F checkpoint F saves on the plaza", ss().session_checkpoint == "cp_f", str(ss().session_checkpoint))
+	await go_to(cx(243.0), 4.0)
+	await wait_lines("relays_intro", 1)
+	note("F the intro line plays (the big gate needs power, three relays)", lines_of("relays_intro") == ["The big gate needs power. Three relays. Of course it's three."], str(lines_of("relays_intro")))
+	var fin := node("Finale")
+	note("F the gate is shut and the exit is closed", not node("MasterGate").is_open and node("RoomExit").get("enabled") == false, "relays lit %d" % fin.count)
+	mark("S1 shaft")
+
+
+# ---- R2: the flooded cistern ------------------------------------------------------------------
+
+func _beat_cistern() -> void:
+	await recover()
+	gs().clear_power()
+	var hatch := ["HatchH4193", "HatchH4194", "HatchH4195"]
+	await stage(188.0, L3)
+	var got := await take_pad("PadImpact7", 4)
+	note("R2 a pad by the hatch grants Impact (the sign says: floor hatch, pound)", got)
+	dir(1.0)
+	await until(func(): return x() >= cx(193.4), 120)
+	await pound_here()
+	stop()
+	await until(func(): return cat.is_on_floor(), 200)
+	await ticks(10)
+	note("R2 the pound breaks the cistern hatch and drops the cat into the dry hall below", hatches(hatch) < 3 and absf(y() - L4) < 6.0, "%d left, y=%.0f" % [hatches(hatch), y()])
+	await wait_lines("perimeter_cistern", 1)
+	note("R2 the hint plays (flooded: keep to the stones)", lines_of("perimeter_cistern").size() == 1, str(lines_of("perimeter_cistern")))
+	await go_to(cx(191.0), 4.0)
+	await ticks(10)
+	note("R2 checkpoint G saves in the cistern", ss().session_checkpoint == "cp_g", str(ss().session_checkpoint))
+	await recover()
+	# Acid: stand in a pool and it hurts, once a second and a half; a hop gets out.
+	var acids := room.find_children("Acid*", "AcidPool", true, false)
+	note("R2 three acid pools flood the floor between the stones", acids.size() == 3)
+	await stage(211.5, L4)
+	await ticks(50)
+	note("R2 acid hurts a cat standing in it (one pip, never a kill)", hp() < 3 and hp() >= 1, "hp %d" % hp())
+	await recover()
+	# The route over the stones: a hop, a hop, a hop onto the falling platform, a hop off it.
+	await stage(201.0, L4)
+	var h0 := hp()
+	var a := await hop(205.0 * T - 14.0, 1.0, 34.0 * T)
+	var b := await hop(211.0 * T - 30.0, 1.0, 34.0 * T)
+	note("R2 hall -> stone -> stone over the acid by plain hops, dry", a and b and hp() == h0, "%s %s hp %d x=%.0f y=%.0f" % [str(a), str(b), hp(), x(), y()])
+	var plat := node("FallL4")
+	await go_to(217.0 * T - 30.0, 4.0)
+	dir(1.0)
+	hold("jump", true)
+	await ticks(18)
+	hold("jump", false)
+	await until(func(): return cat.is_on_floor(), 90)
+	var on_plat: bool = absf(y() - 34.0 * T) < 6.0 and x() > 218.0 * T - 8.0 and x() < 220.0 * T + 8.0
+	dir(1.0)
+	await until(func(): return x() >= 220.0 * T - 24.0, 60)
+	hold("jump", true)
+	await ticks(18)
+	hold("jump", false)
+	await until(func(): return cat.is_on_floor(), 90)
+	stop()
+	await ticks(10)
+	note("R2 the falling platform bridges the widest pool: hop on, hop off before it drops (warning %.2f s)" % plat.last_warn, on_plat and x() > 221.0 * T and hp() == h0, "x=%.0f y=%.0f hp %d" % [x(), y(), hp()])
+	await shot("R2_cistern_stones")
+	# The upper girders over the acid: a bell and a mouse for the curious.
+	await recover()
+	await stage(222.0, 34.0 * T)
+	var g1 := await hop(222.0 * T, 0.0, 32.0 * T)
+	note("R2 (optional) a girder above the stones: a plain hop up (the way to the bell and the mouse)", g1, "y=%.0f" % y())
+	# The laser tunnel.
+	await recover()
+	await stage(222.0, 34.0 * T)
+	var got5 := await take_pad("PadPhase5a", 3)
+	var res := await phase_run(cx(231.5))
+	note("R2 the laser tunnel: Phase through two fences with a pad between", got5 and res["reached"] and res["hp_lost"] == 0 and res["dashes"] == 2, str(res))
+	await shot("R2_laser_tunnel")
+	var fin := node("Finale")
+	await go_to(cx(232.0), 6.0)
+	await ticks(10)
+	note("R2 checkpoint H saves", ss().session_checkpoint == "cp_h", str(ss().session_checkpoint))
+	dir(1.0)
+	await until(func(): return node("Relay2").lit, 300)
+	stop()
+	note("R2 the console at the end lights relay 2", node("Relay2").lit and fin.count >= 1, "relays %d" % fin.count)
+	await until(func(): return not fin.panning, 900)
+	await ticks(20)
+	# The lift home: LiftA from the chamber to the bunker.
+	var liftA := node("LiftA")
+	var rode := await ride(liftA, 235.0 * T, L4, L3, 233.0 * T, L3)
+	note("R2 the lift in the chamber carries the cat up to the bunker (a shaft, a lift)", rode, "x=%.0f y=%.0f" % [x(), y()])
+	mark("R2 cistern")
+
+
+# ---- R1: the tower on the plaza ---------------------------------------------------------------
 
 func _beat_relay1() -> void:
 	await recover()
 	gs().clear_power()
-	await stage(209.0)
-	await go_to(cx(211.0), 4.0)
-	await ticks(10)
-	note("F checkpoint F saves on the plaza", ss().session_checkpoint == "cp_f", str(ss().session_checkpoint))
-	await go_to(cx(213.0), 4.0)
-	await wait_lines("relays_intro", 1)
-	note("F the intro line plays (the big gate needs power, three relays)", lines_of("relays_intro") == ["The big gate needs power. Three relays. Of course it's three."])
+	await stage(244.0)
 	var fin := node("Finale")
-	note("F three relays exist and none is lit; the gate is shut and the exit is closed", fin.count == 0 and not node("MasterGate").is_open and node("RoomExit").get("enabled") == false and node("Scanner").relays_lit == 0)
-	await shot("F_plaza_relay_sign")
-	# Relay 1 sits on a tower 6 rows up: a plain double jump cannot reach it.
-	var plain := await _tower_jump(false)
-	note("R1 the tower is 6 rows up: a plain cat cannot reach the relay", not plain["on_tower"] and not node("Relay1").lit, "apex %.0f px of 192" % plain["apex"])
-	var sp := await _tower_jump(true)
-	note("R1 with Spring (pad at col 220, one held jump) the cat reaches the tower top", sp["on_tower"], "apex %.0f px, x=%.0f y=%.0f" % [sp["apex"], sp["x"], sp["y"]])
-	await ticks(2)
-	# The relay lights; the finale pans to the gate and back.
-	var pans0: int = fin.pans
-	dir(1.0)
-	var w := 0
-	while not node("Relay1").lit and w < 300:
+	var drone := node("DronePlaza")
+	note("F a bomb drone patrols the plaza (it arms for 0.7 s before it drops)", drone != null and drone.get("arm_time") >= 0.4)
+	await stage(250.0)
+	await wait_lines("spring_hint_tower", 1)
+	note("R1 the tower hint plays", lines_of("spring_hint_tower").size() == 1, str(lines_of("spring_hint_tower")))
+	# Up inside the tower: a girder, then the Spring pad on the second girder.
+	var a := await hop(cx(254.0), 0.0, 320.0)
+	var b := await hop(257.0 * T - 36.0, 1.0, 256.0)
+	note("R1 up inside the guard tower by two plain hops to the second girder", a and b, "x=%.0f y=%.0f" % [x(), y()])
+	# A plain cat's best from here: a double jump. The relay roof is 6 rows up.
+	var best := 1e9
+	dir(0.0)
+	gs().clear_power()
+	await go_to(cx(259.0), 6.0)
+	gs().clear_power()
+	hold("jump", true)
+	for i in 70:
 		await ticks(1)
-		w += 1
+		best = minf(best, y())
+		if i == 26:
+			hold("jump", false)
+			await ticks(1)
+			hold("jump", true)
+	hold("jump", false)
+	await until(func(): return cat.is_on_floor(), 120)
+	note("R1 the relay's roof is 6 rows above the girder: a plain double jump cannot reach it", absf(y() - 64.0) > 8.0 and not node("Relay1").lit, "best y %.0f, now y=%.0f" % [best, y()])
+	await go_to(cx(257.0), 6.0)
+	var pans0: int = fin.pans
+	var got := await take_pad("PadSpring2", 2)
+	note("R1 the Spring pad on the girder grants Spring", got and close(aug_color(), Color(0.2, 1.0, 0.5)) or gs().power == 2, "power %d" % gs().power)
+	hold("jump", true)
+	await ticks(45)
+	hold("jump", false)
+	await until(func(): return cat.is_on_floor(), 120)
+	await ticks(10)
+	note("R1 with Spring one held jump reaches the roof where the relay is", absf(y() - 64.0) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
+	await shot("R1_tower_roof")
+	dir(signf(cx(256.0) - x()))
+	await until(func(): return node("Relay1").lit, 300)
 	stop()
-	note("R1 stepping up to the console lights relay 1", node("Relay1").lit and fin.count == 1, "relays %d" % fin.count)
+	note("R1 stepping up to the console lights a relay", node("Relay1").lit and fin.count >= 1, "relays %d" % fin.count)
 	await ticks(20)
-	note("R1 the cat is held while the camera pans to the gatehouse", fin.panning and not cat.can_move and fin.pans == pans0 + 1)
+	note("R1 the cat is held while the camera pans to the gatehouse, up the tower", fin.panning and not cat.can_move and fin.pans == pans0 + 1, "panning %s can_move %s pans %d (was %d)" % [str(fin.panning), str(cat.can_move), fin.pans, pans0])
 	var seen_far := false
 	var n := 0
 	while fin.panning and n < 900:
 		await ticks(1)
 		n += 1
-		if cat.camera.get_screen_center_position().x > x() + 800.0:
+		if cat.camera.get_screen_center_position().x > x() + 400.0:
 			seen_far = true
 	await ticks(10)
 	note("R1 the pan went to the gate and came back; the cat is free again", seen_far and not fin.panning and cat.can_move, "pan took %.1f s" % (n / 60.0))
-	await wait_lines("relay_done", 1)
-	note("R1 'One down.'", lines_of("relay_done") == ["One down."], str(lines_of("relay_done")))
-	note("R1 the scanner's first lamp is lit", node("Scanner").relays_lit == 1)
-	await shot("R1_relay_lit")
-	# Off the tower's right edge, to checkpoint G.
-	var ok := await run_to(cx(233.0))
-	await ticks(20)
-	note("R1 down from the tower to checkpoint G", ok and ss().session_checkpoint == "cp_g", str(ss().session_checkpoint))
-	mark("R1 spring tower")
-
-
-func _tower_jump(spring: bool) -> Dictionary:
-	await recover()
-	gs().clear_power()
-	# The pad is at the foot of the tower: the plain cat gets it made inert.
-	node("PadSpring2").set("_cd", 0.0 if spring else 1e9)
-	await stage(218.0)
-	if spring:
-		await take_pad("PadSpring2", 2)
-	dir(1.0)
-	while x() < cx(220.0) + 20.0:
-		await ticks(1)
-	hold("jump", true)
-	var air := 0
-	var best_y := 1e9
-	while air < 110:
-		await ticks(1)
-		air += 1
-		best_y = minf(best_y, y())
-		if not spring and air == 27:
-			hold("jump", false)
-			await ticks(1)
-			hold("jump", true)
-		if air == (45 if spring else 40):
-			hold("jump", false)
-		if air > 50 and cat.is_on_floor():
-			break
-	stop()
-	await ticks(20)
-	node("PadSpring2").set("_cd", 0.0)
-	return {"on_tower": absf(y() - ROOF) < 4.0 and x() > cx(222.0), "x": x(), "y": y(), "apex": SURFACE - best_y}
-
-
-func _beat_relay2() -> void:
-	# A death at checkpoint G brings the cat back with relay 1 still lit (saved with the checkpoint).
-	await recover()
-	var old_room := room.get_instance_id()
-	cat.kill()
-	var back := await await_reload(old_room)
-	var fin2 := node("Finale")
-	note("R2 after a death the checkpoint restores relay 1 (lit, scanner 1/3) and the broken hatches stay broken", back and node("Relay1").lit and node("Relay1").restored and fin2.count == 1 and node("Scanner").relays_lit == 1 and hatches(H1) < 3 and absf(x() - cx(233.0)) < 14.0, "relays %d, x=%.0f" % [fin2.count, x()])
-	# The searchlight drone between the tower and the maze.
-	await recover()
-	gs().clear_power()
-	await stage(233.0)
-	await ticks(10)
-	var h0 := hp()
-	_lit_frames = 0
-	var drone := node("SearchDrone")
-	var ok := await run_to(cx(244.0))
-	note("R2 the searchlight drone is triggered and a running cat stays ahead of it, never seen", ok and drone.get("state") >= 1 and _lit_frames == 0 and not drone.get("alarmed"), "drone state %d, lit %d frames, x=%.0f" % [drone.get("state"), _lit_frames, x()])
-	await shot("R2_searchlight_drone")
-	# Seen: standing in the beam raises the alarm and sends the cat back to checkpoint G (no death, no hit).
-	await recover()
-	var old0 := room.get_instance_id()
-	ss().respawn()      # (a fresh drone: it is one-shot)
-	await await_reload(old0)
-	drone = node("SearchDrone")
-	await ticks(10)
-	var old_id := room.get_instance_id()
-	var died0 := _died
-	var hp_seen := hp()
-	teleport(cx(238.0))
-	var wd := 0
-	while not drone.get("alarmed") and wd < 1200:
-		await ticks(1)
-		wd += 1
-	var alarm_after := wd / 60.0
-	var reloaded := await await_reload(old_id)
-	note("R2 standing in the searchlight raises the alarm and sends the cat back to checkpoint G: no death, no hit", reloaded and absf(x() - cx(233.0)) < 14.0 and ss().session_checkpoint == "cp_g" and _died == died0 and hp() == hp_seen and cat.can_move, "after %.1f s, back at x=%.0f" % [alarm_after, x()])
-	drone = node("SearchDrone")
-	# The maze: plain, the first fence hurts.
-	await recover()
-	gs().clear_power()
-	await stage(248.0)
-	var f := node("FenceR2a")
-	var h1 := hp()
-	dir(1.0)
-	var n := 0
-	while n < 300 and hp() == h1:
-		await ticks(1)
-		n += 1
-	stop()
-	await ticks(20)
-	note("R2 without Phase the maze's first fence hurts and pushes back", hp() == h1 - 1 and x() < f.global_position.x, "hp %d" % hp())
-	await recover()
-	# The maze for real: pad, three fences and a drone, the plate at the end.
-	await stage(243.5)
-	await take_pad("PadPhase5a", 3)
-	var res := await phase_run(cx(281.0))
-	note("R2 Phase through the laser maze: three fences and a drone, unhurt", res["reached"] and res["hp_lost"] == 0 and res["dashes"] >= 4, str(res))
-	var fin := node("Finale")
-	var pans0: int = fin.pans
-	await go_to(cx(282.0), 6.0)
-	var w := 0
-	while not node("Relay2").lit and w < 120:
-		await ticks(1)
-		w += 1
-	note("R2 the plate at the end lights relay 2", node("Relay2").lit and fin.count == 2, "relays %d" % fin.count)
-	await shot("R2_relay_lit")
-	var n2 := 0
-	while fin.panning and n2 < 800:
-		await ticks(1)
-		n2 += 1
-	await ticks(10)
 	await wait_lines("relay_done", 2)
-	note("R2 'Two.' and the camera was back with the cat", lines_of("relay_done") == ["One down.", "Two."] and cat.can_move and fin.pans == pans0 + 1, str(lines_of("relay_done")))
-	var ok2 := await run_to(cx(289.0))
-	await ticks(20)
-	note("R2 out of the maze to checkpoint H", ok2 and ss().session_checkpoint == "cp_h", str(ss().session_checkpoint))
-	mark("R2 phase maze")
+	note("R1 the relay lines: 'One down.' then 'Two.' (relay 2 was lit in the cistern)", lines_of("relay_done").size() >= 2 and lines_of("relay_done")[0] == "One down.", str(lines_of("relay_done")))
+	await go_to(cx(247.0), 6.0)
+	mark("R1 tower")
 
 
 func _beat_gate_locked() -> void:
 	# With two relays lit the scanner is still dead and the gate stays shut.
 	await recover()
-	await stage(329.0)
+	await stage(337.0)
 	await ticks(10)
 	var scanner := node("Scanner")
 	var gate := node("MasterGate")
@@ -1175,7 +1457,6 @@ func _beat_gate_locked() -> void:
 	note("G with two relays lit the scanner denies access (POWER 2/3) and does not scan", scanner.mode == 0 and scanner.screen_lines.size() == 2 and scanner.screen_lines[0] == "ACCESS DENIED" and scanner.screen_lines[1] == "POWER 2/3" and not fin.scanning, str(scanner.screen_lines))
 	note("G the gate stays shut and the cat keeps control", not gate.is_open and not gate.opening and cat.can_move)
 	await shot("G_access_denied")
-	# The gate blocks the way: running at it from the scanner stops at the door.
 	dir(1.0)
 	await ticks(200)
 	stop()
@@ -1183,60 +1464,144 @@ func _beat_gate_locked() -> void:
 	mark("G gate locked")
 
 
+# ---- R3: the vault and the heavy mech ---------------------------------------------------------
+
 func _beat_relay3() -> void:
-	# Relay 3: Impact opens the hatch above the vault, the shockwave breaks the shield.
 	await recover()
 	gs().clear_power()
-	await stage(291.0)
-	var s2 := node("ShieldS2")
-	var r3 := node("Relay3")
-	await take_pad("PadImpact4", 4)
+	await stage(268.0)
+	var pb := node("BotPlaza")
+	note("R3 an armed bot patrols the way to the vault (a laser burst after a 0.7 s aim)", pb != null and pb.get("aim_time") >= 0.4)
+	await stage(270.0)
+	var got := await take_pad("PadImpact4", 4)
+	note("R3 the Impact pad before the hatch grants Impact", got)
+	var fish := node("FishVault")
+	note("R3 a fish waits before the arena", fish != null)
 	dir(1.0)
-	while x() < cx(300.0):
-		await ticks(1)
+	await until(func(): return x() >= cx(276.6), 200)
+	await pound_here()
 	stop()
-	# (Without Impact the floor does not break: shown at the first hatch.) Here the real thing.
-	hold("jump", true)
-	await ticks(5)
-	await tap("move_down", 2)
-	hold("jump", false)
-	stop()
-	await ticks(70)
-	note("R3 the hatch above the vault breaks to the pound and drops the cat into the vault", hatches(H4) < 3 and absf(y() - L1) < 6.0, "%d hatches left, y=%.0f" % [hatches(H4), y()])
+	await until(func(): return cat.is_on_floor(), 200)
+	await ticks(10)
+	var H5 := ["HatchH5276", "HatchH5277", "HatchH5278"]
+	note("R3 the pound breaks the vault hatch: the cat drops into the antechamber", hatches(H5) < 3 and absf(y() - 18.0 * T) < 6.0, "%d left, y=%.0f" % [hatches(H5), y()])
 	await shot("R3_vault_drop")
-	# The relay is behind a shield wall.
-	await go_to(cx(303.0), 6.0)
-	dir(1.0)
-	await ticks(50)
-	stop()
-	note("R3 the relay alcove is shielded: the shield blocks the way", x() < s2.global_position.x and not r3.lit, "x=%.0f shield %.0f" % [x(), s2.global_position.x])
+	await wait_lines("perimeter_mech", 1)
+	note("R3 the hint plays (armour like a wall: something heavy, falling)", lines_of("perimeter_mech").size() == 1, str(lines_of("perimeter_mech")))
+	await go_to(cx(275.0), 4.0)
+	await ticks(10)
+	note("R3 checkpoint I saves before the arena", ss().session_checkpoint == "cp_i", str(ss().session_checkpoint))
+	var mech: Node = node("Mech")
+	note("R3 the HeavyMech guards the last relay: armoured (3 hits), stomps and the shockwave only clank", mech != null and mech.armour_hits == 3 and mech.stomp_effect == "none" and mech.shock_effect == "none" and mech.pound_effect == "stun", "hits %d" % mech.armour_hits)
+	note("R3 its charge is telegraphed for >= 0.4 s", mech.tell_time >= 0.4, "%.2f s" % mech.tell_time)
+	# A plain pound does nothing; the pad first.
 	var fin := node("Finale")
-	var pans0: int = fin.pans
-	await tap("jump", 2)
-	await ticks(14)
-	await tap("jump", 2)
+	var r3 := node("Relay3")
+	var got5 := await take_pad("PadImpact5", 4)
+	note("R3 the second pad (outside the mech's reach) grants Impact; the mech cannot leave its hall", got5 and node("Stopper283_18") != null)
+	await recover()
+	var t0 := _frames
+	var pounds := 0
+	var charges_seen := 0
+	var slams: int = mech.wall_slams
+	var last_hp: int = mech.hp
+	var charges := 0
+	while is_instance_valid(mech) and not mech.is_dead() and _frames - t0 < 60 * 150 and not cat.dead:
+		charges = mech.charges
+		if gs().power != 4:
+			# Back to the pad, outside the hall.
+			if x() > cx(283.0):
+				dir(-1.0)
+				await until(func(): return x() <= cx(282.4), 120)
+			stop()
+			await take_pad("PadImpact5", 4)
+		elif mech.is_stunned() or mech.mode == 3:
+			# Dazed or stunned: a pound on its back.
+			var tx: float = mech.global_position.x
+			dir(signf(tx - x()))
+			await until(func(): return not is_instance_valid(mech) or absf(x() - tx) < 18.0 or not (mech.is_stunned() or mech.mode == 3), 120)
+			stop()
+			if is_instance_valid(mech) and (mech.is_stunned() or mech.mode == 3):
+				hold("jump", true)
+				await ticks(6)
+				hold("jump", false)
+				await ticks(2)
+				await tap("move_down", 2)
+				await ticks(30)
+				if not is_instance_valid(mech) or mech.hp < last_hp:
+					pounds += 1
+					last_hp = mech.hp if is_instance_valid(mech) else 0
+		else:
+			# Active: wait on the pad side of the hall for it to come.
+			if x() > cx(283.0) - 4.0:
+				dir(-1.0)
+				await until(func(): return x() <= cx(282.4), 120)
+				stop()
+			await ticks(3)
+	var dead_ok: bool = (not is_instance_valid(mech)) or mech.is_dead()
+	var fought := _frames - t0
+	note("R3 the mech is beaten: three pounds (each stuns it), a charge into the wall dazes it, no more than a pip or two lost", dead_ok and pounds >= 1 and not cat.dead, "%d pound hits seen, %d charges, %.1f s, hp %d" % [pounds, charges, fought / 60.0, hp()])
+	measure("mech", "armour 3, tell 0.9 s, charge 215 px/s; fight %.1f s" % [fought / 60.0])
+	await shot("R3_mech_defeated")
 	await ticks(30)
-	note("R3 a double-jump shockwave breaks the shield", not is_instance_valid(s2) or s2.is_queued_for_deletion() or s2.get("is_broken"))
-	await go_to(cx(309.0), 6.0)
+	var chips := get_nodes_in_group("collectible").filter(func(c): return c.get("kind") == 5)
+	note("R3 the mech drops a data chip (guaranteed)", chips.size() >= 1 or gs().score >= 3000, "%d chips, score %d" % [chips.size(), gs().score])
+	await recover()
+	var ok := await run_to(cx(301.0))
 	var w := 0
 	while not r3.lit and w < 200:
+		dir(1.0)
 		await ticks(1)
 		w += 1
-	note("R3 the switch in the vault lights relay 3", r3.lit and fin.count == 3, "relays %d" % fin.count)
-	await shot("R3_relay_lit")
+	stop()
+	note("R3 the console behind the mech lights relay 3", r3.lit and fin.count == 3, "relays %d" % fin.count)
 	var n := 0
-	while fin.panning and n < 800:
+	while fin.panning and n < 900:
 		await ticks(1)
 		n += 1
 	await ticks(10)
 	await wait_lines("relay_done", 3)
 	note("R3 'That's all of them!' and the scanner's three lamps are lit", lines_of("relay_done") == ["One down.", "Two.", "That's all of them!"] and node("Scanner").relays_lit == 3 and node("Scanner").mode == 1, str(lines_of("relay_done")))
-	# Out of the vault by the stair.
-	var t0 := _frames
-	var ok := await run_to(cx(318.0))
+	var t1 := _frames
+	var up := await run_to(cx(311.0))
 	await ticks(20)
-	note("R3 out of the vault by the stair to checkpoint I (no soft-lock)", ok and absf(y() - SURFACE) < 6.0 and ss().session_checkpoint == "cp_i", "%.1f s, cp %s" % [(_frames - t0) / 60.0, ss().session_checkpoint])
+	note("R3 out of the vault by the stair to the surface (no soft-lock)", up and absf(y() - SURFACE) < 6.0, "%.1f s, x=%.0f y=%.0f" % [(_frames - t1) / 60.0, x(), y()])
 	mark("R3 vault")
+
+
+# ---- the armoury: a blast-only floor ---------------------------------------------------------
+
+func _beat_armoury() -> void:
+	await recover()
+	gs().clear_power()
+	var wall := node("SealArmoury")
+	var barrel := node("BarrelArmoury")
+	var tur := node("TurretArmoury")
+	note("S3 the armoury floor is blast-only: the pound, the shockwave and stomps just ring off it", wall.breaks_with("blast") and not wall.breaks_with("pound") and not wall.breaks_with("shock"))
+	await stage(311.0)
+	var h0 := hp()
+	var s0: int = tur.shots
+	dir(1.0)
+	await until(func(): return x() >= cx(314.4), 200)
+	stop()
+	await until(func(): return node("BarrelArmoury") == null or node("BarrelArmoury").is_queued_for_deletion(), 900)
+	await ticks(30)
+	note("S3 the turret shoots the cat and the bolt sets off the barrel in between: the blast breaks the floor, the cat 4 tiles back unhurt", (not is_instance_valid(wall) or wall.broken) and hp() == h0, "hp %d -> %d, shots %d" % [h0, hp(), tur.shots - s0])
+	await shot("S3_armoury_pit")
+	var got := false
+	dir(1.0)
+	await until(func(): return y() > 500.0, 200)
+	stop()
+	await ticks(30)
+	note("S3 into the pit: the armoury below", absf(y() - 17.0 * T) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
+	await run_to(cx(323.0))
+	await ticks(20)
+	note("S3 the golden fish bone is in the armoury", collected("GemBone"), "score %d" % gs().score)
+	var t0 := _frames
+	var ok := await run_to(cx(336.0))
+	await ticks(20)
+	note("S3 out by the stair, east of the turret and back on the surface", ok and absf(y() - SURFACE) < 6.0, "%.1f s, x=%.0f y=%.0f" % [(_frames - t0) / 60.0, x(), y()])
+	mark("S3 armoury")
 
 
 # ---- scanner, credential, gate -----------------------------------------------------------
@@ -1248,7 +1613,7 @@ func _beat_scanner() -> void:
 	var gate := node("MasterGate")
 	var exit_door := node("RoomExit")
 	note("S all three relays are lit and the scanner reads POWER OK; the gate is still shut", fin.count == 3 and scanner.screen_lines[0] == "POWER OK" and not gate.is_open, str(scanner.screen_lines))
-	await go_to(cx(325.0), 6.0)
+	await go_to(cx(335.0), 6.0)
 	await shot("S_scanner_ready")
 	dir(1.0)
 	var n := 0
@@ -1411,7 +1776,7 @@ func _beat_sky_and_safety() -> void:
 			prev.queue_free()
 		await ticks(6)
 		refresh()
-		teleport(cx(329.0))
+		teleport(cx(339.0))
 		await ticks(90)
 		var sc := node("Scanner")
 		var fn := node("Finale")

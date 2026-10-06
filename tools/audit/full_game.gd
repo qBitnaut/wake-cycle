@@ -552,12 +552,17 @@ func _voice_check() -> void:
 	var sets: Dictionary = JSON.parse_string(f.get_as_text())
 	var missing := []
 	var lines := 0
+	var text_only := 0
 	for id in sets:
 		for i in sets[id].size():
+			var entry: Variant = sets[id][i]
+			if entry is Dictionary and bool(entry.get("text_only", false)):
+				text_only += 1   # hint lines that play as text until the next voice pass
+				continue
 			lines += 1
 			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]):
 				missing.append("%s_%d" % [id, i])
-	note("VOICE all %d monologue lines have a narration clip" % lines, missing.is_empty(), str(missing))
+	note("VOICE all %d monologue lines have a narration clip (%d text-only hints await a voice pass)" % [lines, text_only], missing.is_empty(), str(missing))
 	note("VOICE narration played for the monologue lines shown (%d clips)" % _voices.size(), _voices.size() >= 20, "%d" % _voices.size())
 	var short := _voices.filter(func(v): return float(v[3]) < float(v[2]) + 0.4 - 0.001)
 	note("VOICE every line's hold is at least its clip length plus the tail", short.is_empty(), str(short.slice(0, 3)))

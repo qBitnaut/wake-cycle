@@ -1438,7 +1438,11 @@ func _beat_relay1() -> void:
 	note("R1 the pan went to the gate and came back; the cat is free again", seen_far and not fin.panning and cat.can_move, "pan took %.1f s" % (n / 60.0))
 	await wait_lines("relay_done", 2)
 	note("R1 the relay lines: 'One down.' then 'Two.' (relay 2 was lit in the cistern)", lines_of("relay_done").size() >= 2 and lines_of("relay_done")[0] == "One down.", str(lines_of("relay_done")))
-	await go_to(cx(247.0), 6.0)
+	# The way on east goes over the tower: along the relay roof to checkpoint L, then off its end.
+	var over := await run_to(cx(266.0))
+	await until(func(): return cat.is_on_floor(), 200)
+	await ticks(10)
+	note("R1 the way on goes over the tower: along the relay roof past checkpoint L and down the far side", over and ss().session_checkpoint == "cp_l" and absf(y() - SURFACE) < 6.0, "x=%.0f y=%.0f cp %s" % [x(), y(), str(ss().session_checkpoint)])
 	mark("R1 tower")
 
 
@@ -1471,7 +1475,7 @@ func _beat_relay3() -> void:
 	gs().clear_power()
 	await stage(268.0)
 	var pb := node("BotPlaza")
-	note("R3 an armed bot patrols the way to the vault (a laser burst after a 0.7 s aim)", pb != null and pb.get("aim_time") >= 0.4)
+	note("R3 an armed bot patrols the way to the vault (a laser burst after a 0.7 s aim; a power-armed stomp on the way down may have finished it)", pb == null or pb.get("aim_time") >= 0.4)
 	await stage(270.0)
 	var got := await take_pad("PadImpact4", 4)
 	note("R3 the Impact pad before the hatch grants Impact", got)

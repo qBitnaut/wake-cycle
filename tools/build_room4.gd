@@ -203,7 +203,7 @@ func _cell(x: int, y: int, mat: int, tile: Vector2i, layer: TileMapLayer = null)
 
 
 ## Every filled cell gets a tile by what it touches: a bevelled top where the cell
-## above is open, a girder under an open bottom, plain plates elsewhere.
+## above is open, plain plates elsewhere (one-way girders are only the explicit ledges).
 func _paint() -> void:
 	for c in _mats:
 		var m: int = _mats[c]
@@ -215,7 +215,9 @@ func _paint() -> void:
 			if m == MAROON:
 				m = STEEL
 		elif down_open:
-			tile = GIRDER_H
+			# (A solid plate, never the one-way girder tile: a girder in a slab's bottom row becomes a
+			# walkable slit at a shaft's or tunnel mouth's vertical face.)
+			tile = FLAT if (c.x + c.y) % 2 == 0 else RIVET
 		elif m == BULKHEAD or m == TEAL or m == RUST:
 			tile = FRAMED if (c.x * 3 + c.y) % 7 == 0 else (CROSS if (c.x + c.y * 5) % 11 == 0 else tile)
 		_cell(c.x, c.y, m, tile)
@@ -839,6 +841,7 @@ func _actors_plaza() -> void:
 	_mono("SpringHintTower", "spring_hint_tower", _p(250, G), Vector2(96, 96))
 	_pad("PadSpring2", 258, 8, 2, 10.0)
 	_put_script("res://scripts/actors/power_relay.gd", "Relay1", 256, 2, {"index": 1})
+	_cp("CheckpointL", 263, 2, "cp_l")     # on the relay roof's east end: the way on goes over the tower
 	_item("bell", "BellR1", 254, 10)
 	_item("yarn", "YarnR1a", 255, G)
 

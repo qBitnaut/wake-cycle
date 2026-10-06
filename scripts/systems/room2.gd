@@ -18,7 +18,6 @@ extends Level
 
 ## Rain is a moving window of RainFX that follows the camera.
 const RAIN_NODES := ["RainFar", "RainNear"]
-const THUNDER := preload("res://assets/audio/ambient/rolling.ogg")
 
 var power_grants: Array = []     ## [power, on_a_pad] per grant, in order
 var power_violations := 0        ## grants that were not Surge, or not from a pad
@@ -31,9 +30,7 @@ var _thunder: AudioStreamPlayer
 func _ready() -> void:
 	super()
 	_thunder = AudioStreamPlayer.new()
-	_thunder.stream = THUNDER
-	_thunder.volume_db = -8.0
-	_thunder.pitch_scale = 0.55
+	_thunder.bus = &"SFX"
 	add_child(_thunder)
 	_lightning = get_node_or_null("Lightning") as LightningFX
 	if _lightning:
@@ -49,7 +46,8 @@ func _ready() -> void:
 
 func _on_thunder(strength: float) -> void:
 	thunders += 1
-	_thunder.volume_db = lerpf(-16.0, -6.0, clampf(strength, 0.0, 1.0))
+	_thunder.stream = Sfx.stream("thunder")
+	_thunder.volume_db = Sfx.level_db("thunder") + lerpf(-9.0, 0.0, clampf(strength, 0.0, 1.0))
 	_thunder.play()
 
 
@@ -138,4 +136,5 @@ func _publish() -> void:
 	var dp = d["droneX"]
 	d["droneX"] = dp.x if dp is Vector2 else null
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

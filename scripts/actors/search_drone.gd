@@ -94,7 +94,7 @@ func _physics_process(delta: float) -> void:
 				visible = true
 				global_position = Vector2(start_x, height_y())
 				triggered.emit()
-				hum = LoopSfx.attach(self, preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg"), -14.0, 1.6, HUM_RANGE)
+				hum = LoopSfx.attach(self, Sfx.stream("drone_hover"), Sfx.level_db("drone_hover") + 2.0, 1.0, HUM_RANGE)
 		State.SWEEP:
 			global_position.x += speed * delta
 			global_position.y = height_y() + sin(_t * 2.0) * 3.0
@@ -175,7 +175,7 @@ func _update_seen(delta: float) -> void:
 func _alarm() -> void:
 	alarmed = true
 	seen.emit()
-	Sfx.play(self, "hurt", -4.0, 0.6)
+	Sfx.play(self, "turret_charge")
 	cat.set_can_move(false)
 	cat.velocity.x = 0.0
 	_flash = ColorRect.new()

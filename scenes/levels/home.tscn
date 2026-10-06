@@ -44,8 +44,6 @@
 [ext_resource type="Script" path="res://scripts/fx/birds.gd" id="41_n1vah"]
 [ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="42_ttfeu"]
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="43_ne3ss"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/birdsong.ogg" id="44_lkycy"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/drip_loop.ogg" id="45_eu1pf"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_cy0wv"]
 polygon = PackedVector2Array(68, 0, 61.265884, 22.900383, 42.39731, 41.265064, 15.131424, 51.456696, -15.131424, 51.456696, -42.39731, 41.265064, -61.265884, 22.900383, -68, 6.463686e-15, -61.265884, -22.900383, -42.39731, -41.265064, -15.131424, -51.456696, 15.131424, -51.456696, 42.39731, -41.265064, 61.265884, -22.900383)
@@ -880,8 +878,5 @@ vignette = 0.12
 
 [node name="Ambience" type="Node" parent="." unique_id=845924052]
 script = ExtResource("43_ne3ss")
-rain_stream = ExtResource("44_lkycy")
-hum_stream = ExtResource("45_eu1pf")
-rain_db = -13.0
-hum_db = -27.0
-step_db = -24.0
+bed = "amb_home"
+surface = "step_wood"

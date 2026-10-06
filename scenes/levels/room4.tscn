@@ -39,8 +39,6 @@
 [ext_resource type="Script" path="res://scripts/fx/sky_progress.gd" id="37_1rbst"]
 [ext_resource type="Script" path="res://scripts/systems/perimeter_finale.gd" id="38_1j6nq"]
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="39_tjsxd"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/rain.ogg" id="40_hbolu"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/pump_01.ogg" id="41_tpdt5"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="42_l33q2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ljt52"]
@@ -1950,11 +1948,8 @@ script = ExtResource("38_1j6nq")
 
 [node name="Ambience" type="Node" parent="." unique_id=2112298785]
 script = ExtResource("39_tjsxd")
-rain_stream = ExtResource("40_hbolu")
-hum_stream = ExtResource("41_tpdt5")
-rain_db = -17.0
-hum_db = -24.0
-step_db = -20.0
+bed = "amb_perimeter"
+surface = "step_wet"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=775970902 instance=ExtResource("42_l33q2")]
 layer = 10

@@ -31,15 +31,29 @@ third-party source.
 
 ## Audio
 
+All of the game's sound is generated with ElevenLabs (Creator plan, which includes a
+commercial-use licence for the output). Nothing in it is from a third-party pack except
+the two bird chirps listed at the bottom.
+
+| What | Generated with | Location |
+|---|---|---|
+| Narration of the cat's inner monologue: every line of `data/monologue.json`, voiced by the premade voice "Will - Relaxed Optimist", model `eleven_v4_turbo`; settings in `voice.json` | ElevenLabs Text to Speech | `assets/audio/voice/` |
+| Sound effects: footsteps, movement, powers, pickups, doors, lasers, robots, the goo transformation, thunder, UI-less map sounds. `sfx.json` maps the logical names to files | ElevenLabs Sound Effects API (`/v1/sound-generation`) | `assets/audio/sfx/` |
+| Ambience loops per scene (warehouse, yard, stacks, perimeter, home, map) and a smooth rain loop | ElevenLabs Sound Effects API (loop mode) | `assets/audio/amb/` |
+| Music: warehouse, yard, stacks, perimeter, home (also the credits) and map, each cut into a seamless loop with an ffmpeg crossfade | ElevenLabs Music API (`/v1/music`, instrumental) | `assets/audio/music/wc_*.ogg` |
+
+The prompts and scripts that made them are in `tools/audio/` (`sfx_spec.py`, `gen_sfx.py`,
+`gen_voice.py`, `gen_music.py`, `make_manifest.py`). The API key is read from a file outside
+the repository and is never stored in it.
+
+### CC0 audio that remains
+
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| 512 Sound Effects (8-bit style), curated subset, converted to OGG | SubspaceAudio / Juhani Junkala | https://opengameart.org/content/512-sound-effects-8-bit-style | CC0 1.0 | `assets/audio/sfx8bit/` |
-| 4 Chiptunes (Adventure), 2 tracks | Juhani Junkala | https://opengameart.org/content/4-chiptunes-adventure | CC0 1.0 | `assets/audio/music/` |
-| 30 CC0 SFX Loops (machine, pump, rolling, rain, water and ambient loops) | rubberduck | https://opengameart.org/content/30-cc0-sfx-loops | CC0 1.0 | `assets/audio/ambient/` |
-| Dripping water loop (converted from FLAC to OGG) | qubodup | https://opengameart.org/content/dripping-water-loop | CC0 1.0 | `assets/audio/ambient/drip_loop.ogg` |
-| Impact Sounds 1.0 (footsteps and metal impacts) | Kenney | https://kenney.nl/assets/impact-sounds | CC0 1.0 | `assets/audio/sfx/` |
-| Blackbird singing in garden with rustling trees (trimmed to a 35 s loop, and one chirp cut from it) | Cinetony | https://freesound.org/people/Cinetony/sounds/565058/ | CC0 1.0 | `assets/audio/ambient/birdsong.ogg`, `assets/audio/sfx/bird_chirp_1.ogg` |
+| Blackbird singing in garden with rustling trees (one chirp cut from it) | Cinetony | https://freesound.org/people/Cinetony/sounds/565058/ | CC0 1.0 | `assets/audio/sfx/bird_chirp_1.ogg` |
 | Ambient Bird Sounds (one chirp cut from it) | isaiah658 | https://opengameart.org/content/ambient-bird-sounds | CC0 1.0 | `assets/audio/sfx/bird_chirp_2.ogg` |
-| JRPG Pack 4 Calm ("Calm6 - Innocence"), the ending and credits music | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/jrpg-pack-4-calm | CC0 1.0 | `assets/audio/music/calm_innocence.ogg` |
+
+The earlier CC0 audio (8-bit sound effects, Kenney impact sounds, rubberduck's SFX loops,
+the qubodup drip loop, the Juhani Junkala tracks) was replaced and removed from the project.
 
 License text: https://creativecommons.org/publicdomain/zero/1.0/

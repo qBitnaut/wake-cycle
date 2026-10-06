@@ -141,6 +141,19 @@ distance to the cat (the web export plays audio as samples, where positional aud
 reliable), stopped out of range and freed with its source; the audits assert no looping
 player outlives its scene (`LoopSfx.orphans`, published as `window.__wake.loops`).
 
+## Audio
+
+All sound is generated with ElevenLabs (see [CREDITS.md](CREDITS.md)); the scripts and prompts
+are in `tools/audio/` and read the API key from `~/.config/wake-cycle/elevenlabs.key`
+(never stored in the repo). `AudioDirector` (`scripts/systems/audio_director.gd`, an
+autoload) owns the buses (Master, Music, Ambience, SFX, Voice), the music (one loop per
+scene, crossfaded on every transition), the map's bed, ducking under the voice, and the web
+unlock (nothing starts before the first key, click or touch). `Sfx.play(self, "jump")` plays
+a manifest name (`assets/audio/sfx/sfx.json`). `Monologue` speaks each line when a clip
+`assets/audio/voice/<id>_<n>.ogg` exists and holds the subtitle for at least the clip plus a
+short tail; a line without a clip is text only. Loops are always streams, never web samples.
+The web audits publish `window.__wake.audio` (`AudioDirector.web_state()`).
+
 ## Room 1 and the powers
 
 The game opens in Warehouse Room 1 (the main scene). It uses plain movement only:

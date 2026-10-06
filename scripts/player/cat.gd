@@ -95,6 +95,26 @@ func _ready() -> void:
 	sprite.sprite_frames = CatFrames.build()
 	sprite.play("idle")
 	_set_crouch(false)
+	GameState.power_changed.connect(_on_power_sound)
+
+
+var _surge_loop: LoopSfx
+
+
+## The Surge whoosh when the power starts and its rush loop while it lasts.
+func _on_power_sound(p: int, _duration: float) -> void:
+	if p == NanoPalette.Power.SURGE:
+		Sfx.play(self, "surge_whoosh")
+		if _surge_loop == null or not is_instance_valid(_surge_loop):
+			_surge_loop = LoopSfx.attach(self, Sfx.stream("surge_loop"), Sfx.level_db("surge_loop"), 1.0, 600.0)
+	elif _surge_loop and is_instance_valid(_surge_loop):
+		_surge_loop.retire()
+		_surge_loop = null
+
+
+func _exit_tree() -> void:
+	if GameState.power_changed.is_connected(_on_power_sound):
+		GameState.power_changed.disconnect(_on_power_sound)
 
 
 func set_camera_limits(r: Rect2i) -> void:
@@ -211,14 +231,14 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 			_jump_buf = 0.0
 			_coyote = 0.0
 			_jumping = true
-			Sfx.play(self, "jump")
+			Sfx.play(self, "spring_boost" if is_spring else "jump")
 			_stretch(Vector2(0.85, 1.2))
 		elif _air_jumps > 0 and not on_floor:
 			velocity.y = _air_jump_velocity(spring_air, is_spring)
 			_air_jumps -= 1
 			_jump_buf = 0.0
 			_jumping = true
-			Sfx.play(self, "double_jump", -6.0, 1.3 if is_spring else 1.0)
+			Sfx.play(self, "spring_boost" if is_spring else "double_jump")
 			_flip()
 			if GameState.shockwave_unlocked:
 				_burst(global_position + Vector2(0, -12), shockwave_radius, "shock")
@@ -237,7 +257,7 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 		dash_left = dash_time
 		_dash_cd = dash_cooldown
 		_ghost_t = 0.0
-		Sfx.play(self, "double_jump", -8.0, 1.7)
+		Sfx.play(self, "phase_dash")
 	if (
 		power == NanoPalette.Power.IMPACT
 		and not on_floor
@@ -317,10 +337,10 @@ func _push_bodies(pre_vx: float) -> void:
 func _land() -> void:
 	if pounding:
 		pounding = false
-		Sfx.play(self, "shockwave_thump", -2.0)
+		Sfx.play(self, "impact_pound")
 		_burst(global_position + Vector2(0, -8), pound_radius, "pound")
 	elif _fall_speed > 249.0:
-		Sfx.play(self, "land", -10.0)
+		Sfx.play(self, "land_hard" if _fall_speed > 420.0 else "land")
 		_stretch(Vector2(1.2, 0.8))
 	_fall_speed = 0.0
 
@@ -334,6 +354,8 @@ func _track_fall() -> void:
 ## on_shockwave(origin, radius, source) with source "shock" or "pound".
 func _burst(pos: Vector2, radius: float, source: String) -> void:
 	shockwave.emit(pos, radius, source)
+	if source == "shock":
+		Sfx.play(self, "shockwave_burst")
 	for n in get_tree().get_nodes_in_group("shock_receiver"):
 		if not n.has_method("on_shockwave"):
 			continue
@@ -375,7 +397,7 @@ func kill() -> void:
 	pounding = false
 	velocity = Vector2(0, -338)
 	body_shape.set_deferred("disabled", true)
-	Sfx.play(self, "hurt", -3.0, 0.7)
+	Sfx.play(self, "hurt", 0.0, 0.8)
 	sprite.play("crouch")
 	sprite.modulate = Color(2.5, 1.0, 1.0)
 	died.emit()

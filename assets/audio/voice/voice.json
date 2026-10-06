@@ -1,0 +1,329 @@
+{
+	"voice_id": "bIHbv24MWmeRgasZH58o",
+	"voice_name": "Will - Relaxed Optimist",
+	"model_id": "eleven_v4_turbo",
+	"voice_settings": {
+		"stability": 0.45,
+		"similarity_boost": 0.75,
+		"style": 0.3,
+		"use_speaker_boost": true
+	},
+	"format": "ogg vorbis mono 44.1k ~80kbps, -16 LUFS",
+	"clips": {
+		"awakening_0": {
+			"file": "awakening_0.ogg",
+			"text": "...Wait. Whaa- what?",
+			"seconds": 1.67
+		},
+		"awakening_1": {
+			"file": "awakening_1.ogg",
+			"text": "Everything is... louder. Sharper. Brighter.",
+			"seconds": 4.1
+		},
+		"awakening_2": {
+			"file": "awakening_2.ogg",
+			"text": "I've been awake before. Never like this.",
+			"seconds": 2.98
+		},
+		"awakening_3": {
+			"file": "awakening_3.ogg",
+			"text": "I can think. I mean really think.",
+			"seconds": 2.99
+		},
+		"awakening_4": {
+			"file": "awakening_4.ogg",
+			"text": "Where am I? What is this place?",
+			"seconds": 2.47
+		},
+		"nanofluid_container_0": {
+			"file": "nanofluid_container_0.ogg",
+			"text": "'Experimental Nanofluid'... I can read that. Since when can I read?",
+			"seconds": 5.3
+		},
+		"nanofluid_container_1": {
+			"file": "nanofluid_container_1.ogg",
+			"text": "Tiny machines. Millions of them. In that water... and now in me.",
+			"seconds": 5.9
+		},
+		"nanofluid_container_2": {
+			"file": "nanofluid_container_2.ogg",
+			"text": "They didn't hurt me. They changed me.",
+			"seconds": 2.79
+		},
+		"nanofluid_container_3": {
+			"file": "nanofluid_container_3.ogg",
+			"text": "If these are micro robots... what have they just done to me?",
+			"seconds": 4.0
+		},
+		"exit_hint_0": {
+			"file": "exit_hint_0.ogg",
+			"text": "The door's open. Outside... I should find a way home.",
+			"seconds": 4.1
+		},
+		"yard_arrival_0": {
+			"file": "yard_arrival_0.ogg",
+			"text": "Rain. Cold. Real.",
+			"seconds": 2.87
+		},
+		"yard_arrival_1": {
+			"file": "yard_arrival_1.ogg",
+			"text": "The city... all those lights. Is anyone out there?",
+			"seconds": 3.9
+		},
+		"surge_first_0": {
+			"file": "surge_first_0.ogg",
+			"text": "Whoa- my legs! Everything's... faster.",
+			"seconds": 3.72
+		},
+		"surge_first_1": {
+			"file": "surge_first_1.ogg",
+			"text": "That pad. It's humming the same blue as the lines in me.",
+			"seconds": 4.0
+		},
+		"surge_gate_0": {
+			"file": "surge_gate_0.ogg",
+			"text": "That gate won't wait for me. Good thing I don't have to wait either.",
+			"seconds": 3.57
+		},
+		"dock_bot_0": {
+			"file": "dock_bot_0.ogg",
+			"text": "It... looked at me. Like it knew me.",
+			"seconds": 3.03
+		},
+		"dock_bot_1": {
+			"file": "dock_bot_1.ogg",
+			"text": "Why do I feel like it's waiting for an order?",
+			"seconds": 2.55
+		},
+		"exit_fence_0": {
+			"file": "exit_fence_0.ogg",
+			"text": "The fence goes on forever. There has to be a way through.",
+			"seconds": 3.81
+		},
+		"stacks_arrival_0": {
+			"file": "stacks_arrival_0.ogg",
+			"text": "The rain's easing up.",
+			"seconds": 1.27
+		},
+		"stacks_arrival_1": {
+			"file": "stacks_arrival_1.ogg",
+			"text": "From up here I can see the whole district... and not one person. Just machines, working.",
+			"seconds": 6.8
+		},
+		"spring_hint_0": {
+			"file": "spring_hint_0.ogg",
+			"text": "Too high to jump... that green pad hums like a spring.",
+			"seconds": 4.2
+		},
+		"spring_hint_ledge_0": {
+			"file": "spring_hint_ledge_0.ogg",
+			"text": "Too high again. Maybe the green one will lift me.",
+			"seconds": 3.28
+		},
+		"spring_hint_combine_0": {
+			"file": "spring_hint_combine_0.ogg",
+			"text": "A tower. Too tall to jump... that green pad again.",
+			"seconds": 4.5
+		},
+		"spring_hint_roof_0": {
+			"file": "spring_hint_roof_0.ogg",
+			"text": "That roof is too high to reach. The green pad hums like a spring.",
+			"seconds": 4.9
+		},
+		"spring_hint_tower_0": {
+			"file": "spring_hint_tower_0.ogg",
+			"text": "Too tall to climb... but there is the green one again.",
+			"seconds": 3.73
+		},
+		"spring_first_0": {
+			"file": "spring_first_0.ogg",
+			"text": "Up! Higher than any cat should go.",
+			"seconds": 2.69
+		},
+		"spring_first_1": {
+			"file": "spring_first_1.ogg",
+			"text": "Green this time. Each pad wakes a different part of me.",
+			"seconds": 3.81
+		},
+		"conduit_0": {
+			"file": "conduit_0.ogg",
+			"text": "Ow- no. Not pain. The machines in me... drank it.",
+			"seconds": 5.0
+		},
+		"conduit_1": {
+			"file": "conduit_1.ogg",
+			"text": "Something new. When I jump twice, the air itself pushes out.",
+			"seconds": 4.6
+		},
+		"shock_first_0": {
+			"file": "shock_first_0.ogg",
+			"text": "Okay. That's... a lot of power for a house cat.",
+			"seconds": 3.87
+		},
+		"mirror_bot_0": {
+			"file": "mirror_bot_0.ogg",
+			"text": "It's copying me. Every step.",
+			"seconds": 2.66
+		},
+		"mirror_bot_1": {
+			"file": "mirror_bot_1.ogg",
+			"text": "It thinks I'm in charge. Maybe the goo made me something they recognise.",
+			"seconds": 4.6
+		},
+		"stacks_exit_0": {
+			"file": "stacks_exit_0.ogg",
+			"text": "There, past the fences. Trees. Rooftops. Little lights in windows.",
+			"seconds": 6.0
+		},
+		"stacks_exit_1": {
+			"file": "stacks_exit_1.ogg",
+			"text": "Home is that way. I can almost smell it.",
+			"seconds": 3.43
+		},
+		"perimeter_arrival_0": {
+			"file": "perimeter_arrival_0.ogg",
+			"text": "Fences. Lasers. Lights that watch.",
+			"seconds": 3.45
+		},
+		"perimeter_arrival_1": {
+			"file": "perimeter_arrival_1.ogg",
+			"text": "'Authorised units only.' ...Am I a unit now?",
+			"seconds": 3.54
+		},
+		"phase_first_0": {
+			"file": "phase_first_0.ogg",
+			"text": "Through it?! I went through it!",
+			"seconds": 2.19
+		},
+		"phase_first_1": {
+			"file": "phase_first_1.ogg",
+			"text": "Cyan. Like slipping between raindrops.",
+			"seconds": 3.23
+		},
+		"impact_first_0": {
+			"file": "impact_first_0.ogg",
+			"text": "Heavy. When I land, the ground answers.",
+			"seconds": 3.62
+		},
+		"impact_first_1": {
+			"file": "impact_first_1.ogg",
+			"text": "Violet. That's all four. The whole rainbow inside me.",
+			"seconds": 4.6
+		},
+		"relays_intro_0": {
+			"file": "relays_intro_0.ogg",
+			"text": "The big gate needs power. Three relays. Of course it's three.",
+			"seconds": 4.6
+		},
+		"relay_done_0": {
+			"file": "relay_done_0.ogg",
+			"text": "One down.",
+			"seconds": 0.84
+		},
+		"relay_done_1": {
+			"file": "relay_done_1.ogg",
+			"text": "Two.",
+			"seconds": 0.51
+		},
+		"relay_done_2": {
+			"file": "relay_done_2.ogg",
+			"text": "That's all of them!",
+			"seconds": 1.14
+		},
+		"scanner_0": {
+			"file": "scanner_0.ogg",
+			"text": "It's scanning me. Please, please...",
+			"seconds": 3.05
+		},
+		"credential_0": {
+			"file": "credential_0.ogg",
+			"text": "'Supervisor credential accepted.'",
+			"seconds": 2.02
+		},
+		"credential_1": {
+			"file": "credential_1.ogg",
+			"text": "They really think I'm one of them.",
+			"seconds": 1.68
+		},
+		"credential_2": {
+			"file": "credential_2.ogg",
+			"text": "...Maybe I am, a little.",
+			"seconds": 2.07
+		},
+		"perimeter_exit_0": {
+			"file": "perimeter_exit_0.ogg",
+			"text": "The rain's stopping. The sky's getting light.",
+			"seconds": 2.67
+		},
+		"perimeter_exit_1": {
+			"file": "perimeter_exit_1.ogg",
+			"text": "Almost home.",
+			"seconds": 0.95
+		},
+		"map_yard_0": {
+			"file": "map_yard_0.ogg",
+			"text": "The whole district... like a map in my head.",
+			"seconds": 3.12
+		},
+		"map_yard_1": {
+			"file": "map_yard_1.ogg",
+			"text": "Since when do I think in maps?",
+			"seconds": 1.96
+		},
+		"map_stacks_0": {
+			"file": "map_stacks_0.ogg",
+			"text": "Up. Everything out here climbs. So will I.",
+			"seconds": 3.53
+		},
+		"map_perimeter_0": {
+			"file": "map_perimeter_0.ogg",
+			"text": "The fence. Beyond it... the hills where the sun comes up.",
+			"seconds": 4.3
+		},
+		"map_home_0": {
+			"file": "map_home_0.ogg",
+			"text": "There. That street. I know it. I know it.",
+			"seconds": 3.54
+		},
+		"home_arrival_0": {
+			"file": "home_arrival_0.ogg",
+			"text": "The sun. I forgot how warm it is.",
+			"seconds": 2.92
+		},
+		"home_arrival_1": {
+			"file": "home_arrival_1.ogg",
+			"text": "This street. That fence. I know this place.",
+			"seconds": 3.82
+		},
+		"home_flap_0": {
+			"file": "home_flap_0.ogg",
+			"text": "Still unlocked. They left it open for me.",
+			"seconds": 2.69
+		},
+		"home_final_0": {
+			"file": "home_final_0.ogg",
+			"text": "Home. It smells like home.",
+			"seconds": 2.6
+		},
+		"home_final_1": {
+			"file": "home_final_1.ogg",
+			"text": "I don't know exactly what I am now. Something more than I was.",
+			"seconds": 4.4
+		},
+		"home_final_2": {
+			"file": "home_final_2.ogg",
+			"text": "But some things are still simple.",
+			"seconds": 2.03
+		},
+		"home_final_3": {
+			"file": "home_final_3.ogg",
+			"text": "Warm sun. Soft cushion. Safe.",
+			"seconds": 3.84
+		},
+		"home_final_4": {
+			"file": "home_final_4.ogg",
+			"text": "...Wake cycle complete.",
+			"seconds": 1.47
+		}
+	}
+}

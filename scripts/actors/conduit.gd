@@ -69,8 +69,8 @@ func _fire(cat: Cat) -> void:
 	_cable.burst(1.5)
 	_floor.burst(1.5)
 	_arc = 1.0
-	Sfx.play(self, "power_up", -4.0, 0.7)
-	Sfx.play(self, "res://assets/audio/sfx/impactMetal_heavy_002.ogg", -8.0, 2.0)
+	Sfx.play(self, "power_up")
+	Sfx.play(self, "shockwave_burst")
 	var aug := cat.get_node_or_null("Sprite/Augments") as CatAugments
 	if aug:
 		aug.flare(1.6)

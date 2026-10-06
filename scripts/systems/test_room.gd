@@ -63,6 +63,7 @@ func _physics_process(delta: float) -> void:
 		"crates": get_tree().get_nodes_in_group("breakable").size(),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))
 
 

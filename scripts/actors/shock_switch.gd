@@ -31,7 +31,7 @@ func _set_active(v: bool) -> void:
 	if v == active:
 		return
 	active = v
-	Sfx.play(self, "door", -8.0, 1.5)
+	Sfx.play(self, "plate_click" if v else "plate_release")
 	state_changed.emit(active)
 
 

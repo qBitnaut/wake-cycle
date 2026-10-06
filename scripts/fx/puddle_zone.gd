@@ -82,4 +82,4 @@ func _kick(global_x: float, strength: float, loud: bool) -> void:
 	_splash.amount = 8 if loud else 4
 	_splash.restart()
 	_splash.emitting = true
-	Sfx.play(self, "land", -20.0 if loud else -26.0, 2.3)
+	Sfx.play(self, "splash", -3.0 if loud else -9.0, 1.2)

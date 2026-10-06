@@ -167,7 +167,7 @@ func _stomp(cat: Cat) -> void:
 		_clank()
 		return
 	stomps += 1
-	Sfx.play(self, "land", -4.0, 0.8)
+	Sfx.play(self, "bot_stomp")
 	if stomps >= stomps_to_befriend:
 		befriend()
 	else:
@@ -177,7 +177,7 @@ func _stomp(cat: Cat) -> void:
 ## The "that did nothing" read: a metal clank, a quick blink and a shudder.
 func _clank() -> void:
 	_flinch = 0.28
-	Sfx.play(self, "res://assets/audio/sfx/impactMetal_heavy_002.ogg", -6.0, 1.3)
+	Sfx.play(self, "bot_stomp", 0.0, 1.25)
 
 
 func _flinch_fx() -> void:
@@ -201,7 +201,7 @@ func befriend() -> void:
 	state = State.FRIENDLY
 	sprite.play("happy")
 	GameState.add_score(500)
-	Sfx.play(self, "power_up", -6.0, 1.4)
+	Sfx.play(self, "robot_chirp")
 
 
 func on_shockwave(origin: Vector2, _radius: float, source: String) -> void:

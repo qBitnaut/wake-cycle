@@ -92,7 +92,7 @@ func _physics_process(delta: float) -> void:
 	if near and not has_reacted:
 		has_reacted = true
 		_flicker = 0.9
-		Sfx.play(self, "power_up", -12.0, 2.4)
+		Sfx.play(self, "robot_chirp")
 		reacted.emit()
 	if near:
 		_flicker = maxf(_flicker - delta, 0.0)

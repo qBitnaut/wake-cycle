@@ -102,8 +102,8 @@ const STRUGGLE_BEAT := 0.42
 @export var focus_offset := Vector2(0, -16)
 @export var letterbox := true
 ## Low hum under the veins (a loop, played pitched down).
-@export var hum_stream: AudioStream = preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg")
-@export var hum_pitch := 0.45
+@export var hum_stream: AudioStream = preload("res://assets/audio/sfx/goo_bubble.ogg")
+@export var hum_pitch := 0.8
 @export_range(-60.0, 0.0, 0.5) var hum_volume_db := -11.0
 ## The feet sink until they are this deep in the goo (never below the
 ## pool's bottom), px. A cat already wading deeper does not sink at all.
@@ -229,7 +229,7 @@ func start() -> void:
 		var hf := create_tween()
 		hf.tween_property(hum, "volume_db", -60.0, 0.35)
 		hf.tween_callback(hum.queue_free)
-	Sfx.play(self, "shockwave_thump", -4.0, 0.8)
+	Sfx.play(self, "absorb_pulse")
 	await _wait(T_PULSE)
 	var ab := create_tween().set_parallel(true)
 	ab.tween_property(_nano, "absorb", 1.0, T_ABSORB).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -260,6 +260,7 @@ func start() -> void:
 	_aug.reveal(T_REVEAL)
 	await _wait(T_REVEAL + T_STAND)
 	_aug.piece_revealed.disconnect(_on_piece)
+	Sfx.play(self, "augment_reveal")
 	augments_revealed.emit()
 
 	# The awakened mind: a soft glow at the head, a glint in the eye.
@@ -268,7 +269,7 @@ func start() -> void:
 		mz.tween_property(_cine, "zoom", zoom_mind, T_MIND).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	mz.tween_property(_hd, "mind", 1.0, T_MIND * 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	mz.chain().tween_property(_hd, "mind", 0.3, T_MIND * 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	Sfx.play(self, "checkpoint", -18.0, 0.7)
+	Sfx.play(self, "checkpoint", -10.0, 0.8)
 	await _wait(T_MIND * 0.3)
 	_hd.mind_pulse()
 	await _wait(T_MIND * 0.7)
@@ -294,7 +295,7 @@ func _set_veins(v: float) -> void:
 
 func _on_piece(_kind: String, local: Vector2) -> void:
 	_hd.pop(local, _aug.idle_color.lerp(Color.WHITE, 0.3))
-	Sfx.play(self, "pickup", -20.0, 1.7)
+	Sfx.play(self, "augment_click")
 
 
 func _process(delta: float) -> void:
@@ -521,7 +522,11 @@ func _start_hum() -> AudioStreamPlayer:
 	if hum_stream == null:
 		return null
 	var p := AudioStreamPlayer.new()
-	p.stream = hum_stream
+	p.stream = hum_stream.duplicate()
+	p.stream.set("loop", true)
+	p.bus = &"SFX"
+	p.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
+	Sfx.play(self, "vein_rise")
 	p.pitch_scale = hum_pitch
 	p.volume_db = -40.0
 	add_child(p)

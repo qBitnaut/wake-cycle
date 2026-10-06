@@ -35,7 +35,7 @@ const server = http.createServer((q, r) => {
     r.end(d);
   });
 });
-await new Promise(res => server.listen(0, res));
+await new Promise(res => server.listen(Number(process.env.PORT || process.env.AUDIT_PORT || 0), res));
 const url = `http://127.0.0.1:${server.address().port}/index.html`;
 
 const launchArgs = gpu === 'swiftshader'
@@ -75,6 +75,7 @@ async function throughMap(tag, done, next, nextFile) {
   await sleep(400);
   await shot(`${tag}_map_after_${done}`);
   M = await page.evaluate(() => window.__map || M);
+  trackAudio(M.audio);
   { const c = soundClean(M.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
     note(`${tag} sound: on the map no looping sound from the room plays (tree and browser)`, c.ok && (M.loops ? M.loops.positional === 0 : false), c.detail); }
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
@@ -94,7 +95,10 @@ const renderer = await page.evaluate(() => {
 console.log('[gpu]', renderer);
 
 let W = null;
-async function poll() { W = await page.evaluate(() => window.__wake || null); return W; }
+// What the audio director has done, seen through every poll (room and map).
+const A = { keys: new Set(), maxDuck: 0, sawFade: false, maxSources: 0 };
+function trackAudio(a) { if (!a) return; if (a.music) A.keys.add(a.music); A.maxDuck = Math.max(A.maxDuck, a.duck || 0); A.sawFade = A.sawFade || !!a.fading; }
+async function poll() { W = await page.evaluate(() => window.__wake || null); if (W) trackAudio(W.audio); return W; }
 for (let i = 0; i < 1200 && !(await poll()); i++) await sleep(50);
 if (!W) { console.log('FAIL game never published state'); process.exit(1); }
 const f0 = W.f;
@@ -431,6 +435,10 @@ await sleep(700); await shot('subtitles_awakening_line3_cat_free');
 for (let i = 0; i < 2000 && W.monoIds.filter(id => id === 'awakening').length < 5; i++) { await sleep(20); await poll(); }
 note('J awakening monologue: all five lines played', W.monoIds.filter(id => id === 'awakening').length === 5, `${W.mono} lines`);
 for (let i = 0; i < 1500 && W.speaking; i++) { await sleep(20); await poll(); }
+note('J narration: a voice clip played for each line shown, and each subtitle was held at least as long as its clip + tail', W.audio.voice[0] >= 5 && W.audio.voice[1] >= -0.001, `clips ${W.audio.voice[0]}, hold margin ${W.audio.voice[1].toFixed(2)} s`);
+note('J the music and ambience duck under the voice', A.maxDuck > 0.9, `deepest ${A.maxDuck.toFixed(2)}`);
+note('J the warehouse music is playing (after the first input)', W.audio.music === 'warehouse' && W.audio.unlocked && W.audio.musicDb > -30, `${W.audio.music} ${W.audio.musicDb.toFixed(1)} dB`);
+note('J the first line is spoken (not text only)', W.audio.voice[2] > 0.5, `clip ${W.audio.voice[2].toFixed(2)} s`);
 note('J the container is not read before the cat reaches it', !W.container, `x=${W.x.toFixed(0)}`);
 await shot('J_loading_door_night_outside');
 await goTo(4832, 6); await ticks(6);
@@ -449,6 +457,9 @@ await stop();
 await throughMap('J', 'warehouse', 'yard', 'room2.tscn');
 await sleep(1500); await poll();
 note('J exit fades out and loads Room 2', W.scene.endsWith('room2.tscn'), W.scene);
+{ const a = await audioLoops(page); A.maxSources = Math.max(A.maxSources, a.sources);
+  note('J music crossfaded warehouse -> map -> yard', A.keys.has('warehouse') && A.keys.has('map') && A.sawFade, `keys ${[...A.keys]} fade seen ${A.sawFade}`);
+  note('J the web audio source count stays bounded (stream playback for loops)', a.audible >= 0 && a.audible <= 8 && a.sources <= 40, `sources ${a.sources}, sounding ${a.audible}`); }
 note('J Room 2 auto-saved, mind awake, still no shockwave', W.save && W.mind && !W.shock && W.power === 0, `save ${W.save}`);
 await sleep(1500);
 await shot('K_room2_cat_with_augments');

@@ -35,14 +35,14 @@ func _on_body(body: Node) -> void:
 	if GameState.use_key(key_color):
 		_open = true
 		GameState.mark_collected(_id)
-		Sfx.play(self, "door")
+		Sfx.play(self, "door_open")
 		$Shape.set_deferred("disabled", true)
 		var tw := create_tween()
 		tw.tween_property(self, "_lift", 68.0, 0.5)
 		tw.tween_callback(queue_free)
 	else:
 		_nope = 0.4
-		Sfx.play(self, "hurt", -16.0, 0.6)
+		Sfx.play(self, "robot_beep", -2.0, 0.7)
 
 
 func _process(delta: float) -> void:

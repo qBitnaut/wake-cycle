@@ -350,12 +350,9 @@ func _build_home() -> void:
 
 	var amb: Node = load("res://scripts/systems/ambience.gd").new()
 	amb.name = "Ambience"
-	amb.set("rain_stream", load("res://assets/audio/ambient/birdsong.ogg"))
-	amb.set("rain_db", -13.0)
-	amb.set("hum_stream", load("res://assets/audio/ambient/drip_loop.ogg"))
-	amb.set("hum_db", -27.0)
-	amb.set("step_db", -24.0)
-	_own(amb)
+	amb.set("bed", "amb_home")
+	amb.set("surface", "step_wood")
+		_own(amb)
 
 	_save(room, "res://scenes/levels/home.tscn")
 

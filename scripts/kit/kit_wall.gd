@@ -96,8 +96,7 @@ func break_it() -> void:
 		var item := Collectible.new()
 		item.kind = reward
 		item.persist = false
-		get_parent().add_child.call_deferred(item)
-		item.set_deferred("global_position", global_position + Vector2(0, -16))
+		KitUtil.add_at(get_parent(), item, global_position + Vector2(0, -16), true)
 	queue_free()
 
 

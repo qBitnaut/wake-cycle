@@ -26,6 +26,7 @@ var dir := 1
 var drops := 0
 
 var _home := Vector2.ZERO
+var _home_set := false
 var _m_t := 0.0
 var _hum: LoopSfx
 
@@ -44,9 +45,16 @@ func _init() -> void:
 
 func _setup() -> void:
 	collision_mask = 1
-	_home = global_position
 	sprite.play("fly")
 	_hum = KitSfx.loop(self, "drone_hover", 360.0)
+
+
+func _physics_process(delta: float) -> void:
+	# Home is wherever it was placed (also when moved after being added).
+	if not _home_set:
+		_home = global_position
+		_home_set = true
+	super(delta)
 
 
 func _tick(delta: float) -> void:

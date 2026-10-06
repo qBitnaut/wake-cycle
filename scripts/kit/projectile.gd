@@ -51,8 +51,7 @@ static func spawn(parent: Node, pos: Vector2, vel: Vector2, kind_ := Kind.BOLT, 
 			p.lifetime = 3.0
 		_:
 			p.lifetime = 5.0
-	parent.add_child(p)
-	p.global_position = pos
+	KitUtil.add_at(parent, p, pos)
 	return p
 
 

@@ -55,8 +55,7 @@ static func drop(parent: Node, pos: Vector2, kind_: Kind) -> Collectible:
 	c._dropping = true
 	c._drop_vel = Vector2(randf_range(-70.0, 70.0), -230.0)
 	c._grace = 0.35
-	parent.add_child.call_deferred(c)
-	c.set_deferred("global_position", pos)
+	KitUtil.add_at(parent, c, pos, true)
 	return c
 
 

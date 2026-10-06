@@ -22,8 +22,7 @@ static func spawn(parent: Node, pos: Vector2, width_ := 80.0, life := 8.0) -> Ac
 	var p := AcidPool.new()
 	p.width = width_
 	p.lifetime = life
-	parent.add_child(p)
-	p.global_position = pos
+	KitUtil.add_at(parent, p, pos)
 	return p
 
 

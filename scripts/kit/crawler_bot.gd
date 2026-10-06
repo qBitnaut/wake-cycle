@@ -27,6 +27,7 @@ var mode := Mode.CRAWL
 var dir := 1
 
 var _home_x := 0.0
+var _home_set := false
 var _m_t := 0.0
 var _ceiling := true
 
@@ -42,7 +43,6 @@ func _init() -> void:
 
 
 func _setup() -> void:
-	_home_x = global_position.x
 	collision_mask = 1
 	_ceiling = not mount_floor
 	if _ceiling:
@@ -77,6 +77,21 @@ func _to_floor_pose() -> void:
 	uses_gravity = true
 
 
+## Let go of the ceiling: the art turns upright and the boxes move down to where the
+## hanging body was, so nothing overlaps the ceiling.
+func _drop_pose() -> void:
+	var h := rect.size.y
+	_to_floor_pose()
+	global_position.y += h
+
+
+func _physics_process(delta: float) -> void:
+	if not _home_set:
+		_home_x = global_position.x
+		_home_set = true
+	super(delta)
+
+
 func _tick(delta: float) -> void:
 	_m_t += delta
 	match mode:
@@ -106,13 +121,12 @@ func _tick(delta: float) -> void:
 				sprite.position.x = 0.0
 				mode = Mode.FALL
 				_m_t = 0.0
-				uses_gravity = true
+				_drop_pose()
 				stompable = false
 				KitSfx.play(self, "crawler_drop")
 		Mode.FALL:
 			sprite.play("tell")
 			if is_on_floor() and _m_t > 0.05:
-				_to_floor_pose()
 				_start_roll()
 				KitSfx.play(self, "hopper_land")
 				Debris.burst(get_parent(), global_position, Color(0.7, 0.72, 0.8), 4)
@@ -142,6 +156,7 @@ func _cat_beneath(any_side := false) -> bool:
 func _start_roll() -> void:
 	mode = Mode.ROLL
 	_m_t = 0.0
+	stompable = true
 	sprite.play("roll")
 	var c := cat()
 	dir = 1 if c == null or c.global_position.x >= global_position.x else -1
@@ -153,9 +168,7 @@ func _on_stunned() -> void:
 	sprite.position.x = 0.0
 	if _ceiling:
 		# Shaken off the ceiling: it falls and lies stunned.
-		uses_gravity = true
-		falls_when_stunned = true
-		_to_floor_pose()
+		_drop_pose()
 	if mode != Mode.SPENT:
 		mode = Mode.FALL
 

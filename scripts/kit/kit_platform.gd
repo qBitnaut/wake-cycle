@@ -22,6 +22,7 @@ var rider := false
 var last_warn := 0.0
 
 var _start := Vector2.ZERO
+var _start_set := false
 var _s := 0.0
 var _dir := 1.0
 var _pause_left := 0.0
@@ -39,7 +40,6 @@ func _ready() -> void:
 	collision_mask = 0
 	sync_to_physics = true
 	add_to_group("kit_platform")
-	_start = global_position
 	var w := width_tiles * 32.0
 	_cs = CollisionShape2D.new()
 	var sh := RectangleShape2D.new()
@@ -69,6 +69,9 @@ func _axis() -> Vector2:
 
 
 func _physics_process(delta: float) -> void:
+	if not _start_set:
+		_start = global_position
+		_start_set = true
 	_t += delta
 	if mode == Mode.FALLING:
 		_falling(delta)

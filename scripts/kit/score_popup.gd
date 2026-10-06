@@ -16,8 +16,7 @@ static func spawn(parent: Node, pos: Vector2, label: String, col := Color(1.0, 0
 	p.text = label
 	p.color = col
 	p.z_index = 60
-	parent.add_child(p)
-	p.global_position = pos
+	KitUtil.add_at(parent, p, pos)
 	return p
 
 

@@ -247,13 +247,15 @@ func _stomp_zone_y() -> float:
 func _touch(c: Cat) -> void:
 	if c.is_phasing() or c.dead:
 		return
-	var above := stompable and c.global_position.y <= _stomp_zone_y() and c.velocity.y > 0.0
+	# The cat falls up to 8 px a frame: judge from where its feet were a frame ago.
+	var feet_prev := c.global_position.y - c.velocity.y * get_physics_process_delta_time()
+	var above := stompable and feet_prev <= _stomp_zone_y() and c.velocity.y > 0.0
 	if above:
 		if _stomp_lock <= 0.0:
 			_stomp(c)
 	elif life == Life.ACTIVE and touch_damage:
 		# Hopping over a bot it cannot hurt is free: only the sides hurt.
-		if stompable and c.global_position.y <= _stomp_zone_y():
+		if stompable and minf(feet_prev, c.global_position.y) <= _stomp_zone_y():
 			return
 		_hurt_cat(c)
 

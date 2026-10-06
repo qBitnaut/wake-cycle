@@ -36,8 +36,7 @@ static func spawn(parent: Node, pos: Vector2, size_ := 1.0, score_ := 0, debris 
 	fx.debris_tint = debris
 	fx.shake = shake_
 	fx.z_index = 40
-	parent.add_child(fx)
-	fx.global_position = pos
+	KitUtil.add_at(parent, fx, pos)
 	return fx
 
 

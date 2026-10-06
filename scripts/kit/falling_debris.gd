@@ -72,5 +72,4 @@ func _cat_under() -> bool:
 func _drop() -> void:
 	drops += 1
 	var rock := FallingRock.new()
-	get_parent().add_child(rock)
-	rock.global_position = global_position + Vector2(0, 14)
+	KitUtil.add_at(get_parent(), rock, global_position + Vector2(0, 14))

@@ -96,8 +96,8 @@ func _put(arena: Node2D, scene: String, lx: float, y: float, props := {}) -> Nod
 	var n: Node = load("res://scenes/kit/%s.tscn" % scene).instantiate()
 	for k in props:
 		n.set(k, props[k])
-	arena.add_child(n)
 	n.position = Vector2(lx, y)
+	arena.add_child(n)
 	return n
 
 

@@ -278,14 +278,18 @@ await sleep(700);
 note('P3 the Spring pad grants Spring', W.power === 2, `power ${W.power}`);
 await dir(1);
 while (W.x < cx(116)) await frame();
+// Tap-tap, the way a player mashes it: a 4-frame tap, then a second 4-frame tap in the air.
+// (A strip of screenshots follows the jump: Spring has no jump cut, the second tap is a real double jump.)
 await hold('jump', true);
-for (let air = 1; air < 60; air++) {
+for (let air = 1; air < 70; air++) {
   await frame();
-  if (air === 22) await shot('P3_midair_single_spring_jump');
-  if (air === 45) await hold('jump', false);
+  if (air === 4) await hold('jump', false);
+  if (air === 12) await hold('jump', true);
+  if (air === 16) await hold('jump', false);
+  if ([3, 9, 14, 20, 28, 40].includes(air)) await shot(`P3_taptap_strip_air${String(air).padStart(2, '0')}`);
 }
 await stop(); await ticks(30);
-note('P3 Spring and one held jump: up onto the guardhouse roof (6 rows)', Math.abs(W.y - 128) < 4 && W.x > cx(118), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+note('P3 Spring and tap-tap (two short presses, a real double jump): up onto the guardhouse roof (6 rows)', Math.abs(W.y - 128) < 4 && W.x > cx(118), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('P3_on_the_roof');
 await takePad(cx(120), 3, 36);
 res = await phaseRun(cx(133));

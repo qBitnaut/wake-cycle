@@ -25,6 +25,9 @@
 ##                      to the late fall. A press earlier than that throws the first
 ##                      jump away (it fails every gap and wall, with every power): a
 ##                      player who double taps that fast is not what the rooms are sized for
+##   patterns           see patterns(): tap lengths 3-8 frames, tap-tap, tap then hold, hold
+##                      then tap and mashing, the second press from the early rise to the
+##                      late fall (Spring has no jump cut, so every one of them must work)
 ##   hold of a single   release at 0.9, 1.0, 1.2, 1.6 and "never" times the jump's
 ##                      own apex time (a player who means to jump high holds it
 ##                      through the rise)
@@ -32,6 +35,8 @@
 extends RefCounted
 
 const MIN_RATE := 0.90
+## Intended moves under the tap, tap-tap, tap-hold, hold-tap and mash patterns (patterns()).
+const MIN_RATE_PATTERNS := 0.95
 
 const WALL_OFFSETS := [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0, 60.0, 66.0]
 const GAP_OFFSETS := [-8.0, -4.0, 0.0, 4.0, 8.0, 12.0, 16.0, 20.0, 24.0, 28.0]   ## px before the lip
@@ -147,6 +152,112 @@ func trial(spot: Dictionary, power: int, jump_x: float, dj: int, hold: int) -> b
 	return ok
 
 
+## One trial with the jump button driven by `events`: [[on_frame, off_frame], ...] counted
+## from the take-off press (frame 0). Direction is held throughout, as in trial().
+func trial_events(spot: Dictionary, power: int, jump_x: float, events: Array) -> bool:
+	trials += 1
+	var d: float = spot["d"]
+	cat.global_position = Vector2(spot["sx"], spot["sy"])
+	cat.velocity = Vector2.ZERO
+	if power == 0:
+		_gs().clear_power()
+	else:
+		_gs().grant_power(power, 999.0)
+	_stop()
+	await _ticks(4)
+	var n := 0
+	while (cat.global_position.x - jump_x) * d < 0.0 and n < 900:
+		_dir(d)
+		await _ticks(1)
+		n += 1
+	var f := 0
+	var y0 := cat.global_position.y
+	var last := 0
+	var down := false
+	var was_air := false
+	for e in events:
+		last = maxi(last, e[1])
+	while f < 240:
+		var want := false
+		for e in events:
+			if f >= e[0] and f < e[1]:
+				want = true
+		# Only on a change, as a key does: Input.action_press/release called every frame
+		# swallow the just_released edge the jump cut listens for.
+		if want != down:
+			down = want
+			_hold("jump", want)
+		_dir(d)
+		await _ticks(1)
+		f += 1
+		# The first landing ends the trial (the pattern's later presses are the mash
+		# carrying on after it, which the run does not need).
+		if not cat.is_on_floor():
+			was_air = true
+		elif was_air and cat.velocity.y >= 0.0:
+			break
+		if cat.global_position.y > y0 + 700.0:
+			break
+	var ok: bool = cat.is_on_floor() and cat.global_position.x >= spot["tx0"] and cat.global_position.x <= spot["tx1"] and absf(cat.global_position.y - spot["ty"]) < 6.0
+	_stop()
+	await _ticks(2)
+	return ok
+
+
+## The ways people really press jump, as event lists (frames from the first press):
+## a single tap, tap-tap, tap then hold, hold then tap, and mashing. Tap lengths 3-8
+## frames; the second press anywhere from the early rise to the late fall.
+static func patterns() -> Array:
+	var out := []
+	for t in [3, 5, 8]:
+		out.append(["tap %d" % t, [[0, t]]])
+	for t1 in [3, 6]:
+		for d in [8, 12, 18, 26, 36]:
+			for t2 in [4, 8]:
+				out.append(["tap-tap %d/%d/%d" % [t1, d, t2], [[0, t1], [d, d + t2]]])
+			out.append(["tap-hold %d/%d" % [t1, d], [[0, t1], [d, d + 60]]])
+	for h in [18, 26, 34]:
+		for gap in [3, 8, 16]:
+			for t2 in [4, 8]:
+				out.append(["hold-tap %d/%d/%d" % [h, gap, t2], [[0, h], [h + gap, h + gap + t2]]])
+	for period in [4, 6, 8]:
+		var ev := []
+		var k := 0
+		while k < 70:
+			ev.append([k, k + period / 2])
+			k += period
+		out.append(["mash %d" % period, ev])
+	return out
+
+
+## Success rate over the take-off offsets x every pattern. `want` as in rate().
+func rate_patterns(spot: Dictionary, power: int, want := "full", min_rate := 0.95) -> Dictionary:
+	var offs: Array = spot.get("offsets", WALL_OFFSETS if spot["kind"] == "wall" else GAP_OFFSETS)
+	var pats := patterns()
+	var hits := 0
+	var total := 0
+	var planned := offs.size() * pats.size()
+	var allowed := int(floor(planned * (1.0 - min_rate)))
+	var worst := {}
+	for p in pats:
+		var key: String = String(p[0]).split(" ")[0]
+		for o in offs:
+			var jx: float = spot["edge"] - spot["d"] * o
+			total += 1
+			var ok: bool = await trial_events(spot, power, jx, p[1])
+			if ok:
+				hits += 1
+			else:
+				worst[key] = worst.get(key, 0) + 1
+			if (want == "none" and hits > 0) or (want == "min" and total - hits > allowed):
+				var r := _result(hits, total, true)
+				r["fails"] = worst
+				return r
+	var r2 := _result(hits, total, false)
+	r2["fails"] = worst
+	return r2
+
+
 ## Success rate of one (power, style) over the whole sweep. `want` lets the audit stop
 ## as soon as the verdict is certain: "min" (an intended move: stop once more than 10%
 ## of the sweep has failed), "none" (a blocked move: stop at the first landing), or
@@ -200,7 +311,11 @@ func run(spots: Array, note: Callable, label := "", full := false) -> Dictionary
 			var want := "full" if full else ("min" if m[2] == true else "none" if m[2] == false else "skip")
 			if want == "skip":
 				continue
-			var r: Dictionary = await rate(spot, m[0], m[1], want)
+			var r: Dictionary
+			if m[1] == "patterns":
+				r = await rate_patterns(spot, m[0], want, MIN_RATE_PATTERNS)
+			else:
+				r = await rate(spot, m[0], m[1], want)
 			var key := "%s %s" % [power_name(m[0]), m[1]]
 			rates[key] = r["rate"]
 			parts.append("%s %s %d/%d%s" % [key, "ok" if m[2] == true else "blocked" if m[2] == false else "info", r["hits"], r["total"], "+" if r.get("stopped", false) else ""])
@@ -248,6 +363,11 @@ static func lab(host: Object, room_id: String, note: Callable, label := "", full
 		c.set("spring_mult", float(OS.get_environment("SPRING_MULT")))
 	if OS.get_environment("SPRING_AIR") != "":
 		c.set("spring_air_mult", float(OS.get_environment("SPRING_AIR")))
+	# Spring exists from Room 3 on: no Spring pad in Rooms 1 and 2, so none of their gaps can
+	# ever be crossed with it (their measured Spring rates are information only).
+	if room_id == "room1" or room_id == "room2":
+		var springs := room.find_children("*", "PowerPad", true, false).filter(func(pd): return int(pd.get("power")) == 2)
+		note.call("%sSWEEP %s: no Spring pad in this room (Spring only exists from Room 3)" % [label, room_id], springs.is_empty(), "%d Spring pads" % springs.size())
 	var sweep = new(tree, room, c)
 	await sweep.prepare()
 	var spots: Array = Spots.for_room(room_id)

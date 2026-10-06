@@ -33,7 +33,7 @@
 ##   G   130-170  SPRING 3 + SURGE: checkpoint C, a pad at the foot of a 6-tile tower, Spring up it,
 ##                a Surge pad on top, a 9-tile gap, the exit roof (checkpoint D), the way
 ##                toward the security perimeter. Under the gap: stairs down the tower's right
-##                side to a pit floor 10 tiles under the exit roof, so a fall is never a trap
+##                side to a pit floor 12 tiles under the exit roof, so a fall is never a trap
 ##                and the far tower cannot be climbed from the pit
 extends SceneTree
 
@@ -47,7 +47,7 @@ const S3 := 18         ## long roof, gallery floor
 const S4 := 12         ## tower tops, exit roof
 const GROOF := 6       ## gallery roof surface: 12 tiles over the long roof (out of Spring's reach)
 const BAY_FLOOR := 22
-const PIT := 22        ## the pit floor under the gap: 10 tiles under the exit roof (out of Spring's reach)
+const PIT := 24        ## the pit floor under the gap: 12 tiles under the exit roof (a boosted Spring double jump rises up to 340 px, 10.6 tiles)
 
 const STEEL := 0
 const BULKHEAD := 1
@@ -84,9 +84,10 @@ const PLATE_X := 4004.0           ## the plate (56 px), flush with the bay wall:
 const MIRROR_COL := 105
 const PAD3_COL := 137             ## Spring, at the foot of the tower (col 138)
 const TOWER := [138, 149]       ## the tower, with stairs down its right side to the pit floor
-const SURGE_COL := 141
+const SURGE_COL := 142            ## Surge, inside the 1-tile-headroom tunnel (cols 142-144): it cannot be hopped over
+const TUNNEL := [142, 144]
 const TOP_FLAT_END := 145         ## last full-height column of the tower top
-const GAP := [146, 154]           ## nine tiles; the stairs (146-149) and the pit floor (150-154) lie under it
+const GAP := [146, 154]           ## nine tiles; the stairs (146-150) and the pit floor (151-154) lie under it
 const LAND := [155, 169]
 const EXIT_COL := 167
 
@@ -359,11 +360,17 @@ func _build_geometry() -> void:
 	_mass(BAY_WALL, BAY_WALL + 3, GROOF, S3 - 4)
 	for x in range(TOWER[0], TOP_FLAT_END + 1):
 		_column(x, S4, ROWS - 1)
-	for i in range(4):  # the stairs: 2 tiles a step, a single jump each
+	for i in range(5):  # the stairs: 2 tiles a step, a single jump each
 		_column(146 + i, S4 + 2 + 2 * i, ROWS - 1)
-	_mass(150, GAP[1], PIT, ROWS - 1)
+	_mass(151, GAP[1], PIT, ROWS - 1)
 	_mass(LAND[0], LAND[1], S4, ROWS - 1)
 	_lip(TOP_FLAT_END, S4)
+	# The Surge pad sits in a low tunnel (32 px of headroom under a block that reaches the
+	# roof): whoever climbed the tower on Spring walks through it, the pad replaces Spring
+	# with Surge, and only then comes the lip. Spring's double jump (297 px) would cross the
+	# nine-tile gap too (266 needed), and Surge's (334) is not far ahead of it, so the pad is
+	# made unavoidable instead of the gap wider.
+	_mass(TUNNEL[0], TUNNEL[1], 0, S4 - 2, false)
 	_lip(LAND[0], S4)
 	# The exit: a parapet on the last tile, then the bulkhead.
 	for y in range(S4 - 4, S4):
@@ -432,7 +439,7 @@ func _back_decor() -> void:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
 	for d in [[36, 43, S1, 2, RUST], [44, 52, S1, 1, TEAL], [56, 64, S3, 2, TEAL], [58, 63, S3 - 4, 1, MAROON]]:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
-	for d in [[130, 136, S3, 2, RUST], [151, 155, PIT, 2, TEAL], [158, 164, S4, 2, TEAL], [165, 169, S4, 3, RUST]]:
+	for d in [[130, 136, S3, 2, RUST], [152, 155, PIT, 2, TEAL], [158, 164, S4, 2, TEAL], [165, 169, S4, 3, RUST]]:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
 	# The gantry crane: two posts, a jib and a hanging cable with its hook block.
 	_truss(24, 12, G - 1)
@@ -536,7 +543,7 @@ func _place_actors() -> void:
 	_pad("PadSurge1", SURGE_COL, S4, 1)
 	_put("res://scenes/actors/gem.tscn", "GemTop1", 142, S4 - 1)
 	_put("res://scenes/actors/gem.tscn", "GemTop2", 144, S4 - 1)
-	for c in [151, 154]:
+	for c in [152, 154]:
 		_put("res://scenes/actors/gem.tscn", "GemPit%d" % c, c, PIT - 1)
 	# The gap: a trail of gems in the arc of the Surge jump.
 	for c in range(148, 154, 2):

@@ -15,11 +15,11 @@ extends RefCounted
 const T := 32.0
 
 ## Moves of a Spring climb: Spring's single jump is the intended move.
-const SPRING_CLIMB := [[2, "single", true], [2, "double", null], [0, "single", false], [0, "double", false],
-	[1, "single", false], [1, "double", false]]
+const SPRING_CLIMB := [[2, "single", true], [2, "patterns", true], [2, "double", true], [0, "single", false], [0, "double", false],
+	[0, "patterns", false], [1, "single", false], [1, "double", false]]
 ## Moves nothing may manage (a skip that must not exist).
 const NO_SKIP := [[0, "single", false], [0, "double", false], [1, "single", false], [1, "double", false],
-	[2, "single", false], [2, "double", false]]
+	[2, "single", false], [2, "double", false], [2, "patterns", false]]
 ## A plain hop: the plain single jump.
 const PLAIN_HOP := [[0, "single", true]]
 
@@ -93,12 +93,13 @@ static func room3() -> Array:
 			"tx0": 4430.0, "tx1": 4660.0, "ty": S4, "moves": SPRING_CLIMB},
 		{"name": "R3 H5 nine-tile gap", "sx": 4528.0, "sy": S4, "d": 1.0, "edge": 4672.0, "kind": "gap",
 			"tx0": 4960.0 - 10.0, "tx1": 5400.0, "ty": S4,
-			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false], [2, "single", false], [2, "double", false]]},
+			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false], [0, "patterns", false],
+				[2, "single", null], [2, "double", null]]},   # Spring cannot reach the lip: the pad is in a tunnel (audited in room3_playthrough)
 		{"name": "R3 skip: shed -> long roof direct", "sx": 1650.0, "sy": S1, "d": 1.0, "edge": 1728.0, "kind": "wall",
 			"tx0": 1735.0, "tx1": 2100.0, "ty": S3, "moves": NO_SKIP},
 		{"name": "R3 skip: long roof -> gallery roof", "sx": 1950.0, "sy": S3, "d": 1.0, "edge": 2112.0, "kind": "wall",
 			"tx0": 2130.0, "tx1": 2900.0, "ty": gallery_roof, "moves": NO_SKIP},
-		{"name": "R3 skip: pit floor -> far tower", "sx": 4850.0, "sy": 704.0, "d": 1.0, "edge": 4960.0, "kind": "wall",
+		{"name": "R3 skip: pit floor -> far tower", "sx": 4850.0, "sy": 768.0, "d": 1.0, "edge": 4960.0, "kind": "wall",
 			"tx0": 4968.0, "tx1": 5200.0, "ty": S4, "moves": NO_SKIP},
 	]
 
@@ -134,7 +135,8 @@ static func test_room() -> Array:
 			"moves": [[0, "double", true], [1, "single", null], [0, "single", false]]},
 		{"name": "TEST wide pit C (8 tiles, Surge)", "sx": 41.0 * T - 200.0, "sy": g, "d": 1.0, "edge": 41.0 * T, "kind": "gap",
 			"tx0": 49.0 * T - 10.0, "tx1": 54.0 * T, "ty": g,
-			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false]]},
+			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false],
+				[2, "double", null]]},   # the Spring pad (col 52) is beyond this pit: nothing to skip
 		{"name": "TEST tall wall D (6 tiles, Spring)", "sx": 55.0 * T - 200.0, "sy": g, "d": 1.0, "edge": 55.0 * T, "kind": "wall",
 			"tx0": 55.0 * T + 10.0, "tx1": 58.0 * T, "ty": g - 6.0 * T, "moves": SPRING_CLIMB},
 	]

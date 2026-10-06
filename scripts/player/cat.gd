@@ -38,7 +38,9 @@ signal died
 @export var dash_cooldown := 0.45
 @export var surge_mult := 1.5
 @export var spring_mult := 1.48  # Spring's first jump: 211 px, 6.6 tiles (plain: 95 px)
-@export var spring_air_mult := 0.6  # Spring's second (air) jump: a small extra (Spring is the high first jump), so its double reach stays 255 px across, 238 px up
+@export var spring_air_mult := 1.0  # Spring's air jump: at least the plain double jump (see _air_jump_velocity)
+@export var spring_air_boost := 0.5  # ...and it adds this share of the speed the cat already has, so a press on the way up is felt
+@export var spring_air_cap := 900.0  # the fastest the air jump can send a Spring cat up (keeps the 12-tile climbs out of reach)
 @export_group("Health")
 @export var invulnerable_time := 1.4
 
@@ -212,16 +214,19 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 			Sfx.play(self, "jump")
 			_stretch(Vector2(0.85, 1.2))
 		elif _air_jumps > 0 and not on_floor:
-			velocity.y = -double_jump_velocity * spring_air
+			velocity.y = _air_jump_velocity(spring_air, is_spring)
 			_air_jumps -= 1
 			_jump_buf = 0.0
 			_jumping = true
-			Sfx.play(self, "double_jump")
+			Sfx.play(self, "double_jump", -6.0, 1.3 if is_spring else 1.0)
 			_flip()
 			if GameState.shockwave_unlocked:
 				_burst(global_position + Vector2(0, -12), shockwave_radius, "shock")
+	# Spring is a super jump however it is pressed: a tap gives the full jump, so there is
+	# no variable-jump cut while it is active.
 	if Input.is_action_just_released("jump") and _jumping and velocity.y < 0.0:
-		velocity.y *= jump_cut
+		if not is_spring:
+			velocity.y *= jump_cut
 		_jumping = false
 	if (
 		power == NanoPalette.Power.PHASE
@@ -241,6 +246,17 @@ func _start_actions(on_floor: bool, _dir: float) -> void:
 	):
 		pounding = true
 		velocity = Vector2(0, pound_speed)
+
+
+## Upward speed of the air jump. Plain: the double jump velocity. Spring: never less than
+## that, and a press on the way up adds spring_air_boost of the speed the cat already has
+## (up to spring_air_cap), so it always reads as a second jump and never slows the rise.
+func _air_jump_velocity(spring_air: float, is_spring: bool) -> float:
+	var v := double_jump_velocity * spring_air
+	if not is_spring:
+		return -v
+	var rising := maxf(-velocity.y, 0.0)
+	return -clampf(rising + v * spring_air_boost, v, maxf(spring_air_cap, v))
 
 
 func _move(delta: float, dir: float, on_floor: bool) -> void:

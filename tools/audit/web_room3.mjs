@@ -346,7 +346,7 @@ await shot('G_the_tower_and_its_pad');
 await hop(4381, -1, { at: 14, fn: async () => { await shot('G_spring_up_the_tower'); } });
 note('G Spring climbs the tower', landed(4430, 4660, S4), `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await shot('G_tower_top_the_gap_ahead');
-await goTo(4528, 6); await ticks(40);
+await goTo(4560, 6); await ticks(40);
 note('G the Surge pad on top replaces Spring', W.power === 1, `power ${W.power}`);
 await shot('G_surge_pad_emitters_blue_nine_tile_gap');
 await hop(4668, 27, { at: 22, fn: async () => { await shot('G_crossing_the_gap_mid_air'); } });

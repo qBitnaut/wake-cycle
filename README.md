@@ -62,7 +62,7 @@ Enhancement pads (after the nanotech pools):
 | Pad | Colour | Effect |
 |---|---|---|
 | Surge | Blue | Speed |
-| Spring | Green | High jump (one held jump clears 6 tiles; the air jump is a small extra) |
+| Spring | Green | Super jump: any press (tap or hold) clears 6 tiles, no jump cut; a press in the air adds a real second jump |
 | Phase | Cyan | Shift dashes through enemies and laser fences |
 | Impact | Violet | Down in mid-air ground-pounds; breaks cracked floors |
 

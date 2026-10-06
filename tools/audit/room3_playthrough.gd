@@ -26,7 +26,7 @@ const S2 := 768.0       ## floating ledge (row 24)
 const S3 := 576.0       ## long roof (row 18)
 const S4 := 384.0       ## tower tops (row 12)
 const BAY_Y := 704.0    ## bay floor (row 22)
-const PIT_Y := 704.0    ## the pit floor under the gap (row 22)
+const PIT_Y := 768.0    ## the pit floor under the gap (row 24)
 const GROOF := 192.0    ## gallery roof (row 6)
 const WALL1 := 1088.0   ## face of the shed (col 34)
 const LEDGE_L := 1440.0
@@ -446,7 +446,7 @@ func _lab() -> void:
 	_hops["H3"] = h3[2]
 	var h4 := await _lab_hop("H4 roof -> tower top (6 tiles)", 4250.0, S3, 1.0, jump_list(TOWER_L, near), djs, 4430.0, 4660.0, S4, 2)
 	_hops["H4"] = h4[2]
-	var h5 := await _lab_hop("H5 nine-tile gap", 4528.0, S4, 1.0, jump_list(TAKEOFF, [-8.0, -4.0, 0.0, 4.0, 8.0]), djs, 4965.0, 5400.0, S4, 1)
+	var h5 := await _lab_hop("H5 nine-tile gap", 4528.0, S4, 1.0, jump_list(TAKEOFF, [-8.0, -4.0, 0.0, 4.0, 8.0]), djs, 4965.0, 5400.0, S4, 1, [2])
 	_hops["H5"] = h5[2]
 	measure("wall 1 (6 tiles = 192 px)", "plain best rise %.0f px (%.0f px short), Spring %.0f px (%.0f px spare)" % [h1[0], 192.0 - h1[0], h1[1], h1[1] - 192.0])
 	measure("tower (6 tiles = 192 px)", "plain best rise %.0f px, Spring %.0f px" % [h4[0], h4[1]])
@@ -454,8 +454,25 @@ func _lab() -> void:
 	# The skips that must not exist.
 	var skip1 := await _lab_hop("S1 shed -> long roof direct (12 tiles)", 1650.0, S1, 1.0, jump_list(LONG_L, near), djs, 1735.0, 2100.0, S3, -1)
 	var skip2 := await _lab_hop("S2 long roof -> gallery roof (12 tiles)", 1950.0, S3, 1.0, jump_list(2112.0, near), djs, 2130.0, 2900.0, GROOF, -1)
-	var skip3 := await _lab_hop("S3 pit floor -> far tower (10 tiles)", 4850.0, PIT_Y, 1.0, jump_list(LAND_L, near), djs, 4968.0, 5200.0, S4, -1)
+	var skip3 := await _lab_hop("S3 pit floor -> far tower (12 tiles)", 4850.0, PIT_Y, 1.0, jump_list(LAND_L, near), djs, 4968.0, 5200.0, S4, -1)
 	note("LAB no skips: the 12-tile climbs are out of every power's reach, so is the far tower from the pit", skip1[0] == 0 and skip2[0] == 0 and skip3[0] == 0, "hits %d / %d / %d" % [skip1[0], skip2[0], skip3[0]])
+	# Spring cannot reach the gap's lip: the Surge pad is in a low tunnel (32 px of headroom
+	# under a block to the roof), so the cat that climbed the tower on Spring and runs, mashing
+	# jump, for the lip arrives there on Surge.
+	pads_inert(false)
+	var run_n := 0
+	teleport(4440.0, S4)
+	gs().grant_power(2, 10.0)
+	await ticks(4)
+	dir(1.0)
+	while x() < 4668.0 and run_n < 500:
+		hold("jump", run_n % 12 < 4)
+		await ticks(1)
+		run_n += 1
+	stop()
+	note("LAB the Surge pad cannot be bypassed: Spring cat running and jumping to the lip arrives on Surge", gs().power == 1 and x() >= 4660.0, "power %d at x=%.0f" % [gs().power, x()])
+	pads_inert(true)
+	gs().clear_power()
 	# The pit has stairs back up on the near side: climbing them needs no power.
 	gs().clear_power()
 	teleport(4850.0, PIT_Y)
@@ -475,13 +492,13 @@ func _lab() -> void:
 ## Runs the plain, Surge and Spring searches for one hop. `needs` is the power (0..2) that
 ## must be the only one that works, or -1 for a hop nothing may manage.
 ## Returns [plain rise, Spring rise, best params, hits of the needed power, total].
-func _lab_hop(name: String, sx: float, sy: float, d: float, jumps: Array, djs: Array, tx0: float, tx1: float, ty: float, needs: int) -> Array:
+func _lab_hop(name: String, sx: float, sy: float, d: float, jumps: Array, djs: Array, tx0: float, tx1: float, ty: float, needs: int, ignore := []) -> Array:
 	var r := []
 	for p in [0, 1, 2]:
 		r.append(await search(name, sx, sy, d, jumps, djs, p, tx0, tx1, ty))
 	if needs < 0:
 		return [r[0]["hits"] + r[1]["hits"] + r[2]["hits"], 0.0, {}, 0, r[0]["total"]]
-	var others := [0, 1, 2].filter(func(p): return p != needs)
+	var others := [0, 1, 2].filter(func(p): return p != needs and not ignore.has(p))   # ignore: Spring on H5 (the tunnel shuts it out, see below)
 	var none_else: bool = others.all(func(p): return r[p]["hits"] == 0)
 	note("LAB %s: needs %s, impossible without it" % [name, ["plain", "Surge", "Spring"][needs]], r[needs]["hits"] > 0 and none_else, "hits plain %d / Surge %d / Spring %d of %d" % [r[0]["hits"], r[1]["hits"], r[2]["hits"], r[0]["total"]])
 	return [r[0]["rise"], r[2]["rise"], r[needs]["best"], r[needs]["hits"], r[needs]["total"]]
@@ -751,7 +768,7 @@ func _beat_combine() -> void:
 	var grants0 := _grants.size()
 	var ok := await _hop("H4", 4430.0, 4660.0, S4)
 	note("G Spring (the foot-of-tower pad) climbs the tower: the 6-tile wall", ok and _grants.size() >= grants0 + 1 and _grants[grants0] == [2, true], "grants %s" % str(_grants.slice(grants0)))
-	await go_to(4528.0, 6.0)
+	await go_to(4560.0, 6.0)
 	await ticks(40)
 	note("G the Surge pad on top replaces Spring: the two powers in sequence", gs().power == 1 and _grants.size() == grants0 + 2 and _grants[-1] == [1, true] and close(aug_color(), Color(0.16, 0.42, 1.0), 0.1), "power %d, grants %s, emitter %s" % [gs().power, str(_grants.slice(grants0)), str(aug_color())])
 	var t0 := _frames

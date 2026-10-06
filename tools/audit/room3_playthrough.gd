@@ -780,7 +780,12 @@ func _beat_corridor(start: String) -> void:
 	ok = await run_to(PIT1_FACE + 40.0)
 	note("C3 ...and steps off on the far side", ok and cat.is_on_floor() and absf(y() - R3) < 4.0 and gs().health == hp1, "x=%.0f hp %d" % [x(), gs().health])
 	measure("moving platform", "%.1f s from boarding to the far side" % ((_frames - t_board) / 60.0))
-	# Fell in? The pit has its own Spring pad: put the cat on the pit floor and climb out.
+	# Fell in? The pit has its own Spring pad: put the cat on the pit floor and climb out. The
+	# corridor's dropped crawlers may have rolled into the pit by now (it depends on the pace of the
+	# run); this test is about the pad, so clear any that did.
+	for k in room.get_children():
+		if String(k.name).begins_with("Crawler") and k is Node2D and k.global_position.y > R3 + 64.0:
+			k.queue_free()
 	teleport(PIT1_L + 80.0, R2)
 	await ticks(30)
 	var g0 := _grants.size()
@@ -991,6 +996,7 @@ func _beat_undercroft(start: String) -> void:
 	await wait_until(func(): return not crawlers.any(func(c): return is_instance_valid(c) and int(c.get("mode")) == 3 and absf(c.global_position.x - x()) < 140.0), 600, true)
 	note("U2 the strip and the crawlers are got past without a scratch", ok and gs().health >= hp1 - 1, "x=%.0f hp %d -> %d" % [x(), hp1, gs().health])
 	ok = await run_to(4270.0, 1.0, 900)
+	var g0 := _grants.size()   # (a landing at the pillar's far edge can already touch its east pad)
 	# --- the shaft: a plain jump across the 2-tile gap, down onto the pillar ---
 	hold("jump", true)
 	dir(1.0)
@@ -1002,10 +1008,9 @@ func _beat_undercroft(start: String) -> void:
 		air_n += 1
 	stop()
 	await ticks(20)
-	note("U3 a plain jump over the shaft's edge lands on the pillar 6 tiles down", cat.is_on_floor() and absf(y() - R2) < 4.0 and x() > 4352.0 and x() < 4480.0, "x=%.0f y=%.0f" % [x(), y()])
+	note("U3 a plain jump over the shaft's edge lands on the pillar 6 tiles down", cat.is_on_floor() and absf(y() - R2) < 4.0 and x() > 4352.0 and x() <= 4482.0, "x=%.0f y=%.0f" % [x(), y()])
 	# --- Spring pads: east, to the far landing ---
 	await go_to(4400.0, 8.0)
-	var g0 := _grants.size()
 	var ok3 := await _hop("U3", 4544.0, 4600.0, R3)
 	note("U3 the pillar's east pad lifts the cat onto the far landing (6 up, 2 across)", ok3 and _grants.size() >= g0 + 1 and _grants[-1] == [2, true], "x=%.0f y=%.0f" % [x(), y()])
 	gs().clear_power()

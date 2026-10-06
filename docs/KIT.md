@@ -95,8 +95,10 @@ Shared API: `hit(source) -> "clank" | "stun" | "destroy" | "ignored"`, `stun(t)`
 * **KitPatrolBot** (`kit_patrol_bot.tscn`, the Legacy biped re-pixelled to 2/3). `speed`,
   `laser_range`, `aim_time` (0.7), `burst_time`, `cooldown`, `line_half_height`,
   `shoots`. Walks, turns at walls/edges; cat in its line: stops, eyes flare, fires a
-  short `KitBeam` laser burst forward. (The room `PatrolBot` is unchanged except for
-  a new `sprite_scale` export, default 1.)
+  short `KitBeam` laser burst forward. (The room `PatrolBot` uses the same 2/3 art at
+  the B' size, a 20x35 body; its `sprite_scale` multiplies that size, default 1.
+  The room's MirrorBot, DockBot, GuardDrone and SearchDrone are at 2/3 too, art by
+  `tools/art/repixel.py`.)
 * **HoverDrone** (`hover_drone.tscn`). `patrol_range`, `speed`, `drop_window`,
   `drop_range`, `arm_time`, `cooldown`, `drop_kind` BOMB / SPARK. Patrols a sine
   bob; cat below: hangs still, bomb bay glows, drops. Stunned: falls, fizzles, rises

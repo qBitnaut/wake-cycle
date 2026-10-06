@@ -25,7 +25,11 @@ signal seen
 
 enum State { IDLE, SWEEP, LEAVING, GONE }
 
-const DRONE := preload("res://assets/art_hd/robots/drone_3.png")
+## B' size: hand-drawn at 2/3 of the ansimuz drone (tools/art/repixel.py), 36x34.
+const DRONE := preload("res://assets/art_hd/robots/drone_3_23.png")
+## The beam leaves the drone here (its apex: what it sees from); the body is
+## placed so the bottom of its face plate, under the lamps, sits on it.
+const LAMP := Vector2(0, 10)
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 const BEAM_COLOR := Color(1.0, 0.93, 0.72)
 const HUM_RANGE := 480.0   ## px: silent beyond this distance from the cat
@@ -53,11 +57,11 @@ func _ready() -> void:
 	z_index = 4
 	_body = Sprite2D.new()
 	_body.texture = DRONE
-	_body.scale = Vector2(1.0, 1.0)
+	_body.position = Vector2(0, 2)
 	_body.self_modulate = Color(0.85, 0.85, 0.9)
 	add_child(_body)
 	_eye = Polygon2D.new()
-	_eye.polygon = PackedVector2Array([Vector2(-5, 7), Vector2(5, 7), Vector2(5, 11), Vector2(-5, 11)])
+	_eye.polygon = PackedVector2Array([Vector2(-4, 4), Vector2(4, 4), Vector2(4, 6), Vector2(-4, 6)])
 	_eye.color = Color(FXPalette.LASER * 1.5, 1.0)
 	_body.add_child(_eye)
 	_eye.visible = false  # the art already carries red lenses; the glow lifts them
@@ -121,7 +125,7 @@ func _cone_points() -> PackedVector2Array:
 	var ha := deg_to_rad(half_angle)
 	var l := Vector2(sin(a - ha), cos(a - ha)) * beam_length
 	var r := Vector2(sin(a + ha), cos(a + ha)) * beam_length
-	return PackedVector2Array([Vector2(0, 10), l, r])
+	return PackedVector2Array([LAMP, l, r])
 
 
 func _update_beam() -> void:
@@ -155,7 +159,7 @@ func sees_cat() -> bool:
 		inside = local.distance_to(e1) < 8.0 or local.distance_to(e2) < 8.0
 	if not inside:
 		return false
-	var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, 10), p, 1)
+	var q := PhysicsRayQueryParameters2D.create(global_position + LAMP, p, 1)
 	return get_world_2d().direct_space_state.intersect_ray(q).is_empty()
 
 

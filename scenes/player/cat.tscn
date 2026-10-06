@@ -23,7 +23,7 @@ z_index = -1
 script = ExtResource("2_aura")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -15)
+position = Vector2(0, -12)
 
 [node name="Camera" type="Camera2D" parent="."]
 offset = Vector2(0, -25)

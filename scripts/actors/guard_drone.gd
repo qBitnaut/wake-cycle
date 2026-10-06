@@ -6,7 +6,8 @@ extends Hazard
 ## dash is the clean way. Origin = the centre of the patrol; it travels
 ## +-`range_x` and bobs +-`bob`.
 
-const DRONE := preload("res://assets/art_hd/robots/drone_1.png")
+## B' size: hand-drawn at 2/3 of the ansimuz drone (tools/art/repixel.py), 36x34.
+const DRONE := preload("res://assets/art_hd/robots/drone_1_23.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 
 @export var range_x := 96.0
@@ -29,7 +30,7 @@ func _ready() -> void:
 	z_index = 4
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(36, 26)
+	r.size = Vector2(24, 17)
 	cs.shape = r
 	add_child(cs)
 	_body = Sprite2D.new()
@@ -38,11 +39,11 @@ func _ready() -> void:
 	add_child(_body)
 	_glow = PointLight2D.new()
 	_glow.texture = LIGHT_TEX
-	_glow.texture_scale = 0.9
+	_glow.texture_scale = 0.6
 	_glow.energy = 0.8
 	_glow.color = Color(1.0, 0.35, 0.28)
 	_glow.range_item_cull_mask = LightingRig.MASK_WORLD
-	_glow.position = Vector2(0, 8)
+	_glow.position = Vector2(0, 5)
 	add_child(_glow)
 
 

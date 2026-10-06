@@ -5,15 +5,17 @@ extends Node2D
 ## walks within `react_range`, then its eyes flicker and settle on the colour of
 ## the cat's emitters, with a short chirp. Walk away and it dims again. It
 ## never moves, never hurts and has no collision. Origin = the dock floor.
+## B' size: the 2/3 mech (assets/art_hd/robots/mech_23.png, tools/art/repixel.py),
+## about 1.4 tiles tall, on a dock drawn to match.
 
 signal reacted
 
-const SHEET := preload("res://assets/art_hd/robots/mech.png")
-const FRAME := Vector2i(96, 80)
+const SHEET := preload("res://assets/art_hd/robots/mech_23.png")
+const FRAME := Vector2i(64, 53)
 const HALO := preload("res://assets/fx/halo.png")
 const LIGHT_TEX := preload("res://assets/fx/light_soft.png")
 ## Visor and chest eye, in frame px.
-const EYES := [Rect2(44, 22, 7, 4), Rect2(45, 35, 4, 3)]
+const EYES := [Rect2(29, 15, 5, 2), Rect2(31, 23, 3, 2)]
 const ASLEEP := Color(0.34, 0.37, 0.52)
 const AWAKE := Color(0.62, 0.66, 0.84)
 
@@ -64,13 +66,13 @@ func _ready() -> void:
 		_eyes.append(p)
 	_halo = Sprite2D.new()
 	_halo.texture = HALO
-	_halo.scale = Vector2(0.7, 0.7)
-	_halo.position = Vector2(-0.5, 24.5)
+	_halo.scale = Vector2(0.47, 0.47)
+	_halo.position = Vector2(-0.5, 16.5)
 	_halo.material = add
 	_eye_root.add_child(_halo)
 	_light = PointLight2D.new()
 	_light.texture = LIGHT_TEX
-	_light.texture_scale = 0.9
+	_light.texture_scale = 0.6
 	_light.position = _halo.position
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD
 	_eye_root.add_child(_light)
@@ -124,14 +126,14 @@ func _apply(level: float, c: Color) -> void:
 
 func _draw() -> void:
 	# The dock: a steel pad under the feet, two clamps, a cable to the wall box.
-	draw_rect(Rect2(-44, -5, 88, 5), Color("141a2c"))
-	draw_rect(Rect2(-43, -4, 86, 3), Color("354655"))
-	draw_rect(Rect2(-43, -4, 86, 1), Color("536a74"))
-	for sx in [-34.0, 28.0]:
-		draw_rect(Rect2(sx, -12, 6, 8), Color("2a4658"))
-		draw_rect(Rect2(sx + 1, -11, 4, 2), FXPalette.INDICATOR)
-	draw_rect(Rect2(52, -46, 22, 46), Color("10121f"))
-	draw_rect(Rect2(53, -45, 20, 44), Color("2a4658"))
-	draw_rect(Rect2(56, -40, 14, 5), Color("141a2c"))
-	draw_rect(Rect2(57, -39, 12, 3), FXPalette.INDICATOR)
-	draw_polyline(PackedVector2Array([Vector2(52, -30), Vector2(30, -26), Vector2(20, -10), Vector2(18, -4)]), Color("141a2c"), 2.0)
+	draw_rect(Rect2(-29, -4, 58, 4), Color("141a2c"))
+	draw_rect(Rect2(-28, -3, 56, 2), Color("354655"))
+	draw_rect(Rect2(-28, -3, 56, 1), Color("536a74"))
+	for sx in [-23.0, 19.0]:
+		draw_rect(Rect2(sx, -8, 4, 5), Color("2a4658"))
+		draw_rect(Rect2(sx + 1, -7, 2, 1), FXPalette.INDICATOR)
+	draw_rect(Rect2(35, -31, 15, 31), Color("10121f"))
+	draw_rect(Rect2(36, -30, 13, 29), Color("2a4658"))
+	draw_rect(Rect2(38, -27, 9, 4), Color("141a2c"))
+	draw_rect(Rect2(39, -26, 7, 2), FXPalette.INDICATOR)
+	draw_polyline(PackedVector2Array([Vector2(35, -20), Vector2(20, -17), Vector2(13, -7), Vector2(12, -3)]), Color("141a2c"), 2.0)

@@ -315,7 +315,7 @@ func _spawn_ghost() -> void:
 	g.flip_h = sprite.flip_h
 	g.offset = sprite.offset
 	g.modulate = Color(NanoPalette.PHASE, 0.55)
-	g.global_position = global_position
+	g.global_position = sprite.global_position  # where the cat is drawn, not its feet
 	g.z_index = z_index - 1
 	get_parent().add_child(g)
 	var tw := g.create_tween()
@@ -505,11 +505,11 @@ func _idle_loop() -> void:
 		_play("idle")
 
 
-## Playback speed that plants the paws: they travel 2 px per frame in crawl, push
-## and crouch_idle, so scale = |vx| / (2 * fps), kept within a readable range.
+## Playback speed that plants the paws: they travel CatFrames.SCALE px per frame in
+## crawl, push and crouch_idle, so scale = |vx| / (SCALE * fps), kept within a readable range.
 func _paw_scale(anim: String) -> float:
 	var fps := sprite.sprite_frames.get_animation_speed(anim)
-	return clampf(absf(velocity.x) / (2.0 * fps), 0.5, 2.0)
+	return clampf(absf(velocity.x) / (CatFrames.SCALE * fps), 0.5, 2.0)
 
 
 func _has(anim: String) -> bool:

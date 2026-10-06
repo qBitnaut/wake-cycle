@@ -1,7 +1,7 @@
 class_name CatOverlay
 extends AnimatedSprite2D
 ## A sprite that mirrors the cat's AnimatedSprite2D frame for frame, drawing
-## a parallel sheet (same 100x100 frame grid) through its own material. Used
+## a parallel sheet (same 75x75 frame grid) through its own material. Used
 ## by CatNanotech (goo and veins) and CatAugments (metal and emitters).
 ##
 ## Add it as a child of the source sprite so it inherits the sprite's
@@ -62,7 +62,7 @@ static func sheet_frame(spr: AnimatedSprite2D) -> Array:
 	return [def[0], idx[spr.frame] if spr.frame < idx.size() else spr.frame]
 
 
-## A point in frame pixels (100x100, top-left origin) to `spr`'s local
+## A point in frame pixels (75x75, top-left origin) to `spr`'s local
 ## space, honouring offset and flip.
 static func frame_to_local(spr: AnimatedSprite2D, p: Vector2) -> Vector2:
 	var half := CatFrames.FRAME * 0.5
@@ -71,7 +71,19 @@ static func frame_to_local(spr: AnimatedSprite2D, p: Vector2) -> Vector2:
 		l.x = -l.x
 	if spr.flip_v:
 		l.y = -l.y
-	return l + spr.offset
+	return l + frame_centre(spr)
+
+
+## The centre of the frame as drawn, in `spr`'s local space. With pixel snap
+## on, Godot rounds a centred sprite's corner to a whole pixel, so an odd
+## frame (75 px) is drawn from -37 and its centre sits at (0.5, 0.5).
+static func frame_centre(spr: AnimatedSprite2D) -> Vector2:
+	var half := Vector2(CatFrames.FRAME, CatFrames.FRAME) * 0.5
+	var corner := spr.offset - half
+	var vp := spr.get_viewport() if spr.is_inside_tree() else null
+	if vp and vp.snap_2d_transforms_to_pixel:
+		corner = (corner + Vector2(0.5, 0.5)).floor()
+	return corner + half
 
 
 static func make(src: AnimatedSprite2D, frames: SpriteFrames, mat: Material, node_name: String) -> CatOverlay:

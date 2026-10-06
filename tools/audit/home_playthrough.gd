@@ -208,7 +208,7 @@ func _settle() -> void:
 	asleep_at = _frames
 	note("D the cat settles: walk, sit, lie down, sleep", _has_order(_anims, ["walk", "sit", "lie_down", "sleep1"]), str(_anims))
 	note("D input stays locked: the cat keeps to its spot", max_x - min_x <= 9.0 and absf(x() - spot) <= 5.0, "x %.0f..%.0f spot %.0f" % [min_x, max_x, spot])
-	note("D it sleeps on the cushion (sprite raised onto it)", cat.get("sprite").position.y < -15.5, str(cat.get("sprite").position.y))
+	note("D it sleeps on the cushion (sprite raised onto it)", cat.get("sprite").position.y < CatFrames.SPRITE_Y - 0.5, str(cat.get("sprite").position.y))
 	measure("settle (spot to asleep)", "%.1f s" % ((_frames - t0) / 60.0))
 	var aug: Node = cat.get_node("Sprite/Augments")
 	await secs(7.0)

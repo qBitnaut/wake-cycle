@@ -37,7 +37,7 @@ func _on_controller(active: bool) -> void:
 	if active == open:
 		return
 	open = active
-	Sfx.play(self, "door", -8.0, 0.8)
+	Sfx.play(self, "shutter_open")
 	state_changed.emit(open)
 
 

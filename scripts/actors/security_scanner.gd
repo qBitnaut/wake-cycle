@@ -68,7 +68,7 @@ func _on_enter(b: Node) -> void:
 		screen_lines = PackedStringArray(["ACCESS DENIED", "POWER %d/3" % relays_lit])
 		screen_color = FXPalette.LASER
 		_flash_until = _t + 2.2
-		Sfx.play(self, "hurt", -14.0, 0.5)
+		Sfx.play(self, "laser_zap", -4.0)
 
 
 func set_relays(n: int) -> void:
@@ -100,7 +100,8 @@ func _refresh() -> void:
 func begin_scan(seconds := 3.2) -> void:
 	mode = Mode.SCANNING
 	_refresh()
-	var hum := LoopSfx.attach(self, preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg"), -10.0, 1.9, 420.0)
+	Sfx.play(self, "scanner_sweep")
+	var hum := LoopSfx.attach(self, Sfx.stream("laser_hum"), Sfx.level_db("laser_hum") + 4.0, 1.0, 420.0)
 	var tw := create_tween()
 	# Left to right, back, and a last slow pass: a sweep that reads as thorough.
 	tw.tween_property(self, "beam_pos", 1.0, seconds * 0.4).from(-1.0).set_trans(Tween.TRANS_SINE)
@@ -115,7 +116,7 @@ func begin_scan(seconds := 3.2) -> void:
 func accept() -> void:
 	mode = Mode.ACCEPTED
 	_refresh()
-	Sfx.play(self, "checkpoint", -4.0, 1.0)
+	Sfx.play(self, "credential_accepted")
 	_flash_until = _t + 1e9
 	scan_finished.emit()
 

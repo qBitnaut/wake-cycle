@@ -679,6 +679,8 @@ occluder = SubResource("OccluderPolygon2D_yfwr2")
 
 [node name="Ambience" type="Node" parent="." unique_id=1615733871]
 script = ExtResource("47_6c51t")
+bed = "amb_warehouse"
+surface = "step_metal"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=476412495 instance=ExtResource("48_e7ht3")]
 layer = 10

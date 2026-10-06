@@ -166,4 +166,5 @@ func _publish() -> void:
 		"bots": get_tree().get_nodes_in_group("enemy").map(func(b): return [b.global_position.x, b.global_position.y]),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

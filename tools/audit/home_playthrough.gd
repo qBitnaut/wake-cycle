@@ -224,7 +224,7 @@ func _settle() -> void:
 	note("D ... that breathes slowly", hi - lo > 0.06, "%.2f..%.2f" % [lo, hi])
 	var cz: Node = room.get("cine")
 	note("D the close-up eases in", cz != null and float(cz.get("zoom")) > 1.8, "zoom %.2f" % (float(cz.get("zoom")) if cz else 0.0))
-	note("D the music has come in", room.get("music") != null and float(room.get("music").get("volume_db")) > -20.0)
+	note("D the music has come in (the director's home track, faded up)", root.get_node("AudioDirector").music_key == "home" and root.get_node("AudioDirector").music_db() > -20.0, "key %s %.1f dB" % [root.get_node("AudioDirector").music_key, root.get_node("AudioDirector").music_db()])
 	var want := [
 		"Home. It smells like home.",
 		"I don't know exactly what I am now. Something more than I was.",
@@ -301,7 +301,7 @@ func _credits() -> void:
 	note("E ... from the very start (asleep, the intro)", r1 != null and int(r1.get("beat")) == 0)
 	note("E ... as a fresh game (no mind, no shockwave, no monologue)", not gs().intelligence and not gs().shockwave_unlocked and mono().history.is_empty())
 	note("E the game is marked complete and the checkpoint cleared", ss().call("is_complete") and not ss().has_save())
-	note("E the ending music is gone", root.get_node_or_null("EndingMusic") == null)
+	note("E the ending music is gone", root.get_node("AudioDirector").music_key != "home", "key %s" % root.get_node("AudioDirector").music_key)
 
 
 func _report() -> void:

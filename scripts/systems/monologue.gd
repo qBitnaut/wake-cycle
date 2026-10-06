@@ -20,6 +20,12 @@ extends CanvasLayer
 ## (CineZoom.attach_overlay), which covers the whole window, so lines show over
 ## the letterbox too.
 ##
+## Voice: a line of a set is spoken when it has a clip,
+## res://assets/audio/voice/<id>_<index>.ogg (ElevenLabs, see voice.json). The subtitle
+## stays up for max(its timing, clip length + VOICE_TAIL), so a line is never cut off. A
+## line without a clip (or an ad-hoc say()) is text only. The clip plays on the "Voice"
+## bus; AudioDirector ducks the music and ambience while `voice_active`.
+##
 ## Timing: hold = max(MIN_HOLD, CHARS_PER_SEC_COST * length + BASE_HOLD), plus
 ## the fades. Monogram has only ASCII: typographic characters are folded to
 ## their ASCII look and anything else it lacks is dropped (see _clean).
@@ -49,6 +55,8 @@ const FADE_OUT := 0.6
 const PER_CHAR := 0.06
 const BASE_HOLD := 1.2
 const MIN_HOLD := 2.0
+const VOICE_DIR := "res://assets/audio/voice/%s_%d.ogg"
+const VOICE_TAIL := 0.45  ## seconds the subtitle outlives its clip
 const TINT := Color(0.82, 0.90, 1.0)
 const FOLD := {
 	"…": "...", "—": "-", "–": "-", "‘": "'", "’": "'",
@@ -57,6 +65,10 @@ const FOLD := {
 
 ## Every line that has been shown, in order: [id, text]. For audits and a log.
 var history: Array = []
+## One entry per line that had a voice clip: [id, index, clip seconds, hold seconds]. For audits.
+var voice_log: Array = []
+## True while a clip is playing.
+var voice_active := false
 
 var _sets := {}
 var _played := {}
@@ -66,6 +78,7 @@ var _root: Control
 var _plate: Panel
 var _label: Label
 var _tween: Tween
+var _voice: AudioStreamPlayer
 var _size := Vector2.ZERO    # the plate's size
 var _slot := 0               # the slot in SLOTS last chosen (normal play)
 var _overlaid := false
@@ -99,6 +112,11 @@ func _ready() -> void:
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_label)
+	_voice = AudioStreamPlayer.new()
+	_voice.name = "Voice"
+	_voice.bus = &"Voice"
+	add_child(_voice)
+	_voice.finished.connect(func(): voice_active = false)
 
 
 func _load() -> void:
@@ -124,7 +142,7 @@ func play(id: String) -> void:
 		var text := str(l.get("text", "")) if l is Dictionary else str(l)
 		var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
 		var after := float(l.get("after", 0.0)) if l is Dictionary else 0.0
-		_queue.append([id, text, hold, i == lines.size() - 1, after])
+		_queue.append([id, text, hold, i == lines.size() - 1, after, i])
 	if not _busy:
 		_next()
 
@@ -140,7 +158,7 @@ func play_line(id: String, index: int) -> void:
 	var l: Variant = lines[i]
 	var text := str(l.get("text", "")) if l is Dictionary else str(l)
 	var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
-	_queue.append([id, text, hold, true])
+	_queue.append([id, text, hold, true, 0.0, i])
 	if not _busy:
 		_next()
 
@@ -157,7 +175,7 @@ func play_once(id: String) -> bool:
 
 ## One ad-hoc line. hold < 0 times it by its length.
 func say(text: String, hold := -1.0) -> void:
-	_queue.append(["", text, hold, false, 0.0])
+	_queue.append(["", text, hold, false, 0.0, -1])
 	if not _busy:
 		_next()
 
@@ -179,6 +197,8 @@ func reset() -> void:
 	_played.clear()
 	history.clear()
 	_queue.clear()
+	voice_log.clear()
+	_stop_voice()
 	_busy = false
 	if _tween:
 		_tween.kill()
@@ -229,6 +249,15 @@ func _next() -> void:
 	var line: Array = _queue.pop_front()
 	var text := clean(line[1])
 	var hold: float = line[2] if line[2] >= 0.0 else hold_for(text)
+	var clip := _clip(line[0], line[5])
+	if clip:
+		hold = maxf(hold, clip.get_length() + VOICE_TAIL)
+		voice_log.append([line[0], line[5], clip.get_length(), hold])
+		_voice.stream = clip
+		voice_active = true
+		_voice.play()
+	else:
+		_stop_voice()
 	_layout(text)
 	history.append([line[0], text])
 	line_started.emit(line[0], text)
@@ -248,6 +277,22 @@ func _next() -> void:
 		if line[3]:
 			set_finished.emit(line[0])
 		_next())
+
+
+## The voice clip of line `index` of set `id`, or null (text only).
+func _clip(id: String, index: int) -> AudioStream:
+	if id == "" or index < 0:
+		return null
+	var path := VOICE_DIR % [id, index]
+	if not ResourceLoader.exists(path):
+		return null
+	return load(path) as AudioStream
+
+
+func _stop_voice() -> void:
+	if _voice:
+		_voice.stop()
+	voice_active = false
 
 
 ## Size the plate to the text and put it where it belongs (see _place).

@@ -51,13 +51,12 @@ var _cat: Node2D
 var _aug: CatAugments
 var _t := 0.0
 var _end_t := 0.0
-var _music: AudioStreamPlayer
 
 
 func _ready() -> void:
 	_build_room()
 	_build_ui()
-	_music = get_tree().root.get_node_or_null("EndingMusic") as AudioStreamPlayer
+	AudioDirector.play_music("home")  # the ending theme plays on through the credits
 	_play_title()
 
 
@@ -155,9 +154,10 @@ func _physics_process(_delta: float) -> void:
 			"title": _title.modulate.a, "white": _white.modulate.a, "end": _end.modulate.a,
 			"roll": _roll.position.y, "rollDone": roll_done, "black": _black.modulate.a,
 			"augE": _aug.emitter_energy() if _aug else 0.0,
-			"music": _music.volume_db if _music and is_instance_valid(_music) else -80.0,
+			"music": AudioDirector.music_db(),
 		}
 		d["loops"] = LoopSfx.census_cached(get_tree())
+		d["audio"] = AudioDirector.web_state()
 		JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))
 
 
@@ -301,8 +301,7 @@ func _leave() -> void:
 	SaveSystem.mark_complete()
 	var tw := create_tween()
 	tw.tween_property(_black, "modulate:a", 1.0, 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	if _music and is_instance_valid(_music):
-		tw.parallel().tween_property(_music, "volume_db", -60.0, 2.2)
+	AudioDirector.stop_music(2.2)
 	tw.tween_interval(0.5)
 	tw.tween_callback(_restart)
 
@@ -310,8 +309,7 @@ func _leave() -> void:
 ## Back to the beginning: a fresh game, the intro (the cat asleep in the dark).
 func _restart() -> void:
 	left.emit()
-	if _music and is_instance_valid(_music):
-		_music.queue_free()
+	AudioDirector.stop_music(0.0)
 	GameState.new_game()
 	Monologue.reset()
 	Room1.intro_done = false

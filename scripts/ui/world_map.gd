@@ -51,9 +51,8 @@ const LAYER_SHADER := preload("res://shaders/map_layer.gdshader")
 const GLOW_SHADER := preload("res://shaders/map_glow.gdshader")
 const SKY_SHADER := preload("res://shaders/map_sky.gdshader")
 const FONT := preload("res://assets/fonts/monogram.ttf")
-const MUSIC := "res://assets/audio/music/chiptune_stage_select.ogg"
-const RAIN_LOOP := "res://assets/audio/ambient/rain.ogg"
-const BIRDS_LOOP := "res://assets/audio/ambient/birdsong.ogg"
+const RAIN_LOOP := "res://assets/audio/amb/rain_loop.ogg"
+const BIRDS_LOOP := "res://assets/audio/amb/amb_home.ogg"
 
 const VIEW := Vector2(640, 360)
 ## Walking speed along the path (px/s); stairs and ladders are slower.
@@ -161,7 +160,6 @@ var _label: Node2D
 var _label_id := ""
 var _label_a := 0.0
 var _cone: Sprite2D
-var _music: AudioStreamPlayer
 var _rain_snd: AudioStreamPlayer
 var _birds_snd: AudioStreamPlayer
 var _rig: LightingRig
@@ -1128,7 +1126,7 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 	await _wait(0.7)
 	if newly_done and markers.has(done):
 		(markers[done] as MapMarker).stamp()
-		Sfx.play(self, "checkpoint", -10.0)
+		Sfx.play(self, "map_node_unlock")
 		await _wait(0.65)
 	var main := ""
 	for id in order:
@@ -1137,7 +1135,7 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 			await _draw_route(r)
 		if markers.has(id):
 			(markers[id] as MapMarker).light_up()
-		Sfx.play(self, "power_up", -12.0)
+		Sfx.play(self, "map_step")
 		# Optional thought as a place first lights up (levels.json "map_line",
 		# an id in data/monologue.json).
 		var line := String(LevelRegistry.get_level(id).get("map_line", ""))
@@ -1213,14 +1211,12 @@ func enter_level(id: String) -> bool:
 	level_chosen.emit(id, scene)
 	if markers.has(id):
 		(markers[id] as MapMarker).flare()
-	Sfx.play(self, "door", -8.0)
+	Sfx.play(self, "door_open", -6.0)
 	cat_sprite.play("jump")
 	var tw := create_tween()
 	tw.tween_property(cat_sprite, "position:y", -23.0, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.tween_property(cat_sprite, "position:y", -15.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(cat_sprite.play.bind("sit"))
-	if _music:
-		create_tween().tween_property(_music, "volume_db", -40.0, 1.2)
 	if load_levels:
 		_go_in(scene)
 	return true
@@ -1245,21 +1241,13 @@ func _wait_real(t: float) -> void:
 # ---- sound ----------------------------------------------------------------------------------------
 
 func _start_audio() -> void:
-	_music = _loop(MUSIC, -40.0)
-	create_tween().tween_property(_music, "volume_db", -15.0, 2.0)
+	# The map's music and its soft bed come from the AudioDirector (by scene).
 	_rain_snd = _loop(RAIN_LOOP, -60.0)
 	_birds_snd = _loop(BIRDS_LOOP, -60.0)
 
 
 func _loop(path: String, db: float) -> AudioStreamPlayer:
-	var s: AudioStream = (load(path) as AudioStream).duplicate()
-	s.set("loop", true)
-	var p := AudioStreamPlayer.new()
-	p.stream = s
-	p.volume_db = db
-	add_child(p)
-	p.play()
-	return p
+	return AudioDirector.loop_player(self, load(path) as AudioStream, db)
 
 
 func _update_audio() -> void:
@@ -1299,4 +1287,5 @@ func _publish() -> void:
 		"save": SaveSystem.has_save(), "fps": Engine.get_frames_per_second(),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__map = %s;" % JSON.stringify(d))

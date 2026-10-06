@@ -76,13 +76,41 @@ func mono() -> Node:
 
 
 func _initialize() -> void:
+	mono().line_started.connect(_on_line)
 	_main.call_deferred()
+
+
+## Audio bookkeeping: the voice clip of every line shown (id, index, clip s, hold s), and
+## the deepest the music was ducked under a voice.
+var _voices: Array = []
+var _max_duck := 0.0
+const MUSIC_OF := {"room1.tscn": "warehouse", "room2.tscn": "yard", "room3.tscn": "stacks", "room4.tscn": "perimeter", "world_map.tscn": "map"}
+
+
+func ad() -> Node:
+	return root.get_node("AudioDirector")
+
+
+func _on_line(_id: String, _text: String) -> void:
+	var log: Array = mono().voice_log
+	if not log.is_empty() and (_voices.is_empty() or _voices.back() != log.back()):
+		_voices.append(log.back())
+
+
+## The scene's music is on and arrived by a crossfade (a fade of at least a second).
+func music_check(label: String, scene: String) -> void:
+	var want: String = MUSIC_OF.get(scene.get_file(), "")
+	if want == "":
+		return
+	var faded: bool = ad().music_log.any(func(l): return l[0] == want and float(l[1]) >= 1.0)
+	note("%s music: the %s track is playing, brought in by a crossfade" % [label, want], ad().music_key == want and ad().music_player() != null and faded, "key %s log %s" % [ad().music_key, str(ad().music_log.slice(-3))])
 
 
 func ticks(n: int) -> void:
 	for i in n:
 		await physics_frame
 		_frames += 1
+		_max_duck = maxf(_max_duck, ad().ducked())
 
 
 func note(label: String, ok: bool, detail := "") -> void:
@@ -155,6 +183,7 @@ func transition(label: String, scene: String, want_mind: bool, want_shock: bool,
 		note("%s the map is in the save" % label, ss().read_save().get("map", {}).get("completed", []).has(done_id))
 	note("%s sound: no looping player from the previous scene is still playing" % label, LoopSfx.orphans(self).is_empty(), str(LoopSfx.orphans(self)))
 	note("%s the next room is %s" % [label, scene.get_file()], s != null and s.scene_file_path == scene, str(s.scene_file_path if s else "?"))
+	music_check(label, scene)
 	note("%s mind %s, shockwave %s" % [label, want_mind, want_shock], gs().intelligence == want_mind and gs().shockwave_unlocked == want_shock, "mind %s shock %s" % [gs().intelligence, gs().shockwave_unlocked])
 	note("%s no power carried through the exit (pads are the only source)" % label, gs().power == 0, "power %d" % gs().power)
 	var save: Dictionary = ss().read_save()
@@ -380,9 +409,15 @@ func enter_from_map(id: String) -> bool:
 	var ok: bool = m.enter_level(id)
 	n = 0
 	var want: String = LevelRegistry.scene_of(id)
+	var saw_fade := false
 	while (current_scene == m or current_scene == null or current_scene.scene_file_path != want or current_scene.get_node_or_null("Cat") == null) and n < 1200:
 		await ticks(1)
 		n += 1
+	for i in 30:
+		await ticks(1)
+		saw_fade = saw_fade or ad().crossfading()
+	note("MAP->%s music: the map's track and the room's overlap while crossfading" % id, saw_fade, "key %s" % ad().music_key)
+	music_check("MAP->%s" % id, want)
 	await ticks(60)
 	return ok
 
@@ -482,7 +517,7 @@ func _revisits() -> void:
 func _fresh_room1() -> void:
 	var s := current_scene
 	var cat: Node2D = s.get_node_or_null("Cat")
-	note("END sound: after the credits the ending music and every loop is gone", LoopSfx.orphans(self).is_empty() and root.get_node_or_null("EndingMusic") == null, str(LoopSfx.playing_loops(self)))
+	note("END sound: after the credits no orphan loop, and the ending theme is gone (Room 1's track has taken over)", LoopSfx.orphans(self).is_empty() and ad().music_key != "home", "music %s, %s" % [ad().music_key, str(LoopSfx.playing_loops(self))])
 	note("END back in Room 1 after the credits", s != null and s.scene_file_path == ROOM1, str(s.scene_file_path if s else "?"))
 	note("END a fresh game: no mind, no shockwave, no power, full health, no score", not gs().intelligence and not gs().shockwave_unlocked and gs().power == 0 and gs().health == 3 and gs().score == 0 and gs().keys.is_empty() and gs().letter_mask == 0 and gs().collected.is_empty(), str(snap()))
 	note("END the credits' new game cleared the map", gs().map_completed.is_empty() and gs().map_unlocked.is_empty() and gs().map_node == "", "completed %s node %s" % [str(gs().map_completed), gs().map_node])
@@ -500,7 +535,28 @@ func _fresh_room1() -> void:
 	cat.set_can_move(false)
 
 
+## Narration: every line has a clip, each clip played with its subtitle held at least as long,
+## the music ducked while it spoke, and sound stayed clean.
+func _voice_check() -> void:
+	var f := FileAccess.open("res://data/monologue.json", FileAccess.READ)
+	var sets: Dictionary = JSON.parse_string(f.get_as_text())
+	var missing := []
+	var lines := 0
+	for id in sets:
+		for i in sets[id].size():
+			lines += 1
+			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]):
+				missing.append("%s_%d" % [id, i])
+	note("VOICE all %d monologue lines have a narration clip" % lines, missing.is_empty(), str(missing))
+	note("VOICE narration played for the monologue lines shown (%d clips)" % _voices.size(), _voices.size() >= 20, "%d" % _voices.size())
+	var short := _voices.filter(func(v): return float(v[3]) < float(v[2]) + 0.4 - 0.001)
+	note("VOICE every line's hold is at least its clip length plus the tail", short.is_empty(), str(short.slice(0, 3)))
+	note("VOICE music and ambience duck under the voice", _max_duck > 0.9, "deepest %.2f" % _max_duck)
+	note("VOICE no orphan loops at the end, and the web-bounded loop count (director music pair + bed + room loops)", LoopSfx.orphans(self).is_empty() and LoopSfx.playing_loops(self).size() <= 8, str(LoopSfx.playing_loops(self)))
+
+
 func _report() -> void:
+	_voice_check()
 	var total := 0
 	var passed := 0
 	print("")

@@ -26,11 +26,9 @@ signal outro_started
 enum Beat { STREET, FLAP, INSIDE, SETTLE, ASLEEP, OUTRO }
 
 const CREDITS := "res://scenes/ui/credits.tscn"
-const MUSIC := preload("res://assets/audio/music/calm_innocence.ogg")
-const FLAP_SOUND := "res://assets/audio/sfx/impactMetal_light_001.ogg"
+const FLAP_SOUND := "wing_flap"
 ## The cat strolls here: the walk animation, not the run.
 const WALK_SPEED := 104.0
-const MUSIC_DB := -11.0
 ## Warm white of the final fade (sunlight, not a hospital).
 const WARM_WHITE := Color(1.0, 0.96, 0.86)
 ## The interior's light-mask bit: the sun does not reach in; the window does.
@@ -168,12 +166,12 @@ func _enter_house() -> void:
 	var amb := get_node_or_null("Ambience")
 	if amb:
 		for p in amb.get_children():
-			if p is AudioStreamPlayer and p.autoplay:
+			if p is AudioStreamPlayer:
 				create_tween().tween_property(p, "volume_db", (p as AudioStreamPlayer).volume_db - 9.0, 2.0)
 
 
 func _swing_flap() -> void:
-	Sfx.play(self, FLAP_SOUND, -20.0, 0.7)
+	Sfx.play(self, FLAP_SOUND)
 	if _flap == null:
 		return
 	create_tween().tween_method(_flap_swing, 0.0, 2.4, 2.4)
@@ -274,18 +272,7 @@ func _start_zoom() -> void:
 
 
 func _start_music() -> void:
-	music = get_tree().root.get_node_or_null("EndingMusic") as AudioStreamPlayer
-	if music == null:
-		music = AudioStreamPlayer.new()
-		music.name = "EndingMusic"
-		var s: AudioStream = MUSIC.duplicate()
-		s.set("loop", true)
-		music.stream = s
-		music.volume_db = -40.0
-		music.autoplay = true
-		# Kept by the root: it plays on through the credits.
-		get_tree().root.add_child.call_deferred(music)
-	create_tween().tween_property(music, "volume_db", MUSIC_DB, 5.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	music = AudioDirector.play_music("home", 5.0)
 
 
 func _on_line_set(id: String) -> void:
@@ -361,8 +348,9 @@ func _publish() -> void:
 		"cz": cine.zoom if cine else 1.0, "fade": _fade_rect.modulate.a if _fade_rect else 0.0,
 		"glints": glints.glints_spawned if glints else 0, "drops": glints.drops_landed if glints else 0,
 		"birdsFlown": birds.flown if birds else 0,
-		"music": music.volume_db if music else -80.0,
+		"music": AudioDirector.music_db(),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

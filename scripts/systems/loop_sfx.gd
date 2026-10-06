@@ -16,8 +16,9 @@ extends Node
 ## cat comes back into range. `retire()` fades it out and frees it.
 
 const GROUP := "loop_sfx"
-## Level-independent music that is meant to outlive a scene (named in the root).
-const PERSISTENT := ["EndingMusic"]
+## Level-independent loops that are meant to outlive a scene (named in the root). The
+## AudioDirector's own music and bed players are persistent by parentage (see playing_loops).
+const PERSISTENT := []
 const FADE_RATE := 3.0   ## gain per second, up or down
 const SILENT := 0.004    ## below this linear gain the player is stopped
 
@@ -63,6 +64,7 @@ func _ready() -> void:
 	# Stream playback, not the web's default samples: a sample cannot be re-leveled
 	# or stopped as reliably, and this is the one sound that must do both.
 	_player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
+	_player.bus = &"SFX" if AudioServer.get_bus_index(&"SFX") >= 0 else &"Master"
 	add_child(_player)
 	_update(0.0)
 
@@ -142,7 +144,9 @@ static func playing_loops(tree: SceneTree) -> Array:
 			if not _loops(n.get("stream")):
 				continue
 			var inside: bool = scene != null and scene.is_ancestor_of(n)
-			out.append({"path": str(n.get_path()), "in_scene": inside, "persistent": PERSISTENT.has(n.name)})
+			var director := tree.root.get_node_or_null("AudioDirector")
+			var kept := PERSISTENT.has(n.name) or (director != null and director.is_ancestor_of(n))
+			out.append({"path": str(n.get_path()), "in_scene": inside, "persistent": kept})
 	return out
 
 

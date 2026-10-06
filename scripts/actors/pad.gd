@@ -47,7 +47,7 @@ func _on_body(body: Node) -> void:
 	else:
 		GameState.grant_power(power, duration)
 		_cd = cooldown
-	Sfx.play(self, "power_up")
+	Sfx.play(self, "power_up" if power == UNLOCK_SHOCKWAVE else ["pad_surge", "pad_spring", "pad_phase", "pad_impact"][clampi(power - 1, 0, 3)])
 	_fx.pulse()
 	_fx.set_enabled(false)
 	activated.emit(power)

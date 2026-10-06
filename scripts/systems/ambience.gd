@@ -1,31 +1,25 @@
 class_name Ambience
 extends Node
-## Room sound bed: a rain loop, a far machine hum, drip plinks (one per
-## DripFX landing, positional) and the cat's footsteps. Kept quiet: the world
-## is asleep. Add it to a level and call `setup(cat)`; it finds the DripFX
-## nodes in the level by itself.
+## Room sound bed: the scene's ambience loop (rain, a far machine hum ... one file per
+## room, see assets/audio/amb), an optional second loop, water drops (one per DripFX
+## landing, positional) and the cat's footsteps on the room's surface. Kept quiet: the
+## world is asleep. Add it to a level and call `setup(cat)`; it finds the DripFX nodes
+## in the level by itself. The loops are streams on the Ambience bus, started once the
+## AudioDirector has unlocked sound (the web's first input).
 
-const RAIN := preload("res://assets/audio/ambient/rain.ogg")
-const HUM := preload("res://assets/audio/ambient/pump_01.ogg")
-const STEPS := [
-	preload("res://assets/audio/sfx/footstep_concrete_000.ogg"),
-	preload("res://assets/audio/sfx/footstep_concrete_001.ogg"),
-	preload("res://assets/audio/sfx/footstep_concrete_002.ogg"),
-	preload("res://assets/audio/sfx/footstep_concrete_003.ogg"),
-	preload("res://assets/audio/sfx/footstep_concrete_004.ogg"),
-]
-const PLINK := [
-	preload("res://assets/audio/sfx/impactMetal_light_000.ogg"),
-	preload("res://assets/audio/sfx/impactMetal_light_001.ogg"),
-	preload("res://assets/audio/sfx/impactMetal_light_002.ogg"),
-]
+## Footstep surfaces: a room sets `surface` (an Sfx name prefix: step_metal, step_concrete,
+## step_wet, step_wood). A crouched cat crawls.
+const SURFACES := ["step_metal", "step_concrete", "step_wet", "step_wood"]
 
 ## The two loops of the bed (a day room swaps them, e.g. birdsong and drips).
-@export var rain_stream: AudioStream = RAIN
-@export var hum_stream: AudioStream = HUM
-@export var rain_db := -17.0
-@export var hum_db := -24.0
-@export var step_db := -20.0
+## The room's bed: a name in res://assets/audio/amb (e.g. "amb_yard"), or `rain_stream` itself.
+@export var bed := ""
+@export var rain_stream: AudioStream
+@export var hum_stream: AudioStream
+@export var rain_db := -6.0
+@export var hum_db := -12.0
+@export var step_db := 0.0
+@export_enum("step_metal", "step_concrete", "step_wet", "step_wood") var surface := "step_concrete"
 
 var cat: Cat
 var steps_played := 0
@@ -37,7 +31,6 @@ var _rain_gain := 1.0
 
 var _rain: AudioStreamPlayer
 var _hum: AudioStreamPlayer
-var _step: AudioStreamPlayer
 var _step_t := 0.0
 
 
@@ -49,31 +42,26 @@ func _ready() -> void:
 
 func setup(player: Cat) -> void:
 	cat = player
-	_rain = _loop(rain_stream, rain_db)
-	_hum = _loop(hum_stream, hum_db)
-	_step = AudioStreamPlayer.new()
-	_step.volume_db = step_db
-	add_child(_step)
+	if rain_stream == null and bed != "":
+		rain_stream = load("res://assets/audio/amb/%s.ogg" % bed)
+	if rain_stream:
+		_rain = _loop(rain_stream, rain_db)
+	if hum_stream:
+		_hum = _loop(hum_stream, hum_db)
 	for d in get_parent().find_children("*", "DripFX", true, false):
 		(d as DripFX).landed.connect(_plink)
 
 
 func _loop(stream: AudioStream, db: float) -> AudioStreamPlayer:
-	var s: AudioStream = stream.duplicate()
-	s.set("loop", true)
-	var p := AudioStreamPlayer.new()
-	p.stream = s
-	p.volume_db = db
-	p.autoplay = true
-	add_child(p)
-	return p
+	return AudioDirector.loop_player(self, stream, db)
 
 
 func _plink(pos: Vector2) -> void:
 	var p := AudioStreamPlayer2D.new()
-	p.stream = PLINK[randi() % PLINK.size()]
-	p.volume_db = -22.0
-	p.pitch_scale = randf_range(2.2, 3.0)
+	p.stream = Sfx.stream("drop")
+	p.bus = &"SFX"
+	p.volume_db = Sfx.level_db("drop") - 6.0
+	p.pitch_scale = randf_range(0.9, 1.15)
 	p.max_distance = 420.0
 	p.global_position = pos
 	add_child(p)
@@ -91,10 +79,7 @@ func _physics_process(delta: float) -> void:
 		_step_t = 0.27 if speed > 117.0 else 0.4
 		if cat.crouched:
 			_step_t = 0.5
-		_step.stream = STEPS[randi() % STEPS.size()]
-		_step.pitch_scale = randf_range(1.1, 1.4)
-		_step.volume_db = step_db - (6.0 if cat.crouched else 0.0)
-		_step.play()
+		Sfx.play(self, "crawl" if cat.crouched else surface, step_db)
 		steps_played += 1
 
 

@@ -61,7 +61,7 @@ func _activate() -> void:
 	lit = true
 	_flash = 1.0
 	GameState.mark_collected(_id)
-	Sfx.play(self, "power_up", -4.0, 1.0 + 0.12 * index)
+	Sfx.play(self, "power_up", 0.0, 1.0 + 0.06 * index)
 	Debris.burst(get_parent(), global_position + Vector2(0, -30), FXPalette.INDICATOR, 12)
 	_light.energy = 1.6
 	activated.emit(index)

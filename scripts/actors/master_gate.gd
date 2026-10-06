@@ -24,6 +24,7 @@ var _shape := RectangleShape2D.new()
 var _cs := CollisionShape2D.new()
 var _spill: PointLight2D
 var _tick := 0.0
+var _grind := 0.0
 
 
 func _ready() -> void:
@@ -79,7 +80,11 @@ func _physics_process(delta: float) -> void:
 		_tick -= delta
 		if _tick <= 0.0:
 			_tick = 0.45
-			Sfx.play(self, "door", -6.0, 0.55 + randf() * 0.15)
+			_grind -= 0.45
+			if _grind <= 0.0:
+				_grind = 2.0
+				Sfx.play(self, "gate_grind")
+			Sfx.play(self, "bot_stomp", -8.0, 0.7 + randf() * 0.15)
 			ScreenShake.shake_at(self, 0.22, 0.5)
 			Debris.burst(get_parent(), global_position + Vector2(randf_range(-40, 40), -height_tiles * 32.0 * (1.0 - lift)), Color("5b7280"), 4)
 

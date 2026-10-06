@@ -116,7 +116,7 @@ func _physics_process(delta: float) -> void:
 		if GameState.intelligence and not _cat.dead and absf(d.x) < wake_range and absf(d.y) < wake_dy:
 			awake = true
 			_flicker = 0.9
-			Sfx.play(self, "power_up", -12.0, 2.0)
+			Sfx.play(self, "robot_chirp")
 			woke.emit()
 	var want := 0.0
 	if awake:

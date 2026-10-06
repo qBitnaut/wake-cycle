@@ -35,7 +35,7 @@ func _physics_process(delta: float) -> void:
 	var now := pressed or _release > 0.0
 	if now != active:
 		active = now
-		Sfx.play(self, "land" if now else "door", -10.0, 1.2)
+		Sfx.play(self, "plate_click" if now else "plate_release")
 		state_changed.emit(active)
 		queue_redraw()
 

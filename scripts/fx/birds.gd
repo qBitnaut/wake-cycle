@@ -35,6 +35,7 @@ func _ready() -> void:
 	_cat = get_node_or_null(cat_path) as Node2D
 	_chirp = AudioStreamPlayer.new()
 	_chirp.volume_db = -14.0
+	_chirp.bus = &"SFX"
 	add_child(_chirp)
 	for p in perches:
 		_birds.append({"pos": p, "vel": Vector2.ZERO, "state": 0, "t": randf() * 3.0,

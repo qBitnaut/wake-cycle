@@ -50,11 +50,11 @@ func on_shockwave(origin: Vector2, _radius: float, source: String) -> void:
 		return
 	if source != "shock":
 		_flinch = 0.3
-		Sfx.play(self, "res://assets/audio/sfx/impactMetal_light_001.ogg", -8.0, 1.4)
+		Sfx.play(self, "bot_stomp", -6.0, 1.3)
 		return
 	is_broken = true
 	GameState.mark_collected(_id)
-	Sfx.play(self, "crate_break", -4.0, 1.5)
+	Sfx.play(self, "robot_debris")
 	Debris.burst(get_parent(), global_position + Vector2(0, -height_tiles * 16.0), NanoPalette.SHOCKWAVE, 14)
 	broken.emit()
 	queue_free()

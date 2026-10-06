@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 			_tick -= delta
 			if _tick <= 0.0:
 				_tick = 0.35
-				Sfx.play(self, "pickup", -16.0, 1.9)
+				Sfx.play(self, "robot_beep", -6.0)
 		if time_left <= 0.0:
 			open = false
 			_armed = false
@@ -103,7 +103,7 @@ func _physics_process(delta: float) -> void:
 		_cs.disabled = shown < 2.0
 	if _lift <= 0.0 and not _slammed:
 		_slammed = true
-		Sfx.play(self, "door", -6.0, 0.7)
+		Sfx.play(self, "bot_stomp", -2.0)
 	queue_redraw()
 
 

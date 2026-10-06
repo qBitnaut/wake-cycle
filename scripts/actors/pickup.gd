@@ -33,19 +33,19 @@ func _on_body(body: Node) -> void:
 	match kind:
 		Kind.KEY:
 			GameState.add_key(key_color)
-			Sfx.play(self, "pickup", -4.0, 0.8)
+			Sfx.play(self, "pickup_big")
 		Kind.LETTER:
 			if not GameState.collect_letter(letter_index):
 				_nope = 0.4
 				return
-			Sfx.play(self, "power_up", -6.0)
+			Sfx.play(self, "pickup_letter")
 		Kind.FISH:
 			GameState.set_health(GameState.MAX_HEALTH)
 			GameState.add_score(100)
-			Sfx.play(self, "pickup", -4.0, 1.3)
+			Sfx.play(self, "pickup_fish")
 		Kind.GEM:
 			GameState.add_score(100)
-			Sfx.play(self, "pickup")
+			Sfx.play(self, "pickup_small")
 	if persist:
 		GameState.mark_collected(_id)
 	Debris.burst(get_parent(), global_position, _color(), 6)

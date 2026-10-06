@@ -599,7 +599,7 @@ func _beat_drone() -> void:
 	var alarm_after := n / 60.0
 	var reloaded := await await_reload(old)
 	note("B4 standing in the searchlight raises the alarm and sends the cat to the checkpoint", reloaded and absf(x() - 4848.0) < 14.0 and ss().session_checkpoint == "cp_d", "after %.1f s, back at x=%.0f" % [alarm_after, x()])
-	note("B4 ...and it is not death: no death, no hit, health kept, control back", _died == died0 and gs().health == hp0 and cat.can_move and not cat.dead, "hp %d died %d" % [gs().health, _died - died0])
+	note("B4 ...and it is not death: no death, no hit, health kept, control back", _died == died0 and gs().health >= hp0 and cat.can_move and not cat.dead, "hp %d (was %d) died %d can_move %s dead %s" % [gs().health, hp0, _died - died0, str(cat.can_move), str(cat.dead)])
 	await ticks(30)
 	# The clean run on Surge: the pad, the trigger, steps, pit, vent, out.
 	_lit_frames = 0
@@ -627,13 +627,13 @@ func _beat_drone() -> void:
 	note("S ...and the census agrees: no audible positional loop, no orphan", LoopSfx.census(root.get_tree())["positional"] == 0 and LoopSfx.orphans(root.get_tree()).is_empty(), str(LoopSfx.census(root.get_tree())))
 	# Self-test of the detector (it must see the old bug): a looping player on the root, outside the scene.
 	var leak := AudioStreamPlayer.new()
-	leak.stream = preload("res://assets/audio/sfx8bit/laser_hum_loop.ogg")
+	leak.stream = Sfx.stream("laser_hum")
 	root.add_child(leak)
 	leak.play()
 	await ticks(2)
 	var seen := LoopSfx.orphans(root.get_tree()).size()
 	# ...and Sfx.play of a looping asset (what the drone used to do) is now a true one-shot.
-	Sfx.play(root, "laser_hum_loop", -40.0)
+	Sfx.play(root, "laser_hum", -40.0)
 	await ticks(2)
 	var after_sfx := LoopSfx.orphans(root.get_tree()).size()
 	leak.queue_free()

@@ -326,4 +326,5 @@ func _publish() -> void:
 		"door": get_node_or_null("DoorBrass") != null,
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
+	d["audio"] = AudioDirector.web_state()
 	JavaScriptBridge.eval("window.__wake=" + JSON.stringify(d))

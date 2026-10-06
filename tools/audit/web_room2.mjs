@@ -40,7 +40,7 @@ const server = http.createServer((q, r) => {
     r.end(d);
   });
 });
-await new Promise(res => server.listen(0, res));
+await new Promise(res => server.listen(Number(process.env.PORT || process.env.AUDIT_PORT || 0), res));
 const url = `http://127.0.0.1:${server.address().port}/index.html?start=room2`;
 
 const launchArgs = gpu === 'swiftshader'

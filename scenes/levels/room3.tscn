@@ -31,8 +31,6 @@
 [ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="29_hglvn"]
 [ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="30_d0bw8"]
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="31_t7pa3"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/rain.ogg" id="32_tn1jg"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/pump_01.ogg" id="33_oii7r"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="34_sshm8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j3bmq"]
@@ -963,11 +961,8 @@ solid_layers = [NodePath("../Tiles")]
 
 [node name="Ambience" type="Node" parent="." unique_id=89534384]
 script = ExtResource("31_t7pa3")
-rain_stream = ExtResource("32_tn1jg")
-hum_stream = ExtResource("33_oii7r")
-rain_db = -17.0
-hum_db = -24.0
-step_db = -20.0
+bed = "amb_stacks"
+surface = "step_concrete"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=2139472813 instance=ExtResource("34_sshm8")]
 layer = 10

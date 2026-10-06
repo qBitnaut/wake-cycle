@@ -29,8 +29,6 @@
 [ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="27_0iifv"]
 [ext_resource type="Script" path="res://scripts/fx/lightning_fx.gd" id="28_y6f6e"]
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="29_dqvg7"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/rain.ogg" id="30_f0ecu"]
-[ext_resource type="AudioStream" path="res://assets/audio/ambient/pump_01.ogg" id="31_68dc7"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="32_vs3tp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ph1hm"]
@@ -959,11 +957,8 @@ light_shadows = false
 
 [node name="Ambience" type="Node" parent="." unique_id=1658915804]
 script = ExtResource("29_dqvg7")
-rain_stream = ExtResource("30_f0ecu")
-hum_stream = ExtResource("31_68dc7")
-rain_db = -17.0
-hum_db = -24.0
-step_db = -20.0
+bed = "amb_yard"
+surface = "step_wet"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=2095688376 instance=ExtResource("32_vs3tp")]
 layer = 10

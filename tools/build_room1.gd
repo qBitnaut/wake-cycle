@@ -184,6 +184,8 @@ func _build_room1() -> void:
 
 	var amb := Ambience.new()
 	amb.name = "Ambience"
+	amb.bed = "amb_warehouse"
+	amb.surface = "step_metal"
 	_own(amb)
 
 	var hud: Node = load("res://scenes/ui/hud.tscn").instantiate()

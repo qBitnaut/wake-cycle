@@ -10,11 +10,17 @@ extends Node2D
 ##               roof hole that only shows inside the moonbeam.
 ##   UNSHADED    flat colour, ignores the night tint.
 
+## follow_camera: for rooms of any height. The rain becomes a window on the camera view:
+## the node tracks the view's top centre, `width` and `floor_y` are set from the view size
+## (so the exports are ignored), and drops die at the bottom of the view. The node's
+## position is then driven here; do not move it yourself.
+
 enum Lighting { SHADED, LIGHT_ONLY, UNSHADED }
 
 const STREAK := preload("res://assets/fx/rain_streak.png")
 const MOTE_SHADER := preload("res://shaders/mote.gdshader")
 
+@export var follow_camera := false
 @export var width := 320.0:
 	set(v):
 		width = v
@@ -62,6 +68,10 @@ var _intensity := 1.0
 
 
 func _ready() -> void:
+	if follow_camera:
+		var vs := get_viewport_rect().size
+		width = vs.x + 160.0
+		floor_y = vs.y + 40.0
 	_drops = CPUParticles2D.new()
 	_drops.name = "Drops"
 	_drops.texture = STREAK
@@ -75,6 +85,15 @@ func _ready() -> void:
 	_splash.name = "Splash"
 	add_child(_splash)
 	_apply()
+
+
+func _process(_delta: float) -> void:
+	if not follow_camera:
+		return
+	var cam := get_viewport().get_camera_2d()
+	if cam != null:
+		var c := cam.get_screen_center_position()
+		global_position = Vector2(roundf(c.x), roundf(c.y - get_viewport_rect().size.y * 0.5 - 20.0))
 
 
 ## Rain intensity multiplier (0 stops it), for weather changes. Changing it

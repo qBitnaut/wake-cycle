@@ -7,6 +7,8 @@ extends Node2D
 ## trees). Art by tools/art/home_art.py. Everything here is unshaded: the
 ## day CanvasModulate and the sun light the world, not the sky.
 ##
+## The sky, sun, rainbow and clouds are pinned to the view in both axes, so they cover a room
+## of any height; the hill and tree bands sit on the horizon (the node's origin).
 ## Parallax by hand, as in NightBackdrop: a layer with scroll s moves at s of
 ## the camera, so it is shifted by (1 - s) of the camera position. The node's
 ## origin is the horizon (the band bottoms sit on it); the sky and the sun are

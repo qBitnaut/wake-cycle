@@ -27,6 +27,10 @@ const MOON := preload("res://assets/fx/moon.png")
 ## Pixel scale for the layer art. 1 = HD art at 1:1 (0 = auto FXScale.whole,
 ## for the old 272 px art at 640x360).
 @export_range(0, 8) var art_scale := 1
+## For rooms taller than the screen: the layers also tile vertically and drift with the
+## camera in y (at the same scroll scales), so the view is covered at any height.
+## Off (default): the layers sit on the horizon only, as in the 360 px rooms.
+@export var extend_vertically := false
 
 var _s := 1.0
 @export var moon_color := Color(1.25, 1.3, 1.45)
@@ -80,8 +84,15 @@ func _scroll() -> void:
 		var spr := _layers[i]
 		var tw := float(spr.texture.get_width()) * _s
 		_holders[i].position.x = roundf(c.x * (1.0 - sc))
-		spr.region_rect = Rect2(0, 0, (view_w + tw * 2.0) / _s, spr.texture.get_height())
 		spr.position.x = floorf((c.x * sc - view_w * 0.5) / tw) * tw
+		if extend_vertically:
+			var th := float(spr.texture.get_height()) * _s
+			var view_h := get_viewport_rect().size.y
+			_holders[i].position.y = roundf(c.y * (1.0 - sc))
+			spr.region_rect = Rect2(0, 0, (view_w + tw * 2.0) / _s, (view_h + th * 2.0) / _s)
+			spr.position.y = floorf((c.y * sc - view_h * 0.5) / th) * th
+		else:
+			spr.region_rect = Rect2(0, 0, (view_w + tw * 2.0) / _s, spr.texture.get_height())
 	if _moon_holder:
 		_moon_holder.position.x = roundf(c.x * (1.0 - MOON_SCROLL))
 

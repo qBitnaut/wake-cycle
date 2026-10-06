@@ -124,6 +124,10 @@ Regenerating generated content (all optional; the results are committed):
   path, resources by path or type and order), so rebuilding unchanged content leaves
   the .tscn unchanged and diffs show only real changes. Godot may add or drop redundant
   defaults on a first re-save (for example a `script` on the Cat instance); that is harmless.
+  After a fresh clone, or after adding a `class_name` script, run
+  `godot --headless --path . --import` once so the builders can see the classes. Level size, the
+  camera for tall rooms and camera zones: `docs/LEVELS.md`; its example room is
+  `build_tall_demo.gd`.
 
 Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and

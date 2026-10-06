@@ -10,6 +10,10 @@ RAW = os.path.join(eleven.SCRATCH, "voice_raw")
 VOICE_ID = "bIHbv24MWmeRgasZH58o"  # Will - Relaxed Optimist
 MODEL = "eleven_v4_turbo"
 SETTINGS = {"stability": 0.45, "similarity_boost": 0.75, "style": 0.3, "use_speaker_boost": True}
+# Per-key overrides on top of SETTINGS: memory fragments are remembered, not reacted to,
+# so softer (less style), steadier (more stability) and a touch slower.
+OVERRIDES = {k: {"stability": 0.6, "style": 0.12, "speed": 0.9}
+             for k in ("memory_warehouse", "memory_yard", "memory_stacks", "memory_perimeter")}
 
 
 def speak_text(t):
@@ -33,15 +37,21 @@ def to_ogg(src, dst):
 
 
 def main():
+    """With key names as arguments, only those sets are made and merged into voice.json."""
+    only = sys.argv[1:]
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(RAW, exist_ok=True)
-    manifest = {"voice_id": VOICE_ID, "voice_name": "Will - Relaxed Optimist", "model_id": MODEL,
+    mpath = os.path.join(OUT, "voice.json")
+    manifest = json.load(open(mpath)) if only and os.path.exists(mpath) else {"voice_id": VOICE_ID, "voice_name": "Will - Relaxed Optimist", "model_id": MODEL,
                 "voice_settings": SETTINGS, "format": "ogg vorbis mono 44.1k ~80kbps, -16 LUFS", "clips": {}}
     for k, i, text, all_lines in lines():
+        if only and k not in only:
+            continue
+        settings = dict(SETTINGS, **OVERRIDES.get(k, {}))
         name = "%s_%d" % (k, i)
         raw = os.path.join(RAW, name + ".mp3")
         if not os.path.exists(raw):
-            body = {"text": speak_text(text), "model_id": MODEL, "voice_settings": SETTINGS}
+            body = {"text": speak_text(text), "model_id": MODEL, "voice_settings": settings}
             if i > 0:
                 p = all_lines[i - 1]
                 body["previous_text"] = speak_text(p["text"] if isinstance(p, dict) else p)
@@ -55,7 +65,9 @@ def main():
         to_ogg(raw, dst)
         dur = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", dst]))
         manifest["clips"][name] = {"file": "%s.ogg" % name, "text": text, "seconds": round(dur, 2)}
-    json.dump(manifest, open(os.path.join(OUT, "voice.json"), "w"), indent="\t")
+        if k in OVERRIDES:
+            manifest["clips"][name]["settings"] = settings
+    json.dump(manifest, open(mpath, "w"), indent="\t")
 
 
 if __name__ == "__main__":

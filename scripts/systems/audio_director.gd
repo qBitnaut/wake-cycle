@@ -14,7 +14,8 @@ extends Node
 ## map and credits, which have none, get theirs here (BEDS).
 ##
 ## Ducking: while the cat's voice plays (Monologue.voice_active) the Music and Ambience
-## buses sink by DUCK_MUSIC / DUCK_AMB and come back after it.
+## buses sink by DUCK_MUSIC / DUCK_AMB and come back after it. A memory fragment
+## (Monologue.memory_active) ducks deeper (MEMORY_*), slower in and slower out.
 ##
 ## Web: audio only starts after the first key, click or touch (the browser keeps the
 ## audio context suspended until then). Loops are always played as streams
@@ -32,6 +33,10 @@ const SILENT_DB := -60.0
 const DUCK_MUSIC := -9.0
 const DUCK_AMB := -7.0
 const DUCK_IN := 0.25
+const MEMORY_MUSIC := -18.0
+const MEMORY_AMB := -14.0
+const MEMORY_IN := 0.8
+const MEMORY_OUT := 2.0
 const DUCK_OUT := 1.2
 ## Bus levels, dB: the voice sits on top.
 const BUS_DB := {"Music": -2.0, "Ambience": -3.0, "SFX": -1.0, "Voice": 2.0}
@@ -63,6 +68,7 @@ var _bed: AudioStreamPlayer
 var _bed_key := ""
 var _pending := ""                            ## a music key asked for before the unlock
 var _pending_fade := CROSSFADE
+var _memory_duck := 0.0                       ## 0..1 how deep the duck is (memory fragment)
 var _duck := 0.0                              ## 0..1 how far the buses are ducked
 var _scene_path := "?"
 
@@ -250,14 +256,19 @@ func loop_player(parent: Node, stream: AudioStream, db: float, bus := &"Ambience
 
 
 func _update_duck(delta: float) -> void:
-	var want := 1.0 if Monologue.voice_active else 0.0
-	_duck = move_toward(_duck, want, delta / (DUCK_IN if want > _duck else DUCK_OUT))
+	var mem: bool = Monologue.memory_active
+	var want := 1.0 if (Monologue.voice_active or mem) else 0.0
+	_duck = move_toward(_duck, want, delta / ((MEMORY_IN if mem else DUCK_IN) if want > _duck else (MEMORY_OUT if _memory_duck > 0.0 else DUCK_OUT)))
+	# Depth eases between the normal and the memory duck, so entering and leaving is smooth.
+	_memory_duck = move_toward(_memory_duck, 1.0 if mem else 0.0, delta / (MEMORY_IN if mem else MEMORY_OUT))
+	var dm := lerpf(DUCK_MUSIC, MEMORY_MUSIC, _memory_duck)
+	var da := lerpf(DUCK_AMB, MEMORY_AMB, _memory_duck)
 	var m := AudioServer.get_bus_index(&"Music")
 	var a := AudioServer.get_bus_index(&"Ambience")
 	if m >= 0:
-		AudioServer.set_bus_volume_db(m, BUS_DB["Music"] + DUCK_MUSIC * _duck)
+		AudioServer.set_bus_volume_db(m, BUS_DB["Music"] + dm * _duck)
 	if a >= 0:
-		AudioServer.set_bus_volume_db(a, BUS_DB["Ambience"] + DUCK_AMB * _duck)
+		AudioServer.set_bus_volume_db(a, BUS_DB["Ambience"] + da * _duck)
 
 
 ## 0..1: how far the music and ambience are ducked under the voice (an audit hook).

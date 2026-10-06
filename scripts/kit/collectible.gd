@@ -116,7 +116,7 @@ func pick(_c: Cat) -> void:
 	if kind == Kind.MEMORY:
 		KitSfx.play(self, "memory_fragment")
 		if memory_id != "" and Monologue.has_set(memory_id):
-			Monologue.play(memory_id)
+			Monologue.play_memory(memory_id)
 		else:
 			Monologue.say(line)
 	if persist:

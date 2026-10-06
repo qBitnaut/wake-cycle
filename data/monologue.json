@@ -129,5 +129,21 @@
 		{"text": "But some things are still simple.", "hold": 3.4, "after": 1.0},
 		{"text": "Warm sun. Soft cushion. Safe.", "hold": 4.2, "after": 2.0},
 		{"text": "...Wake cycle complete.", "hold": 4.6}
+	],
+	"memory_warehouse": [
+		"A food bowl with my name on it.",
+		"Someone filled it every morning."
+	],
+	"memory_yard": [
+		"A warm lap. A voice saying 'good boy.'",
+		"I'd forgotten."
+	],
+	"memory_stacks": [
+		"A window seat. Rain on glass.",
+		"Someone reading beside me."
+	],
+	"memory_perimeter": [
+		"The front door opening at six. Footsteps I knew...",
+		"They'll be worried."
 	]
 }

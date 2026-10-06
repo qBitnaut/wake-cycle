@@ -505,7 +505,7 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	_mass(TOWER_WALL, TOWER_WALL + 1, 2, 3)
 	_mass(TOWER_WALL, TOWER_WALL + 1, R, G - 1)
 	for x in [TOWER_WALL, TOWER_WALL + 1]:
-		_cell(x, R, STEEL, BEVEL)
+		_cell(x, R, STEEL, GIRDER_H)   # the doorway's floor: a girder, level with the roof run (y 260)
 		tiles.erase_cell(Vector2i(x, G - 1))   # the slit's pocket (the letter C)
 	# The lift shaft's west wall (col 9, rows 2-15).
 	for y in range(2, M):
@@ -621,11 +621,11 @@ func _place_actors() -> void:
 	_gem("GemDeckWest2", "yarn", 15, M)
 	# ==== R (walked east) ====
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointC", 17, R, {"checkpoint_id": "cp_c"})
-	_kitx("platform_vertical", "FreightLift", 11 * T, R * T, {"width_tiles": 2, "travel": float((M - R) * T), "speed": 64.0, "pause": 1.4})
+	_kitx("platform_vertical", "FreightLift", 11 * T, R * T + 4, {"width_tiles": 2, "travel": float((M - R) * T), "speed": 64.0, "pause": 1.4})
 	_put("res://scenes/actors/letter.tscn", "LetterT", 13, 4, {"letter_index": 2})
 	_gem("GemRoof1", "yarn", 14, R)
 	_gem("GemRoof2", "yarn", 20, R)
-	_kitx("platform_falling", "FallA", _mid(23, 24), R * T, {"width_tiles": 2, "fall_delay": 0.9, "respawn_time": 3.0})
+	_kitx("platform_falling", "FallA", _mid(23, 24), R * T + 4, {"width_tiles": 2, "fall_delay": 0.9, "respawn_time": 3.0})
 	_gem("GemFallBell", "bell", 23, R, 40.0)
 	_kit("hover_drone", "Drone1", 30, R, {"patrol_range": 100.0, "drop_kind": HoverDrone.Drop.SPARK, "_dy": -150.0,
 		"drop_range": 190.0, "cooldown": 2.6})
@@ -633,7 +633,7 @@ func _place_actors() -> void:
 	_gem("GemRoof4", "yarn", 32, R)
 	_gem("GemRoof5", "yarn", 38, R)
 	_gem("GemLoftBone", "bone", 40, 4)
-	_kitx("platform_horizontal", "RideA", 46 * T, R * T, {"width_tiles": 2, "travel": 96.0, "speed": 44.0, "pause": 0.7})
+	_kitx("platform_horizontal", "RideA", 46 * T, R * T + 4, {"width_tiles": 2, "travel": 96.0, "speed": 44.0, "pause": 0.7})
 	_gem("GemRideBell", "bell", 47, R, 50.0)
 	_gem("GemRoof6", "yarn", 54, R)
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointD", 61, R, {"checkpoint_id": "cp_d"})

@@ -131,6 +131,12 @@ func _main() -> void:
 		await load_room("res://scenes/levels/%s.tscn" % id)
 		await ticks(30)
 		var r = room.camera_rig
+		if room.camera_tiers():
+			# A redesigned tall room: the driver runs and keeps the view inside the room's limits.
+			var c: Vector2 = cat.camera.get_screen_center_position()
+			var lim: Rect2i = room.limits
+			note("%s: a tall room, the tier driver is active and the view stays inside the limits" % id, r.managed and c.x >= lim.position.x + 319.0 and c.x <= lim.end.x - 319.0 and c.y >= lim.position.y + 179.0 and c.y <= lim.end.y - 179.0, "centre %s limits %s" % [c, lim])
+			continue
 		note("%s: camera driver idle, vertical offset unchanged" % id, not r.managed and cat.camera.offset.y == -25.0, "managed %s offset %s" % [r.managed, cat.camera.offset])
 	_finish()
 

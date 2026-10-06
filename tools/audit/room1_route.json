@@ -1,0 +1,143 @@
+{
+ "about": "The scripted route through the tall Warehouse (Room 1), shared by tools/audit/room1_playthrough.gd and tools/audit/web_room1.mjs. Steps: go x [tol] | gorel dx | hop d dirFrames [dj] | runhop d jx dirFrames [dj] | crawl d x | off d x steer frames | wait|waitgt|waitlt name idx value | expect label x y tx ty | cpcheck id | mask label n | collected label name | markscore | scoreup label n | hold frames | stand frames | nopower | snap",
+ "crates": [
+  ["go", 380],
+  ["runhop", 1, 410, 14],
+  ["expect", "B crate 1 (1 tile)", 432, 736, 20, 4],
+  ["runhop", 1, 440, 14],
+  ["expect", "B crate 2 (2 tiles)", 512, 704, 34, 4],
+  ["runhop", 1, 535, 12],
+  ["expect", "B up on the deck over the bot's lane", 700, 676, 150, 5],
+  ["go", 840]
+ ],
+ "floor": [
+  ["off", 1, 890, 0, 0],
+  ["go", 1072],
+  ["cpcheck", "cp_a"],
+  ["go", 1330, 8],
+  ["wait", "SpikesG", 2, 2],
+  ["wait", "SpikesG", 2, 0],
+  ["go", 1440, 8],
+  ["expect", "B belt and spikes crossed", 1440, 768, 14, 4]
+ ],
+ "racks": [
+  ["go", 1760],
+  ["crawl", 1, 1900],
+  ["mask", "B secret letter C in the collapsed rack", 3],
+  ["crawl", -1, 1750],
+  ["go", 1380],
+  ["runhop", 1, 1392, 16],
+  ["expect", "C rack step 1", 1456, 708, 50, 5],
+  ["runhop", 1, 1488, 18],
+  ["expect", "C rack step 2", 1584, 644, 50, 5],
+  ["runhop", 1, 1612, 18],
+  ["expect", "C rack step 3", 1712, 580, 50, 5],
+  ["runhop", 1, 1740, 18],
+  ["expect", "C up on the mezzanine", 1790, 516, 60, 5]
+ ],
+ "mezz": [
+  ["go", 1776],
+  ["cpcheck", "cp_b"],
+  ["go", 1425],
+  ["runhop", -1, 1415, 60],
+  ["expect", "D mezzanine hole crossed", 1250, 516, 70, 5],
+  ["go", 1200],
+  ["wait", "ShutterMezz", 4, true],
+  ["go", 420]
+ ],
+ "lift": [
+  ["waitgt", "FreightLift", 1, 505],
+  ["go", 352],
+  ["waitlt", "FreightLift", 1, 264],
+  ["go", 470],
+  ["expect", "E up the freight lift onto the roof girders", 470, 260, 20, 5],
+  ["go", 432, 4],
+  ["hold", 5],
+  ["hop", 0, 0, 20],
+  ["mask", "E secret letter T on the ledge above the lift", 7],
+  ["off", 1, 520, 0, 0],
+  ["snap"],
+  ["expect", "E back on the roof girders", 540, 260, 60, 5]
+ ],
+ "roof": [
+  ["go", 560],
+  ["cpcheck", "cp_c"],
+  ["runhop", 1, 690, 10],
+  ["expect", "F falling platform", 768, 260, 50, 5],
+  ["runhop", 1, 790, 12],
+  ["expect", "F girder past the falling platform", 900, 260, 90, 5],
+  ["go", 846, 4],
+  ["hp0"],
+  ["waitlt", "Drone1", 0, 900],
+  ["waitgt", "Drone1", 0, 1000],
+  ["runhop", 1, 1076, 60],
+  ["expect", "F girder gap crossed", 1250, 260, 90, 5],
+  ["hp", "F the drone's sparks dodged: no damage"],
+  ["markscore"],
+  ["go", 1296],
+  ["hop", 0, 0, 20],
+  ["scoreup", "F secret roof loft: the golden bone", 2000],
+  ["off", 1, 1418, -1, 14],
+  ["go", 1425],
+  ["waitlt", "RideA", 0, 1476],
+  ["go", 1472],
+  ["waitgt", "RideA", 0, 1560],
+  ["go", 1640],
+  ["expect", "F across the gap on the moving platform", 1640, 260, 30, 5],
+  ["go", 1860]
+ ],
+ "shaft": [
+  ["go", 1968],
+  ["cpcheck", "cp_d"],
+  ["go", 2000],
+  ["off", 1, 2034, -1, 20],
+  ["expect", "G the long drop: the catch ledge", 1980, 900, 70, 6],
+  ["off", 1, 2060, 0, 0],
+  ["expect", "G down in the basement", 2100, 1056, 60, 4]
+ ],
+ "basement": [
+  ["go", 2128],
+  ["cpcheck", "cp_e"]
+ ],
+ "tunnel": [
+  ["go", 440],
+  ["crawl", -1, 215],
+  ["collected", "H the drain tunnel's fake dead end: the memory fragment", "GemMemory"],
+  ["hold", 30],
+  ["crawl", 1, 420]
+ ],
+ "drain": [
+  ["go", 2200],
+  ["go", 2440],
+  ["crawl", 1, 2690],
+  ["go", 2790],
+  ["wait", "Electric1", 2, 2],
+  ["wait", "Electric1", 2, 0],
+  ["go", 2940, 10]
+ ],
+ "lab": [
+  ["go", 2960],
+  ["wait", "Steam1", 2, 2],
+  ["wait", "Steam1", 2, 0],
+  ["go", 3140, 8],
+  ["go", 3216],
+  ["cpcheck", "cp_f"],
+  ["go", 3240],
+  ["wait", "Steam2", 2, 2],
+  ["wait", "Steam2", 2, 0],
+  ["go", 3420, 8],
+  ["wait", "Steam3", 2, 2],
+  ["wait", "Steam3", 2, 0],
+  ["go", 3590, 8],
+  ["go", 3560],
+  ["runhop", 1, 3630, 12],
+  ["expect", "H up on the sill at the lip of the pool", 3680, 1024, 40, 5],
+  ["nopower"]
+ ],
+ "lifttest": [
+  ["go", 1860],
+  ["snap"],
+  ["go", 1968],
+  ["snap"]
+ ]
+}

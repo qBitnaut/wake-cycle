@@ -313,9 +313,9 @@ func _watch() -> Dictionary:
 			e[3] = e[3] or a.is_warning()
 		var ph = a.get("phase")
 		if ph == null:
-			ph = a.get("mode")
-		if ph == null:
 			ph = a.get("state")
+		if ph == null:
+			ph = a.get("mode")
 		e[2] = ph if ph is int else (str(ph) if ph != null else 0)
 		var op = a.get("open")
 		if op != null:
@@ -356,7 +356,8 @@ func _publish() -> void:
 		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
 		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),
 		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),
-		"n": _watch(),
+		"n": _watch(), "lmask": GameState.letter_mask,
+		"got": GameState.collected.map(func(c): return String(c).get_file()),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
 	d["audio"] = AudioDirector.web_state()

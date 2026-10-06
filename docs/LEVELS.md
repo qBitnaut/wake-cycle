@@ -41,6 +41,11 @@ bottom of `limits`, so put basements inside `limits`.
 lag or jitter. It stays out of the way during a CineZoom cutscene, which lifts and restores the
 limits, and resumes after it.
 
+A `ScreenShake` on the camera (a pound, an explosion) restores its own base offset every frame; the
+driver keeps that base on its own view each physics step, so a shake never freezes the tier camera
+(`camera_audit.gd` checks it). A cutscene pan (the Master Gate finale) sets `LevelCamera.pan_to` (world
+px) and tweens `pan_blend` 0..1: the view centre blends from the follow position to the target.
+
 ### Camera zones
 
 ```gdscript

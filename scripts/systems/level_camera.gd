@@ -38,6 +38,10 @@ var _x_free := true            ## the view follows the cat horizontally (not loc
 var _y_free := true            ## CENTRED mode: the view is centred on the cat vertically
 var _lim := Rect2()            ## exact view limits as applied (eased towards the target)
 var _was_owned := false
+## A cutscene pan (the Master Gate finale): the view centre blends from the follow position to
+## `pan_to` (world px) by `pan_blend` (0 follow .. 1 on `pan_to`). Tween `pan_blend`; set `pan_to` first.
+var pan_to := Vector2.ZERO
+var pan_blend := 0.0
 
 
 func _init() -> void:
@@ -187,4 +191,13 @@ func _ease_limits() -> void:
 ## The view centre, whole px, as the camera offset (the camera sits on the cat).
 func _apply() -> void:
 	var cp := cat.global_position
-	cat.camera.offset = Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y)
+	var c := Vector2(_cx, _cy)
+	if pan_blend > 0.0:
+		c = c.lerp(pan_to, pan_blend)
+	var off := Vector2(roundf(c.x) - cp.x, roundf(c.y) - cp.y)
+	cat.camera.offset = off
+	# A ScreenShake on the camera restores its own base offset every frame: keep that base on the driver's
+	# view, or the first shake (a pound, an explosion) would freeze the camera where it was.
+	for k in cat.camera.get_children():
+		if k is ScreenShake:
+			(k as ScreenShake).set_base_offset(off)

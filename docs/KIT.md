@@ -213,8 +213,9 @@ Call `KitSfx.play(self, "turret_fire")` (loops: `KitSfx.loop(self, "drone_hover"
 Resolution: the audio library (`res://assets/audio/sfx/sfx.json`, the `Sfx` manifest) when it has
 the name, then the older `assets/audio/sfx_manifest.json` / `assets/audio/sfx_lib/<name>.ogg`, then
 a stand-in (`KitSfx.STAND_INS`: another library sound with a level and pitch shift), else silence.
-A missing name never errors. `KitSfx.NO_DEDICATED_SOUND` lists the names still on stand-ins; adding
-a name to `sfx.json` replaces its stand-in with no actor changes.
+A missing name never errors. Every kit name now has a dedicated sound, so
+`KitSfx.NO_DEDICATED_SOUND` is empty; it lists any future name that is still on a stand-in, and
+adding a name to `sfx.json` replaces its stand-in with no actor changes.
 Set `KitSfx.use_placeholders = false` to hear only dedicated library sounds.
 
 Names: `turret_charge` `turret_fire` `laser_charge` `laser_zap` `drone_hover` (loop)

@@ -22,8 +22,11 @@
 extends SceneTree
 
 const HumanSweep := preload("res://tools/audit/human_sweep.gd")
-## Monologue sets added without a narration clip yet (text only until a voice pass).
-const TEXT_ONLY_UNTIL_VOICE := ["warehouse_climb", "warehouse_roof", "warehouse_shaft", "warehouse_lab"]
+## Monologue sets added by the level redesigns without a narration clip yet (text only until the
+## voice pass): Room 1 warehouse_*, Room 2 yard_*, Room 3 stacks_*.
+const TEXT_ONLY_UNTIL_VOICE := ["warehouse_climb", "warehouse_roof", "warehouse_shaft", "warehouse_lab",
+	"yard_roof", "yard_underpass", "yard_vault", "yard_closet",
+	"stacks_lift", "stacks_crack", "stacks_barrels", "stacks_vent_top"]
 const ROOM1 := "res://scenes/levels/room1.tscn"
 const ROOM2 := "res://scenes/levels/room2.tscn"
 const ROOM3 := "res://scenes/levels/room3.tscn"
@@ -549,8 +552,6 @@ func _fresh_room1() -> void:
 
 ## Narration: every line has a clip, each clip played with its subtitle held at least as long,
 ## the music ducked while it spoke, and sound stayed clean.
-## Lines added by the level redesigns that play as text until the next voice pass (set ids).
-const TEXT_ONLY_UNTIL_VOICE_PASS := ["yard_roof", "yard_underpass", "yard_vault", "yard_closet"]
 
 
 func _voice_check() -> void:
@@ -563,7 +564,7 @@ func _voice_check() -> void:
 			continue   # new hint lines: they play text-only until a voice pass
 		for i in sets[id].size():
 			lines += 1
-			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]) and not TEXT_ONLY_UNTIL_VOICE_PASS.has(id):
+			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]):
 				missing.append("%s_%d" % [id, i])
 	note("VOICE all %d monologue lines have a narration clip" % lines, missing.is_empty(), str(missing))
 	note("VOICE narration played for the monologue lines shown (%d clips)" % _voices.size(), _voices.size() >= 20, "%d" % _voices.size())

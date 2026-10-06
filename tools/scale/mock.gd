@@ -6,6 +6,7 @@
 ##     --script res://tools/scale/mock.gd -- --skip-intro <A|B|C|D> <out_prefix> [still|strip]
 ## A as is (640x360 integer). B tighter sprites (cat 1.5x, robots and props 2/3,
 ## from tools/scale/repixel.py). C 800x450 fractional, current sprites. D = B + C.
+## SCALE_PROPS=1x keeps the props at their own size in B and D.
 ## SCALE_LIMITS=asis keeps the room's camera limits (one 360 px screen tall).
 extends SceneTree
 
@@ -75,7 +76,8 @@ func _setup() -> void:
 		mech.sprite_frames = _frames(ART + "mech_23.png", Vector2i(64, 53), 8.0)
 		mech.offset = Vector2(-32, -53)
 		drone.texture = _tex(ART + "drone_1_23.png")
-		_tight_props()
+		if OS.get_environment("SCALE_PROPS") != "1x":
+			_tight_props()
 	else:
 		mech.sprite_frames = _frames("res://assets/art_hd/robots/mech.png", Vector2i(96, 80), 8.0)
 		mech.offset = Vector2(-48, -80)

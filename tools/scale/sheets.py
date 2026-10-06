@@ -176,6 +176,10 @@ def main():
     for v in "ABCD":
         for s in ("1080", "720"):
             Image.open(RAW / f"{v}_{s}_window.png").convert("RGB").save(D / f"{v}_{s}.png", optimize=True)
+    if (RAW / "Bprops1x_1080_window.png").exists():
+        cells = [label(Image.open(RAW / "B_1080_window.png").convert("RGB"), "B  props 2/3", "cat 1.5x, robots 2/3, props 2/3"),
+                 label(Image.open(RAW / "Bprops1x_1080_window.png").convert("RGB"), "B'  props 1x", "cat 1.5x, robots 2/3, props as is")]
+        grid(cells, 2).save(D / "compare_B_props_1080.png", optimize=True)
     for s, wh in (("1080", (1920, 1080)), ("720", (1280, 720))):
         sharp_bilinear(Image.open(RAW / f"C_{s}_internal.png"), wh).save(D / f"C_sharp_{s}.png", optimize=True)
 

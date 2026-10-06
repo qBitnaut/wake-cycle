@@ -281,6 +281,10 @@ func _beats(chained: bool) -> void:
 		cat.velocity = Vector2.ZERO
 		await ticks(10)
 	var only := OS.get_environment("ONLY")
+	if only == "crateedge":
+		await _run_steps(_route_data()["crateedge"], "crateedge")
+		_finish()
+		return
 	if only == "lifttest":
 		await _run_steps(_route_data()["lifttest"], "lifttest")
 		_finish()
@@ -476,6 +480,11 @@ func _run_steps(steps: Array, label: String) -> void:
 					dn += 1
 				dir(0.0)
 				await ticks(10)
+			"setpos":
+				var sn := room.get_node_or_null(String(st[1])) as Node2D
+				if sn:
+					sn.global_position = Vector2(float(st[2]), float(st[3]))
+					sn.set("linear_velocity", Vector2.ZERO)
 			"pos":
 				var nd := room.get_node_or_null(String(st[1]))
 				print("   pos %s %s" % [st[1], str(nd.global_position) if nd else "gone"])

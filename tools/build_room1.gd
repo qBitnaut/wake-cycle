@@ -623,10 +623,16 @@ func _office() -> void:
 		tiles.erase_cell(Vector2i(68, y))
 	_cell(68, 8, STEEL, GIRDER_H)
 	tiles.erase_cell(Vector2i(69, 17))
-	_deck(69, 100, R)              # the upper deck, level with the roof run
+	_deck(69, 101, R)              # the upper deck, level with the roof run
 	_deck(86, 90, 4)               # the high ledge: a pushed barrel is the step up
 	_hangers_office([74, 84, 96], R)
 	# The vault: a walled room (cols 111-125) with a 2-tile door at its foot, rows 15-16.
+	# The way back up from the office floor (so the crate puzzle never traps anyone): zigzag
+	# rack steps (rise 2, gap 1) at the east end, then a hop onto the deck.
+	_deck(108, 110, 15, 17)
+	_deck(104, 106, 13, 17)
+	_deck(108, 110, 11, 15)
+	_deck(104, 106, 9, 13)
 	_mass(111, 111, 3, 14)
 	_mass(112, 125, 3, 13)
 
@@ -760,6 +766,8 @@ func _place_office() -> void:
 	_put("res://scenes/actors/shutter.tscn", "ShutterOffice", 94, 17, {"height_tiles": 3, "controller": NodePath("../PlateOffice")})
 	_put("res://scenes/actors/locked_door.tscn", "DoorOffice", 111, 17, {"key_color": "brass"})
 	_gem("GemOffice4", "yarn", 90, 17)
+	_gem("GemOfficeStep1", "yarn", 109, 15)
+	_gem("GemOfficeStep2", "yarn", 105, 13)
 	_gem("GemOffice5", "yarn", 80, 17)
 	_gem("GemOfficeBell2", "bell", 72, 17)
 	_gem("GemVault1", "mouse", 114, 17)

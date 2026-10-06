@@ -352,7 +352,7 @@ func _build_home() -> void:
 	amb.name = "Ambience"
 	amb.set("bed", "amb_home")
 	amb.set("surface", "step_wood")
-		_own(amb)
+	_own(amb)
 
 	_save(room, "res://scenes/levels/home.tscn")
 

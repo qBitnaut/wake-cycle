@@ -218,6 +218,26 @@ func t_manifest_and_scale() -> void:
 	var rb: Vector2 = b.body_cs.shape.size
 	check("sprite_scale 0.5 halves the collider", absf(ra.x * 2.0 - rb.x) < 0.5 and absf(ra.y * 2.0 - rb.y) < 0.5, "%s vs %s" % [ra, rb])
 	check("sprite_scale drives the art", absf(a.sprite.scale.x * 2.0 - b.sprite.scale.x) < 0.001)
+	var glow_ok := true
+	var glow_bad := []
+	for gid in ["sentry_turret", "hover_drone", "hopper_bot", "crawler_bot", "security_camera", "heavy_mech", "kit_patrol_bot"]:
+		var ge := spawn(gid, Vector2(300 + 150 * glow_bad.size(), FLOOR_Y - 200), {"detect_range": 0.0} if gid in ["sentry_turret", "hopper_bot"] else {})
+		await frames(2)
+		var gs: Node = ge.sprite.get_node_or_null("Glow")
+		if gid in ["sentry_turret", "security_camera"]:
+			gs = ge._head.get_node_or_null("Glow")
+		if gs == null or gs.material == null or not (gs.material as ShaderMaterial).shader.code.contains("blend_add") or gs.frame != (gs.src as AnimatedSprite2D).frame:
+			glow_ok = false
+			glow_bad.append(gid)
+		else:
+			glow_bad.append("")
+	glow_bad = glow_bad.filter(func(x): return x != "")
+	check("every kit enemy has an additive emissive glow synced to its sprite", glow_ok, str(glow_bad))
+	var rbot: Node = load("res://scenes/actors/patrol_bot.tscn").instantiate()
+	world.add_child(rbot)
+	rbot.global_position = Vector2(1600, FLOOR_Y)
+	await frames(2)
+	check("the room PatrolBot has the emissive glow too", rbot.sprite.get_node_or_null("Glow") != null)
 	# The room's patrol bot: same size by default, shrinks with sprite_scale, compatibly.
 	var room_bot: Node = load("res://scenes/actors/patrol_bot.tscn").instantiate()
 	world.add_child(room_bot)
@@ -331,11 +351,20 @@ func t_turret() -> void:
 	check("turret SFX hooks: charge then fire", sfx_has("turret_charge") and sfx_has("turret_fire"))
 	var bolt: Node = get_nodes_in_group("kit_projectile")[0] if count_group("kit_projectile") > 0 else null
 	check("turret fires a slow bolt (<= 160 px/s)", bolt != null and bolt.velocity.length() <= 160.0 and bolt.velocity.x < 0.0)
+	if bolt != null:
+		var tip: Vector2 = t.to_global(t._head.position) + bolt.velocity.normalized() * 24.0
+		check("a left-aimed bolt spawns at the barrel tip (head + aim x 24)", bolt.global_position.distance_to(tip) <= 6.0 and bolt.global_position.x < t.to_global(t._head.position).x - 14.0,
+			"bolt=%s tip=%s" % [bolt.global_position, tip])
 	# Dodgeable: a cat that steps out of line takes no damage.
 	var dodged: bool = true
 	cat.global_position = Vector2(300, FLOOR_Y - 140)
 	cat.velocity = Vector2.ZERO
-	await secs(2.5)
+	# Until the first bolt has passed the cat's column (a later shot is a different test).
+	# The cat is held in the air (it would otherwise fall back into the line).
+	cat.set_physics_process(false)
+	await until(func(): return count_group("kit_projectile") == 0 or get_nodes_in_group("kit_projectile")[0].global_position.x < 280.0, 6.0)
+	await secs(0.2)
+	cat.set_physics_process(true)
 	dodged = hp() == 3
 	check("the cat can dodge the bolt (out of the line, no damage)", dodged, "hp=%d" % hp())
 	# A cat that stays is hurt.

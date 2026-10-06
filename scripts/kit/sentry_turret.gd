@@ -30,6 +30,7 @@ var aim := Vector2.RIGHT
 
 var _head: AnimatedSprite2D
 var _p_t := 0.0
+const BARREL_LEN := 24.0
 var _muzzle_local := Vector2(14, -17)
 
 
@@ -53,7 +54,8 @@ func _setup() -> void:
 	_head = KitArt.make_sprite(actor_id, "head", art_scale)
 	_head.name = "Head"
 	add_child(_head)
-	_muzzle_local = Vector2(14.0, 0.0) * art_scale + _head.position
+	KitGlow.attach(_head)
+	_muzzle_local = _head.position
 	# Rotated mounts: the cat's range check wants a global-axis box.
 	var c := rect.get_center()
 	shock_offset = c.rotated(rotation)
@@ -74,8 +76,10 @@ func alert(seconds: float) -> void:
 		tint = Color.WHITE
 
 
+## The barrel tip: the head's pivot plus the aim direction x 24 px, right for both facings
+## (the head sprite is mirrored when it aims left, but the aim vector is not).
 func muzzle() -> Vector2:
-	return to_global(_muzzle_local + (aim_local() * 10.0 * art_scale))
+	return to_global(_head.position + aim_local() * BARREL_LEN * art_scale)
 
 
 func aim_local() -> Vector2:

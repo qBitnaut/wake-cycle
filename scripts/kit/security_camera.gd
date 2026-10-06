@@ -53,6 +53,7 @@ func _setup() -> void:
 	_head = KitArt.make_sprite(actor_id, "head", art_scale)
 	_head.name = "Head"
 	add_child(_head)
+	KitGlow.attach(_head)
 	angle = sweep_min
 	_apply_angle()
 
@@ -136,6 +137,11 @@ func _apply_angle() -> void:
 	_head.rotation = deg_to_rad(angle)
 	# Past straight down the housing would hang upside down: mirror it so the hood stays on top.
 	_head.flip_v = angle > 90.0
+	# The hit box follows the swivelling head (the stomp-free shock and pound ranges too).
+	var c := rect.get_center() + Vector2.RIGHT.rotated(deg_to_rad(angle)) * 5.0 * art_scale
+	if hitbox != null and hitbox.get_child_count() > 0:
+		(hitbox.get_child(0) as Node2D).position = c
+	shock_offset = c
 
 
 func _on_stunned() -> void:

@@ -210,13 +210,12 @@ ones), a score pop-up, a glint, and rarer items glow brighter.
 ## SFX hooks (logical names)
 
 Call `KitSfx.play(self, "turret_fire")` (loops: `KitSfx.loop(self, "drone_hover")`).
-Resolution: the audio library's manifest (`res://assets/audio/sfx_manifest.json`,
-`{"name": "path"}` or `{"sounds": {...}}`), then `assets/audio/sfx_lib/<name>.ogg|wav|mp3`,
-then a stand-in from the shipped 8-bit set, else silence. A missing name never errors.
-Set `KitSfx.use_placeholders = false` to hear only the real library.
-
-The existing `Sfx.play(ctx, name, ...)` is untouched; `KitSfx` is the one seam, so when the
-ElevenLabs library lands it needs only files and a manifest, no actor changes.
+Resolution: the audio library (`res://assets/audio/sfx/sfx.json`, the `Sfx` manifest) when it has
+the name, then the older `assets/audio/sfx_manifest.json` / `assets/audio/sfx_lib/<name>.ogg`, then
+a stand-in (`KitSfx.STAND_INS`: another library sound with a level and pitch shift), else silence.
+A missing name never errors. `KitSfx.NO_DEDICATED_SOUND` lists the names still on stand-ins; adding
+a name to `sfx.json` replaces its stand-in with no actor changes.
+Set `KitSfx.use_placeholders = false` to hear only dedicated library sounds.
 
 Names: `turret_charge` `turret_fire` `laser_charge` `laser_zap` `drone_hover` (loop)
 `bomb_drop` `robot_explode` `robot_stun` `robot_clank` `debris` `barrel_explode`

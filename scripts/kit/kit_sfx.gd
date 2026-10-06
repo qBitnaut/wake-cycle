@@ -3,18 +3,20 @@ extends RefCounted
 ## Sound hooks for the actor kit, by LOGICAL NAME: KitSfx.play(self, "turret_fire").
 ##
 ## Resolution order for a name:
-##   1. the audio library's manifest (res://assets/audio/sfx_manifest.json, either
-##      {"name": "path"} or {"sounds": {"name": "path"}}), when it exists;
-##   2. a file assets/audio/sfx_lib/<name>.ogg|.wav|.mp3 (the ElevenLabs library);
-##   3. a stand-in from the shipped 8-bit set (PLACEHOLDERS), so a build with no
-##      library still makes noise;
+##   1. the audio library, assets/audio/sfx/sfx.json (the Sfx autoload's manifest), when it
+##      has the name itself (turret_fire, laser_zap, drone_hover, pickup_big...);
+##   2. an older manifest (assets/audio/sfx_manifest.json, {"name": "path"} or
+##      {"sounds": {...}}) and assets/audio/sfx_lib/<name>.ogg|.wav|.mp3, when present;
+##   3. a stand-in: STAND_INS maps the name to another library sound with a level and pitch
+##      shift, so every kit event makes noise until a dedicated sound is generated.
+##      NO_DEDICATED_SOUND lists the names that are still stand-ins;
 ##   4. nothing: an unknown name is silently skipped.
-## So the audio pass lands by dropping files in; no actor script changes. All
+## A dedicated sound lands by adding the name to sfx.json; no actor script changes. All
 ## names the kit uses are listed in LOGICAL_NAMES (and docs/KIT.md).
 
 const LIB_DIR := "res://assets/audio/sfx_lib/"
 const LIB_MANIFEST := "res://assets/audio/sfx_manifest.json"
-## Set false to hear only the real library (no stand-ins).
+## Set false to hear only dedicated library sounds (no stand-ins).
 static var use_placeholders := true
 ## Audit hook: every name requested, in order (cleared by the audit).
 static var log: Array[String] = []
@@ -30,33 +32,36 @@ const LOGICAL_NAMES := [
 	"pickup_small", "pickup_big", "pickup_rare", "pickup_heal", "memory_fragment",
 ]
 
-## Stand-ins: logical name -> [8-bit sound or res:// path, volume dB, pitch].
-const PLACEHOLDERS := {
-	"turret_charge": ["power_up", -12.0, 1.7], "turret_fire": ["hurt", -10.0, 2.0],
-	"laser_charge": ["power_up", -14.0, 2.2], "laser_zap": ["hurt", -12.0, 2.6],
-	"bomb_drop": ["jump", -12.0, 0.6], "robot_explode": ["crate_break", -2.0, 0.55],
-	"robot_stun": ["land", -6.0, 1.5], "robot_clank": ["res://assets/audio/sfx/impactMetal_heavy_002.ogg", -6.0, 1.3],
-	"debris": ["crate_break", -12.0, 1.5], "barrel_explode": ["shockwave_thump", -2.0, 0.7],
-	"barrel_fuse": ["checkpoint", -14.0, 2.0], "acid_hiss": ["land", -12.0, 2.4],
-	"acid_splash": ["crate_break", -8.0, 1.8], "electric_warn": ["checkpoint", -14.0, 2.4],
-	"crusher_warn": ["land", -10.0, 0.5], "crusher_slam": ["shockwave_thump", -3.0, 0.9],
-	"spike_warn": ["checkpoint", -14.0, 1.6], "spike_pop": ["land", -6.0, 1.9],
-	"steam_hiss": ["land", -14.0, 2.6], "flame_burst": ["power_up", -10.0, 0.5],
-	"hopper_squat": ["land", -12.0, 1.2], "hopper_land": ["land", -8.0, 0.9],
-	"crawler_drop": ["land", -8.0, 0.7], "camera_spot": ["checkpoint", -8.0, 1.8],
-	"mech_charge": ["power_up", -8.0, 0.4], "mech_slam": ["shockwave_thump", -2.0, 0.6],
-	"wall_break": ["crate_break", -4.0, 0.75], "wall_clank": ["res://assets/audio/sfx/impactMetal_heavy_002.ogg", -8.0, 1.0],
-	"platform_shake": ["land", -14.0, 0.8], "platform_fall": ["jump", -10.0, 0.5],
-	"rock_fall": ["jump", -14.0, 0.5], "rock_land": ["crate_break", -6.0, 0.7],
-	"pickup_small": ["pickup", -6.0, 1.0], "pickup_big": ["pickup", -3.0, 0.8],
-	"pickup_rare": ["power_up", -3.0, 1.2], "pickup_heal": ["pickup", -4.0, 1.3],
-	"memory_fragment": ["power_up", -4.0, 1.5],
+## Stand-ins: kit name -> [library sound, dB offset, pitch]. Loops use the same table.
+const STAND_INS := {
+	"laser_charge": ["power_up", -6.0, 2.2],
+	"bomb_drop": ["drop", 0.0, 0.6], "robot_explode": ["robot_explosion", 0.0, 1.0],
+	"robot_stun": ["land", 0.0, 1.5], "robot_clank": ["bot_stomp", 0.0, 1.3],
+	"debris": ["robot_debris", 0.0, 1.0], "barrel_explode": ["shockwave_burst", 3.0, 0.7],
+	"barrel_fuse": ["checkpoint", -6.0, 2.0], "acid_hiss": ["goo_bubble", 0.0, 1.6],
+	"acid_splash": ["splash", 0.0, 1.0], "electric_warn": ["checkpoint", -6.0, 2.4],
+	"crusher_warn": ["land", 0.0, 0.5], "crusher_slam": ["impact_pound", 0.0, 1.0],
+	"spike_warn": ["checkpoint", -6.0, 1.6], "spike_pop": ["land", 0.0, 1.9],
+	"steam_hiss": ["scanner_sweep", -4.0, 2.2], "flame_burst": ["power_up", -2.0, 0.5],
+	"hopper_squat": ["land", -4.0, 1.2], "hopper_land": ["land", 0.0, 0.9],
+	"crawler_drop": ["land", 0.0, 0.7], "camera_spot": ["checkpoint", 0.0, 1.8],
+	"mech_charge": ["power_up", 0.0, 0.4], "mech_slam": ["impact_pound", 2.0, 0.8],
+	"wall_break": ["crate_break", 0.0, 0.75], "wall_clank": ["bot_stomp", -2.0, 1.0],
+	"platform_shake": ["land", -6.0, 0.8], "platform_fall": ["drop", 0.0, 0.5],
+	"rock_fall": ["drop", -4.0, 0.5], "rock_land": ["crate_break", 0.0, 0.7],
+	"pickup_heal": ["pickup_small", 0.0, 1.3], "memory_fragment": ["pickup_rare", 0.0, 1.2],
+	# Loops.
+	"electric_arc": ["laser_hum", 0.0, 2.2], "camera_alarm": ["laser_hum", 0.0, 3.0],
+	"conveyor_hum": ["laser_hum", -6.0, 0.8],
 }
-## Loops (the library's, or a stand-in): name -> [8-bit loop, dB, pitch].
-const LOOP_PLACEHOLDERS := {
-	"drone_hover": ["laser_hum_loop", -16.0, 1.5], "electric_arc": ["laser_hum_loop", -14.0, 2.2],
-	"camera_alarm": ["laser_hum_loop", -12.0, 3.0], "conveyor_hum": ["laser_hum_loop", -20.0, 0.8],
-}
+## Kit names the library (sfx.json) has no dedicated sound for yet: stand-ins play.
+const NO_DEDICATED_SOUND := [
+	"laser_charge", "bomb_drop", "robot_explode", "robot_stun", "robot_clank", "debris", "barrel_explode",
+	"barrel_fuse", "acid_hiss", "acid_splash", "electric_warn", "electric_arc", "crusher_warn", "crusher_slam",
+	"spike_warn", "spike_pop", "steam_hiss", "flame_burst", "hopper_squat", "hopper_land", "crawler_drop",
+	"camera_alarm", "camera_spot", "mech_charge", "mech_slam", "wall_break", "wall_clank", "platform_shake",
+	"platform_fall", "conveyor_hum", "rock_fall", "rock_land", "pickup_heal", "memory_fragment",
+]
 
 static var _lib := {}
 static var _lib_loaded := false
@@ -78,8 +83,10 @@ static func _load_lib() -> void:
 			_lib[str(k)] = str(v.get("file", v.get("path", ""))) if v is Dictionary else str(v)
 
 
-## The stream for a logical name from the real library, or null.
+## The stream for a logical name from the real library, or null. Looks in sfx.json first.
 static func library_stream(name: String) -> AudioStream:
+	if Sfx.has(name):
+		return Sfx.stream(name)
 	_load_lib()
 	var cands: Array[String] = []
 	if _lib.has(name) and _lib[name] != "":
@@ -97,9 +104,22 @@ static func library_stream(name: String) -> AudioStream:
 	return null
 
 
+## [stream, dB, pitch] for a name (the library's own, else a stand-in), or [] for none.
+static func _resolve(name: String) -> Array:
+	var lib := library_stream(name)
+	if lib != null:
+		return [lib, Sfx.level_db(name) if Sfx.has(name) else -8.0, 1.0]
+	if use_placeholders and STAND_INS.has(name):
+		var ph: Array = STAND_INS[name]
+		var s := Sfx.stream(ph[0])
+		if s != null:
+			return [s, Sfx.level_db(ph[0]) + float(ph[1]), float(ph[2])]
+	return []
+
+
 ## True when a logical name would make a sound right now.
 static func resolves(name: String) -> bool:
-	return library_stream(name) != null or (use_placeholders and (PLACEHOLDERS.has(name) or LOOP_PLACEHOLDERS.has(name)))
+	return not _resolve(name).is_empty()
 
 
 static func play(ctx: Node, name: String, volume_db := 0.0, pitch := 1.0) -> void:
@@ -107,30 +127,24 @@ static func play(ctx: Node, name: String, volume_db := 0.0, pitch := 1.0) -> voi
 		log.append(name)
 	if ctx == null or not ctx.is_inside_tree():
 		return
-	var lib := library_stream(name)
-	if lib != null:
-		_one_shot(ctx, lib, volume_db - 4.0, pitch)
+	var r := _resolve(name)
+	if r.is_empty():
 		return
-	if use_placeholders and PLACEHOLDERS.has(name):
-		var ph: Array = PLACEHOLDERS[name]
-		Sfx.play(ctx, ph[0], float(ph[1]) + volume_db, float(ph[2]) * pitch)
+	var st: AudioStream = r[0]
+	if LoopSfx._loops(st):
+		st = st.duplicate()
+		st.set("loop", false)
+	_one_shot(ctx, st, float(r[1]) + volume_db, float(r[2]) * pitch)
 
 
 ## A loop that belongs to `host` (see LoopSfx), or null when the name has none.
 static func loop(host: Node2D, name: String, range_px := 420.0) -> LoopSfx:
 	if record:
 		log.append(name)
-	var s := library_stream(name)
-	var db := -12.0
-	var pt := 1.0
-	if s == null and use_placeholders and LOOP_PLACEHOLDERS.has(name):
-		var ph: Array = LOOP_PLACEHOLDERS[name]
-		s = load("res://assets/audio/sfx8bit/%s.ogg" % ph[0])
-		db = float(ph[1])
-		pt = float(ph[2])
-	if s == null:
+	var r := _resolve(name)
+	if r.is_empty():
 		return null
-	return LoopSfx.attach(host, s, db, pt, range_px)
+	return LoopSfx.attach(host, r[0], float(r[1]), float(r[2]), range_px)
 
 
 static func _one_shot(ctx: Node, stream: AudioStream, db: float, pitch: float) -> void:
@@ -138,6 +152,7 @@ static func _one_shot(ctx: Node, stream: AudioStream, db: float, pitch: float) -
 	p.stream = stream
 	p.volume_db = db
 	p.pitch_scale = pitch
+	p.bus = &"SFX" if AudioServer.get_bus_index(&"SFX") >= 0 else &"Master"
 	ctx.get_tree().root.add_child(p)
 	p.finished.connect(p.queue_free)
 	p.play()

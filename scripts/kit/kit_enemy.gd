@@ -94,6 +94,7 @@ func _ready() -> void:
 	sprite = KitArt.make_sprite(actor_id, "", art_scale)
 	sprite.name = "Sprite"
 	add_child(sprite)
+	KitGlow.attach(sprite)
 	body_cs = CollisionShape2D.new()
 	var sh := RectangleShape2D.new()
 	sh.size = Vector2(rect.size.x * body_shrink, rect.size.y * lerpf(1.0, body_shrink, 0.4))

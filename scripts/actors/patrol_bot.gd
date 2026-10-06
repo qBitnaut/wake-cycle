@@ -60,6 +60,7 @@ func _ready() -> void:
 	hitbox.collision_mask = 2
 	sprite.sprite_frames = _build_frames()
 	sprite.play("walk")
+	KitGlow.attach(sprite)
 	_apply_scale()
 	if shielded:
 		sprite.self_modulate = Color(1.0, 0.92, 0.72)

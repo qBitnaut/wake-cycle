@@ -69,6 +69,8 @@ static func room1() -> Array:
 			"tx0": 30.0 * T + 8.0, "tx1": 33.0 * T - 8.0, "ty": m + 64.0, "offsets": [12.0, 16.0, 20.0], "moves": PLAIN_HOP},
 		{"name": "R1 roof girder gap (3 tiles)", "sx": 30.0 * T, "sy": r, "d": 1.0, "edge": 34.0 * T, "kind": "gap",
 			"tx0": 37.0 * T - 10.0, "tx1": 44.0 * T, "ty": r, "moves": PLAIN_HOP},
+		{"name": "R1 office ledge without a barrel (4 tiles up)", "sx": 2672.0, "sy": r, "d": 1.0, "edge": 86.0 * T, "kind": "wall",
+			"tx0": 86.0 * T + 8.0, "tx1": 91.0 * T - 8.0, "ty": 4.0 * T + 4.0, "moves": [[0, "single", false], [0, "double", null]]},
 		{"name": "R1 drain deck (floor -> 2 tiles)", "sx": 70.0 * T - 120.0, "sy": b, "d": 1.0, "edge": 70.0 * T, "kind": "wall",
 			"tx0": 70.0 * T + 8.0, "tx1": 74.0 * T - 8.0, "ty": b - 64.0, "moves": PLAIN_HOP},
 		{"name": "R1 electric-floor bypass deck (floor -> 2 tiles)", "sx": 87.0 * T - 120.0, "sy": b, "d": 1.0, "edge": 87.0 * T, "kind": "wall",

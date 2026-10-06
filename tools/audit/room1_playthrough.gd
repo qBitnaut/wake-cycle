@@ -85,6 +85,8 @@ func go_to(target: float, tol := 6.0, limit := 900) -> bool:
 		dir(signf(target - x()))
 		await ticks(1)
 		n += 1
+		if OS.get_environment("GO_TRACE") != "" and n % 60 == 0:
+			print("   go %.0f: %s vx=%.0f" % [target, st(), cat.velocity.x])
 	dir(0.0)
 	await ticks(6)
 	return n < limit
@@ -221,7 +223,8 @@ func no_powers() -> bool:
 ## full-game chain (tools/audit/full_game.gd) the scene is already loaded and the run
 ## stops at the exit: see _setup(true) and _beats(true).
 func _main() -> void:
-	await HumanSweep.lab(self, "room1", note, "LAB ")
+	if OS.get_environment("SWEEP") != "0":
+		await HumanSweep.lab(self, "room1", note, "LAB ")
 	await _setup(false)
 	await _beats(false)
 	_finish()
@@ -237,7 +240,9 @@ func _setup(chained: bool) -> void:
 		room = current_scene
 	await ticks(4)
 	cat = room.get_node("Cat")
-	cat.hurt_taken.connect(func(_hp): _hurt += 1)
+	cat.hurt_taken.connect(func(_hp):
+		_hurt += 1
+		print("  (hurt at x=%.0f y=%.0f)" % [x(), y()]))
 	cat.died.connect(func(): print("  (cat died at x=%.0f y=%.0f)" % [x(), y()]))
 	var mono := root.get_node("Monologue")
 	mono.line_started.connect(func(id: String, text: String):
@@ -269,20 +274,32 @@ func _after(beat_name: String) -> void:
 func _beats(chained: bool) -> void:
 	await _beat_intro()
 	await _after("intro")
-	await _beat_b()
-	await _after("b")
-	await _beat_c()
-	await _after("c")
-	await _beat_d()
-	await _after("d")
-	await _beat_e()
-	await _after("e")
-	await _beat_f()
-	await _after("f")
-	await _beat_g()
-	await _after("g")
-	await _beat_h()
-	await _after("h")
+	var tp := OS.get_environment("TELEPORT")   # dev: "x,y" to start a route test mid-level
+	if tp != "":
+		var xy := tp.split(",")
+		cat.global_position = Vector2(float(xy[0]), float(xy[1]))
+		cat.velocity = Vector2.ZERO
+		await ticks(10)
+	var only := OS.get_environment("ONLY")
+	if only == "crateedge":
+		await _run_steps(_route_data()["crateedge"], "crateedge")
+		_finish()
+		return
+	if only == "lifttest":
+		await _run_steps(_route_data()["lifttest"], "lifttest")
+		_finish()
+		return      # dev: "racks,mezz" to run just those beats
+	for b in BEATS:
+		if only != "" and not only.split(",").has(b):
+			continue
+		await _route_beat(b)
+		await _after(b)
+	if only != "":
+		if only.split(",").has("pool"):
+			await _beat_pool()
+			await _beat_exit()
+		_finish()
+		return
 	await _beat_pool()
 	await _after("pool")
 	await _beat_exit()
@@ -340,267 +357,189 @@ func _beat_intro() -> void:
 	mark("intro")
 
 
-func _beat_b() -> void:
-	await go_to(430.0)
-	await hop(1.0, 14)
-	note("B crate step 1 (1 tile)", on_floor_at(288.0) and x() > 448.0 and x() < 512.0, "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(498.0, 4.0)
-	await hop(1.0, 12)
-	note("B crate step 2 (2 tiles)", on_floor_at(256.0) and x() > 544.0 and x() < 608.0, "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(596.0, 4.0)
-	await hop(1.0, 12)
-	note("B crate step 3: the catwalk level", on_floor_at(224.0) and x() > 640.0, "x=%.0f y=%.0f" % [x(), y()])
-	# Gap: 3 tiles (96 px) between the decks.
-	await go_to(820.0, 4.0)
-	await run_hop(892.0, 60)
-	note("B catwalk gap crossed (3 tiles, single jump)", on_floor_at(228.0) and x() > 992.0, "x=%.0f y=%.0f" % [x(), y()])
-	# Secret letter C: drop off deck 2's left end into the pocket under the gap.
-	dir(-1.0)
-	var dn := 0
-	while not (x() < 985.0 and cat.is_on_floor() and y() > 300.0) and dn < 300:
-		await ticks(1)
-		dn += 1
-	stop()
-	await go_to(944.0, 4.0)
-	await ticks(6)
-	note("B secret letter C under the catwalk gap", gs().letter_mask == 3, "mask %d" % gs().letter_mask)
-	await go_to(1120.0, 4.0)
-	await hop(1.0, 12)
-	await go_to(1180.0)
-	await ticks(30)
-	note("B descent stairs", cat.is_on_floor() and y() > 250.0, "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(1240.0, 6.0)
-	await hop(1.0, 12)
-	await go_to(1360.0)
-	await ticks(10)
-	note("B checkpoint A saves", ss().session_checkpoint == "cp_a", str(ss().session_checkpoint))
-	note("B no powers yet", no_powers())
-	mark("B catwalk")
+## The route beats, in order (tools/audit/room1_route.json holds the steps).
+const BEATS := ["crates", "floor", "racks", "mezz", "lift", "roof", "office", "shaft", "basement", "tunnel", "drain", "lab"]
+var _route: Dictionary = {}
+var _score_mark := 0
+var _hp_mark := 3
 
 
-func _beat_c() -> void:
-	# Wade through the first puddle (cols 44-47).
-	var zone = node("PuddleHall1")
-	var rippled := false
-	await go_to(1440.0)
-	var bot = node("Bot")
-	# The bot faces the way it walks (the art faces right: flipped when it goes left).
-	var face_ok := true
-	for i in 90:
-		await ticks(1)
-		if bot.state == 0 and absf(bot.velocity.x) > 1.0 and bot.sprite.flip_h != (bot.velocity.x < 0.0):
-			face_ok = false
-	note("C the patrol bot faces the way it walks", face_ok)
-	# Stomp it without powers: the cat bounces, nothing else happens.
-	var hp0: int = gs().health
-	var bx0: float = bot.global_position.x
-	cat.global_position = Vector2(bot.global_position.x, bot.global_position.y - 80.0)
-	cat.velocity = Vector2(0.0, 220.0)
-	var bounced := false
-	var flinched := false
-	for i in 40:
-		await ticks(1)
-		bounced = bounced or cat.velocity.y < -300.0
-		flinched = flinched or bot._flinch > 0.0
-	note("C stomping the bot without powers bounces the cat", bounced and flinched, "bounced %s flinch %s" % [bounced, flinched])
-	note("C ...does no damage: no stun, no befriend, no hurt", bot.state == 0 and bot.stomps == 0 and gs().health == hp0 and not cat.dead, "state %d stomps %d hp %d" % [bot.state, bot.stomps, gs().health])
-	await go_to(1440.0)
-	await ticks(90)
-	note("C ...and the bot keeps patrolling", bot.state == 0 and absf(bot.global_position.x - bx0) > 6.0 and absf(bot.velocity.x) > 1.0, "x %.0f -> %.0f" % [bx0, bot.global_position.x])
-	# Now get past it by hopping over, as a player would.
-	hold("move_right", true)
+func _route_data() -> Dictionary:
+	if _route.is_empty():
+		_route = JSON.parse_string(FileAccess.get_file_as_string("res://tools/audit/room1_route.json"))
+	return _route
+
+
+func _route_beat(beat_name: String) -> void:
+	if _route.is_empty():
+		_route = JSON.parse_string(FileAccess.get_file_as_string("res://tools/audit/room1_route.json"))
+	await _run_steps(_route[beat_name], beat_name)
+	mark(beat_name)
+
+
+## Named actors' state, as the room publishes it: name -> [x, y, phase/mode, dangerous, open].
+func watch(n: String, idx: int) -> Variant:
+	var w: Dictionary = room.call("_watch")
+	return w[n][idx] if w.has(n) else null
+
+
+func _run_steps(steps: Array, label: String) -> void:
+	for st in steps:
+		var op: String = st[0]
+		match op:
+			"go":
+				await go_to(float(st[1]), float(st[2]) if st.size() > 2 else 6.0)
+			"hop":
+				await hop(float(st[1]), int(st[2]), int(st[3]) if st.size() > 3 else 0, int(st[4]) if st.size() > 4 else 999)
+			"runhop":
+				await run_hop_d(float(st[1]), float(st[2]), int(st[3]), int(st[4]) if st.size() > 4 else 0)
+			"crawl":
+				hold("move_down", true)
+				dir(float(st[1]))
+				var n := 0
+				while (x() - float(st[2])) * float(st[1]) < 0.0 and n < 1500:
+					await ticks(1)
+					n += 1
+				hold("move_down", false)
+				dir(0.0)
+				await ticks(20)
+			"off":
+				# Walk off an edge in direction d past x, steer the other way for a few frames.
+				var d := float(st[1])
+				dir(d)
+				var n := 0
+				while (x() - float(st[2])) * d < 0.0 and n < 1500:
+					await ticks(1)
+					n += 1
+				if int(st[4]) > 0:
+					dir(float(st[3]))
+					await ticks(int(st[4]))
+					dir(0.0)
+				n = 0
+				while cat.is_on_floor() and n < 40:   # still on the ledge: keep walking
+					await ticks(1)
+					n += 1
+				n = 0
+				while not cat.is_on_floor() and n < 600:
+					await ticks(1)
+					n += 1
+				dir(0.0)
+				await ticks(8)
+			"wait", "waitgt", "waitlt":
+				var n := 0
+				while n < 1800:
+					var v: Variant = watch(String(st[1]), int(st[2]))
+					var want: Variant = st[3]
+					var ok := false
+					if v != null:
+						if op == "wait":
+							ok = v == want or (v is bool and str(v) == str(want)) or (typeof(v) == TYPE_INT and typeof(want) == TYPE_FLOAT and float(v) == want) or (typeof(v) == TYPE_FLOAT and float(v) == float(want) and false)
+						elif op == "waitgt":
+							ok = float(v) > float(want)
+						else:
+							ok = float(v) < float(want)
+					if ok:
+						break
+					await ticks(1)
+					n += 1
+				note("%s waited for %s[%s] %s %s" % [label, st[1], st[2], op, str(st[3])], n < 1800, "%d ticks" % n)
+			"expect":
+				var ok := cat.is_on_floor() and absf(x() - float(st[2])) <= float(st[4]) and absf(y() - float(st[3])) <= float(st[5])
+				note(String(st[1]), ok, "x=%.0f y=%.0f (want %s, %s)" % [x(), y(), str(st[2]), str(st[3])])
+			"cpcheck":
+				note("%s checkpoint %s saves" % [label, st[1]], ss().session_checkpoint == String(st[1]), str(ss().session_checkpoint))
+			"letters":
+				note("%s letters %d" % [label, int(st[1])], gs().letters == int(st[1]) or gs().letter_mask == int(st[1]), "mask %d" % gs().letter_mask)
+			"mask":
+				note(String(st[1]), gs().letter_mask == int(st[2]), "mask %d" % gs().letter_mask)
+			"board":
+				# Step onto the moving lift only while it is down at the catwalk's level.
+				var n := 0
+				while n < 3000:
+					var ly: float = float(watch(String(st[1]), 1))
+					var lx: float = float(watch(String(st[1]), 0))
+					if cat.is_on_floor() and absf(y() - ly) < 8.0 and absf(x() - lx) < 28.0:
+						break
+					if x() > 392.0 and ly < 500.0 and absf(y() - 516.0) < 6.0:
+						dir(0.0)   # the lift is away: wait on the catwalk
+					else:
+						dir(-1.0 if x() > float(st[2]) else 1.0)
+					await ticks(1)
+					n += 1
+				dir(0.0)
+				await ticks(4)
+			"key":
+				note(String(st[1]), gs().keys.has("brass"), str(gs().keys))
+			"gone":
+				note(String(st[1]), room.get_node_or_null(String(st[2])) == null, "x=%.0f" % x())
+			"opendoor":
+				dir(1.0)
+				var dn := 0
+				while room.get_node_or_null(String(st[1])) != null and dn < 400:
+					await ticks(1)
+					dn += 1
+				dir(0.0)
+				await ticks(10)
+			"setpos":
+				var sn := room.get_node_or_null(String(st[1])) as Node2D
+				if sn:
+					sn.global_position = Vector2(float(st[2]), float(st[3]))
+					sn.set("linear_velocity", Vector2.ZERO)
+			"pos":
+				var nd := room.get_node_or_null(String(st[1]))
+				print("   pos %s %s" % [st[1], str(nd.global_position) if nd else "gone"])
+			"gorel":
+				await go_to(x() + float(st[1]), 6.0)
+			"hp0":
+				_hp_mark = gs().health
+			"hp":
+				note(String(st[1]), gs().health >= _hp_mark, "hp %d (was %d)" % [gs().health, _hp_mark])
+			"markscore":
+				_score_mark = gs().score
+			"scoreup":
+				note(String(st[1]), gs().score - _score_mark >= int(st[2]), "score +%d" % (gs().score - _score_mark))
+			"collected":
+				note(String(st[1]), gs().collected.any(func(c): return String(c).ends_with("/" + String(st[2]))), str(gs().collected.size()))
+			"hold":
+				await ticks(int(st[1]))
+			"nopower":
+				note("%s no powers yet" % label, no_powers())
+			"stand":
+				stop()
+				await ticks(int(st[1]))
+			"snap":
+				print("   @ %s: %s" % [label, st_()])
+			"note":
+				note(String(st[1]), true)
+
+
+func st_() -> String:
+	return "x=%.0f y=%.0f floor=%s hp=%d" % [x(), y(), cat.is_on_floor(), gs().health]
+
+
+## A running jump in direction d: run until x passes jx, take off, hold direction for
+## dir_frames, double jump at frame dj (0 = none).
+func run_hop_d(d: float, jx: float, dir_frames: int, dj := 0) -> void:
+	dir(d)
 	var n := 0
-	var stomped_again := 0
-	while x() < 1830.0 and n < 1800 and not cat.dead:
-		if zone.puddle._ripples.size() > 0:
-			rippled = true
-		var d: float = bot.global_position.x - x()
-		if d > 30.0 and d < 62.0 and cat.is_on_floor():
+	while (x() - jx) * d < 0.0 and n < 600:
+		await ticks(1)
+		n += 1
+	hold("jump", true)
+	var t := 0
+	while t < 300:
+		await ticks(1)
+		t += 1
+		if t == dir_frames:
+			dir(0.0)
+		if dj > 0 and t == dj:
+			hold("jump", false)
+			await ticks(1)
 			hold("jump", true)
-			await ticks(22)
-			hold("jump", false)
-		else:
-			hold("jump", false)
-		await ticks(1)
-		n += 1
-	stop()
-	await ticks(20)
-	note("C waded through the puddle, ripple + splash", rippled, "ripples seen")
-	note("C hopped over the patrol bot and got past", x() >= 1830.0 and not cat.dead and bot.stomps == 0, "x=%.0f hp %d stomps %d" % [x(), gs().health, bot.stomps])
-	# The harm logic is kept, gated: a bot that is not armoured (or a cat with powers) yields.
-	var gated: bool = not bot.can_be_harmed()
-	bot.armoured = false
-	var open_: bool = bot.can_be_harmed()
-	bot.armoured = true
-	note("C stun/befriend logic kept, gated behind powers", gated and open_)
-	mark("C hall")
-
-
-func _beat_d() -> void:
-	await go_to(1880.0)
-	dir(1.0)
-	await ticks(100)
-	stop()
-	note("D low beam blocks the standing cat", x() < 1952.0, "x=%.0f" % x())
-	hold("move_down", true)
-	dir(1.0)
-	var n := 0
-	var seen := {}
-	while x() < 2190.0 and n < 1200:
-		await ticks(1)
-		n += 1
-		if absf(cat.velocity.x) > 14.0:
-			seen[cat.sprite.animation] = true
-	note("D crawled under the beam (crouch)", x() >= 2150.0 and gs().score > 0, "x=%.0f score %d" % [x(), gs().score])
-	var want_move := "crawl" if has_anim("crawl") else "crouch"
-	note("D crawling plays '%s' (crawl when it exists, else crouch)" % want_move, seen.size() == 1 and seen.has(want_move), str(seen.keys()))
-	dir(0.0)
-	await ticks(20)
-	var want_idle := "crouch_idle" if has_anim("crouch_idle") else "crouch"
-	note("D still, crouched: '%s'" % want_idle, cat.crouched and cat.sprite.animation == want_idle, cat.sprite.animation)
-	stop()
-	await ticks(10)
-	mark("D crawl")
-
-
-func _beat_e() -> void:
-	await go_to(2330.0)
-	var fence: Node = node("FenceTimed")
-	var hp0: int = gs().health
-	for i in 600:  # wait for the beam to fire, then for it to drop
-		if fence.active:
+		if t > 8 and cat.is_on_floor():
 			break
-		await ticks(1)
-	for i in 600:
-		if not fence.active:
-			break
-		await ticks(1)
-	await ticks(2)
-	dir(1.0)
-	while x() < 2500.0 and not cat.dead:
-		await ticks(1)
 	stop()
-	note("E timed fence crossed in its off window", x() >= 2500.0 and gs().health == hp0, "x=%.0f hp %d" % [x(), gs().health])
-	# The crate and the plate.
-	await go_to(2490.0)
-	var crate: Node = node("PushCrate")
-	var shutter: Node = node("Shutter")
-	note("E shutter shut at first", not shutter.open)
-	dir(1.0)
-	var n := 0
-	var sw := 0  # animation changes while pushing
-	var sw_frames := 0
-	var last_anim := ""
-	var pushing_anims := {}
-	var win_start := -1
-	var plate_n := -1
-	while n < 900 and (plate_n < 0 or n - plate_n < 90):  # push on for 1.5 s past the plate: shoving against the stopper
-		await ticks(1)
-		n += 1
-		if plate_n < 0 and node("PlateA").active:
-			plate_n = n
-		var near := absf(crate.global_position.x - x()) < 32.0
-		if near and win_start < 0:
-			win_start = n
-		if win_start >= 0:
-			sw_frames += 1
-			pushing_anims[cat.sprite.animation] = true
-			if cat.sprite.animation != last_anim:
-				sw += 1
-			last_anim = cat.sprite.animation
-	stop()
-	await ticks(40)
-	var secs := maxf(sw_frames / 60.0, 0.01)
-	note("E pushing the crate: no animation thrash", sw <= 3 and sw / secs <= 2.0, "%d switches in %.1f s (%.1f/s), anims %s" % [sw, secs, sw / secs, str(pushing_anims.keys())])
-	var want_push := "push" if has_anim("push") else "walk"
-	note("E pushing plays '%s' (push when it exists, else walk)" % want_push, pushing_anims.has(want_push) and not pushing_anims.has("idle"), str(pushing_anims.keys()))
-	note("E crate pushed onto the plate, shutter opens", node("PlateA").active and shutter.open, "crate x=%.0f" % crate.global_position.x)
-	await ticks(30)
-	await hop(1.0, 26)
-	await go_to(2790.0)
-	note("E crate rests on the plate", absf(crate.global_position.x - 2704.0) < 40.0 and node("PlateA").active and shutter.open, "crate x=%.0f" % crate.global_position.x)
-	await go_to(2860.0)
-	note("E through the shutter", x() > 2850.0, "x=%.0f" % x())
-	mark("E fence+crate")
-
-
-func _beat_f() -> void:
-	await go_to(2950.0)
-	await hop(1.0, 12)
-	await hop(1.0, 12)
-	note("F stairs up to the key deck", on_floor_at(228.0), "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(3070.0, 5.0)
-	await go_to(3120.0)
-	await ticks(6)
-	note("F brass key on the deck", gs().keys.has("brass"), str(gs().keys))
-	await go_to(3140.0, 5.0)
-	dir(1.0)
-	await ticks(100)
-	stop()
-	await ticks(20)
-	note("F back down", cat.is_on_floor() and y() > 300.0, "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(3300.0)
-	dir(1.0)
-	var n := 0
-	while node("DoorBrass") != null and n < 300:
-		await ticks(1)
-		n += 1
-	await go_to(3420.0)
-	note("F door opened with the key", node("DoorBrass") == null and not gs().keys.has("brass"), "x=%.0f" % x())
-	await go_to(3472.0)
-	await ticks(10)
-	note("F checkpoint B saves", ss().session_checkpoint == "cp_b", str(ss().session_checkpoint))
-	note("F no powers yet", no_powers())
-	mark("F key+door")
-
-
-func _beat_g() -> void:
-	# Three cycling steam vents. Wait in the pocket before each, cross when it
-	# has just gone safe.
-	var hp0: int = gs().health
-	var steps := [[3510.0, "Steam1", 3640.0], [3670.0, "Steam2", 3800.0], [3830.0, "Steam3", 3960.0]]
-	var worst := 99.0
-	for s in steps:
-		await go_to(s[0] - 40.0 if s[0] == 3510.0 else s[0], 5.0)
-		var vent = node(s[1])
-		var seen_danger := false
-		for i in 900:
-			if vent.is_dangerous():
-				seen_danger = true
-			elif seen_danger:
-				break
-			await ticks(1)
-		note("G %s cycles on and off" % s[1], seen_danger and not vent.is_dangerous())
-		dir(1.0)
-		while x() < s[2] and not cat.dead:
-			await ticks(1)
-		stop()
-		await ticks(4)
-	note("G steam dodged, no hits", gs().health == hp0 and not cat.dead, "x=%.0f hp %d" % [x(), gs().health])
-	mark("G steam")
-
-
-func _beat_h() -> void:
-	await go_to(4050.0)
-	# The flooded hall: puddles to wade, letter T on its perch (crates, then the double jump).
-	await go_to(4080.0)
-	await hop(1.0, 12)
-	await hop(1.0, 12)
-	note("H crates up to the T perch", cat.is_on_floor() and y() < 280.0, "x=%.0f y=%.0f" % [x(), y()])
-	await go_to(4140.0, 5.0)
-	await hop(1.0, 24, 18)
-	note("H bonus letter T on the high perch: all three, bonus score", gs().letters == 3 and gs().score >= 5000, "letters %d score %d" % [gs().letters, gs().score])
-	await go_to(4240.0, 6.0)
-	dir(1.0)
-	await ticks(60)
-	stop()
-	await ticks(40)
-	# Up onto the near sill (one tile), to the lip of the pool.
-	await go_to(4330.0, 4.0)
-	await hop(1.0, 10)
-	await go_to(4400.0)
-	note("H up on the sill at the lip of the pool, still no powers, mind asleep", on_floor_at(288.0) and no_powers() and not gs().intelligence, "x=%.0f y=%.0f" % [x(), y()])
-	mark("H flooded hall")
+	await ticks(8)
 
 
 func _beat_pool() -> void:
@@ -609,9 +548,9 @@ func _beat_pool() -> void:
 	room.nanotech_absorbed_started.connect(func(): signalled[0] = true)
 	var gs_signalled := [false]
 	gs().nanotech_absorbed_started.connect(func(): gs_signalled[0] = true)
-	await go_to(4350.0)
+	await go_to(3660.0)
 	dir(1.0)
-	while x() < 4416.0 - 6.0:
+	while x() < 3712.0 - 6.0:
 		await ticks(1)
 	hold("jump", true)
 	var t := 0
@@ -624,7 +563,7 @@ func _beat_pool() -> void:
 			hold("jump", true)
 	stop()
 	var caught_x := x()
-	note("I jumping the pool fails: the cat is caught", room.get("beat") == 3 and caught_x < 4736.0, "caught at x=%.0f (pool 4416..4736)" % caught_x)
+	note("I jumping the pool fails: the cat is caught", room.get("beat") == 3 and caught_x < 4032.0, "caught at x=%.0f (pool 3712..4032)" % caught_x)
 	note("I nanotech_absorbed_started on the level and on GameState", signalled[0] and gs_signalled[0])
 	note("I input locked in the pool", not cat.can_move)
 	var x0 := x()
@@ -643,7 +582,12 @@ func _beat_pool() -> void:
 	note("I TransformSequence ran and finished", room.get("beat") == 4 and n < 2600, "after %.1f s" % (n / 60.0))
 	note("I the goo's gift: the mind is awakened, no power, no shockwave", gs().intelligence and not gs().shockwave_unlocked and room.get("power_violations") == 0 and gs().power == 0)
 	note("I control returns", cat.can_move)
-	note("I the first line starts at mind_awakened, during the close-up, drawn on its overlay", not _zoom_state.is_empty() and _zoom_state[0][0] and _zoom_state[0][1], str(_zoom_state[0]) if not _zoom_state.is_empty() else "no line")
+	var ai := -1
+	for k in _lines.size():
+		if _lines[k][0] == "awakening":
+			ai = k
+			break
+	note("I the first awakening line starts at mind_awakened, during the close-up, drawn on its overlay", ai >= 0 and ai < _zoom_state.size() and _zoom_state[ai][0] and _zoom_state[ai][1], str(_zoom_state[ai]) if ai >= 0 and ai < _zoom_state.size() else "no line")
 	var awake_ids := _lines.filter(func(l): return l[0] == "awakening")
 	note("I the awakening monologue starts with the mind (subtitles)", awake_ids.size() >= 1 and awake_ids[0][1] == "...Wait. Whaa- what?", "%d line(s) so far: %s" % [awake_ids.size(), str(awake_ids[0][1]) if awake_ids.size() else "-"])
 	await ticks(40)  # the fade-in is done
@@ -657,9 +601,9 @@ func _beat_pool() -> void:
 
 func _beat_exit() -> void:
 	# Walk out.
-	await go_to(4690.0, 8.0)
+	await go_to(3990.0, 8.0)
 	await hop(1.0, 12)
-	note("J out of the pool and up onto the far sill", on_floor_at(288.0) and x() > 4730.0, "x=%.0f y=%.0f" % [x(), y()])
+	note("J out of the pool and up onto the far sill", on_floor_at(1024.0) and x() > 4034.0, "x=%.0f y=%.0f" % [x(), y()])
 	# The awakening monologue finishes (five lines) whether or not the cat moves.
 	var mono := root.get_node("Monologue")
 	var n := 0
@@ -671,7 +615,7 @@ func _beat_exit() -> void:
 	note("J subtitle text is plain ASCII Monogram can draw", _lines.all(func(l): return l[1] == mono.clean(l[1]) and not " \u2014 ".is_subsequence_of(l[1])))
 	# The container: stepping up to it reads it (mind awake).
 	note("J the container is not read before the cat reaches it", not mono.has_played("nanofluid_container"), "x=%.0f" % x())
-	await go_to(4832.0, 6.0)
+	await go_to(4128.0, 6.0)
 	await ticks(6)
 	note("J the container trigger fires after the mind awakens", mono.has_played("nanofluid_container") and gs().intelligence, "x=%.0f y=%.0f" % [x(), y()])
 	n = 0
@@ -680,7 +624,7 @@ func _beat_exit() -> void:
 		n += 1
 	var cont: Array = _lines.filter(func(l): return l[0] == "nanofluid_container")
 	note("J container monologue: four lines", cont.size() == 4 and cont[0][1].begins_with("'Experimental Nanofluid'..."), "%d lines" % cont.size())
-	await go_to(4880.0, 6.0)
+	await go_to(4176.0, 6.0)
 	await ticks(6)
 	note("J the exit hint plays once the container was read", mono.has_played("exit_hint"))
 	dir(1.0)
@@ -735,7 +679,7 @@ func _beat_continue() -> void:
 	await ticks(30)
 	room = current_scene
 	cat = room.get_node("Cat")
-	note("K continue loads the checkpoint", absf(x() - 1360.0) < 12.0 and ss().session_checkpoint == "cp_a", "x=%.0f cp %s" % [x(), ss().session_checkpoint])
+	note("K continue loads the checkpoint", absf(x() - 1072.0) < 12.0 and ss().session_checkpoint == "cp_a", "x=%.0f cp %s" % [x(), ss().session_checkpoint])
 	mark("continue")
 
 
@@ -746,6 +690,6 @@ func _beat_respawn() -> void:
 	room = current_scene
 	cat = room.get_node("Cat")
 	var hud: CanvasLayer = node("Hud")
-	note("L death respawns at the checkpoint, no intro", absf(x() - 1360.0) < 12.0 and cat.can_move and hud.visible and room.get("beat") == 1, "x=%.0f beat %s" % [x(), str(room.get("beat"))])
+	note("L death respawns at the checkpoint, no intro", absf(x() - 1072.0) < 12.0 and cat.can_move and hud.visible and room.get("beat") == 1, "x=%.0f beat %s" % [x(), str(room.get("beat"))])
 	note("L no pads in Room 1, nothing unlocked on a fresh respawn", room.find_children("*", "PowerPad", true, false).is_empty() and gs().power == 0)
 	mark("respawn")

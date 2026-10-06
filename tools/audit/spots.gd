@@ -17,6 +17,11 @@ const T := 32.0
 ## Moves of a Spring climb: Spring's single jump is the intended move.
 const SPRING_CLIMB := [[2, "single", true], [2, "patterns", true], [2, "double", true], [0, "single", false], [0, "double", false],
 	[0, "patterns", false], [1, "single", false], [1, "double", false]]
+## A climb out of a narrow pit: a single press is the intended move; a Spring double jump overshoots the
+## pillar by geometry and lands in the sibling pit (which has a Spring pad of its own: never a trap), so
+## the double jump and the patterns are measured, not asserted.
+const SPRING_PIT := [[2, "single", true], [2, "patterns", null], [2, "double", null], [0, "single", false], [0, "double", false],
+	[0, "patterns", false], [1, "single", false], [1, "double", false]]
 ## Moves nothing may manage (a skip that must not exist).
 const NO_SKIP := [[0, "single", false], [0, "double", false], [1, "single", false], [1, "double", false],
 	[2, "single", false], [2, "double", false], [2, "patterns", false]]
@@ -163,31 +168,52 @@ static func room2() -> Array:
 
 
 static func room3() -> Array:
-	var G := 1152.0
-	var S1 := 960.0
-	var S2 := 768.0
-	var S3 := 576.0
-	var S4 := 384.0
-	var gallery_roof := 192.0
+	## The Stacks (rows: yard 44, shed 38, ledge and pit floors 32, long roof and the corridor 26,
+	## gallery 20, roof and bay 14, tower tops and the exit roof 8). Every wall here is 6 tiles.
+	var G := 1408.0
+	var R1 := 1216.0
+	var R2 := 1024.0
+	var R3 := 832.0
+	var R5 := 448.0
+	var R6 := 256.0
 	return [
 		{"name": "R3 H1 wall (shed, 6 tiles)", "sx": 980.0, "sy": G, "d": 1.0, "edge": 1088.0, "kind": "wall",
-			"tx0": 1100.0, "tx1": 1700.0, "ty": S1, "moves": SPRING_CLIMB},
-		{"name": "R3 H2 shed roof -> floating ledge (6 tiles)", "sx": 1312.0, "sy": S1, "d": 1.0, "edge": 1440.0, "kind": "wall",
-			"tx0": 1450.0, "tx1": 1625.0, "ty": S2, "moves": SPRING_CLIMB},
-		{"name": "R3 H3 ledge -> long roof (6 tiles, 1 across)", "sx": 1500.0, "sy": S2, "d": 1.0, "edge": 1696.0, "kind": "gap",
-			"tx0": 1735.0, "tx1": 2100.0, "ty": S3, "moves": SPRING_CLIMB},
-		{"name": "R3 H4 the combine tower (6 tiles)", "sx": 4250.0, "sy": S3, "d": 1.0, "edge": 4416.0, "kind": "wall",
-			"tx0": 4430.0, "tx1": 4660.0, "ty": S4, "moves": SPRING_CLIMB},
-		{"name": "R3 H5 nine-tile gap", "sx": 4528.0, "sy": S4, "d": 1.0, "edge": 4672.0, "kind": "gap",
-			"tx0": 4960.0 - 10.0, "tx1": 5400.0, "ty": S4,
-			"moves": [[1, "double", true], [0, "single", false], [0, "double", false], [1, "single", false], [0, "patterns", false],
-				[2, "single", null], [2, "double", null]]},   # Spring cannot reach the lip: the pad is in a tunnel (audited in room3_playthrough)
-		{"name": "R3 skip: shed -> long roof direct", "sx": 1650.0, "sy": S1, "d": 1.0, "edge": 1728.0, "kind": "wall",
-			"tx0": 1735.0, "tx1": 2100.0, "ty": S3, "moves": NO_SKIP},
-		{"name": "R3 skip: long roof -> gallery roof", "sx": 1950.0, "sy": S3, "d": 1.0, "edge": 2112.0, "kind": "wall",
-			"tx0": 2130.0, "tx1": 2900.0, "ty": gallery_roof, "moves": NO_SKIP},
-		{"name": "R3 skip: pit floor -> far tower", "sx": 4850.0, "sy": 768.0, "d": 1.0, "edge": 4960.0, "kind": "wall",
-			"tx0": 4968.0, "tx1": 5200.0, "ty": S4, "moves": NO_SKIP},
+			"tx0": 1100.0, "tx1": 1700.0, "ty": R1, "moves": SPRING_CLIMB},
+		{"name": "R3 H2 shed roof -> floating ledge (6 tiles)", "sx": 1312.0, "sy": R1, "d": 1.0, "edge": 1440.0, "kind": "wall",
+			"tx0": 1450.0, "tx1": 1625.0, "ty": R2, "moves": SPRING_CLIMB},
+		{"name": "R3 H3 ledge -> long roof (6 tiles, 1 across)", "sx": 1500.0, "sy": R2, "d": 1.0, "edge": 1696.0, "kind": "gap",
+			"tx0": 1735.0, "tx1": 2100.0, "ty": R3, "moves": SPRING_CLIMB},
+		{"name": "R3 P1 out of the first pit (6 tiles)", "sx": 2800.0, "sy": R2, "d": 1.0, "edge": 2976.0, "kind": "wall",
+			"tx0": 2984.0, "tx1": 3240.0, "ty": R3, "moves": SPRING_CLIMB},
+		{"name": "R3 P2 out of the second pit (6 tiles)", "sx": 3360.0, "sy": R2, "d": 1.0, "edge": 3520.0, "kind": "wall",
+			"tx0": 3528.0, "tx1": 3700.0, "ty": R3, "moves": SPRING_CLIMB},
+		{"name": "R3 V vent tower pillar (6 tiles)", "sx": 3120.0, "sy": R5, "d": 1.0, "edge": 3200.0, "kind": "wall",
+			"tx0": 3208.0, "tx1": 3350.0, "ty": R6, "moves": SPRING_CLIMB,
+			"alt": [[3280.0, 3370.0, 192.0], [3072.0, 3584.0, 132.0], [3360.0, 3456.0, 160.0], [3072.0, 3104.0, 160.0]]},   # a Spring double jump may reach the falling platform or the crane deck: a skilled shortcut, the climb is made
+		{"name": "R3 X exit tower (6 tiles)", "sx": 4800.0, "sy": R5, "d": 1.0, "edge": 4864.0, "kind": "wall",
+			"tx0": 4872.0, "tx1": 5000.0, "ty": R6, "moves": SPRING_CLIMB},
+		{"name": "R3 XP out of the exit pit (6 tiles)", "sx": 5160.0, "sy": R5, "d": 1.0, "edge": 5280.0, "kind": "wall",
+			"tx0": 5288.0, "tx1": 5500.0, "ty": R6, "moves": SPRING_CLIMB},
+		{"name": "R3 U1 undercroft: west pit -> pillar (6 tiles)", "sx": 4296.0, "sy": 1216.0, "d": 1.0, "edge": 4352.0, "kind": "wall",
+			"tx0": 4360.0, "tx1": 4470.0, "ty": R2, "offsets": [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0], "moves": SPRING_PIT, "alt": [[4480.0, 4544.0, 1216.0]]},
+		{"name": "R3 U2 undercroft: east pit -> pillar (6 tiles)", "sx": 4536.0, "sy": 1216.0, "d": -1.0, "edge": 4480.0, "kind": "wall",
+			"tx0": 4362.0, "tx1": 4472.0, "ty": R2, "offsets": [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0], "moves": SPRING_PIT, "alt": [[4288.0, 4352.0, 1216.0]]},
+		{"name": "R3 U3 undercroft: pillar -> far landing (6 up, 2 across)", "sx": 4400.0, "sy": R2, "d": 1.0, "edge": 4480.0, "kind": "gap",
+			"tx0": 4544.0, "tx1": 4600.0, "ty": R3, "moves": SPRING_CLIMB},
+		{"name": "R3 U4 undercroft: pillar -> corridor (6 up, 2 across)", "sx": 4440.0, "sy": R2, "d": -1.0, "edge": 4352.0, "kind": "gap",
+			"tx0": 4150.0, "tx1": 4278.0, "ty": R3, "moves": SPRING_CLIMB},
+		{"name": "R3 pump house hop (2 tiles)", "sx": 2300.0, "sy": R5, "d": 1.0, "edge": 2432.0, "kind": "wall",
+			"tx0": 2440.0, "tx1": 2650.0, "ty": R5 - 64.0, "moves": PLAIN_HOP},
+		{"name": "R3 ladder 1 (gallery floor -> girder, 2 tiles)", "sx": 2262.0, "sy": R3 - 192.0, "d": -1.0, "edge": 2208.0, "kind": "gap",
+			"tx0": 2146.0, "tx1": 2200.0, "ty": R3 - 252.0, "moves": PLAIN_HOP},
+		{"name": "R3 ladder 2 (girder -> girder, 2 tiles)", "sx": 2150.0, "sy": R3 - 252.0, "d": 1.0, "edge": 2208.0, "kind": "gap",
+			"tx0": 2200.0, "tx1": 2270.0, "ty": R3 - 316.0, "moves": PLAIN_HOP},
+		{"name": "R3 ladder 3 (girder -> the roof, 2 tiles)", "sx": 2216.0, "sy": R3 - 316.0, "d": 1.0, "edge": 2272.0, "kind": "wall",
+			"tx0": 2280.0, "tx1": 2400.0, "ty": R5, "moves": PLAIN_HOP},
+		{"name": "R3 skip: shed -> long roof direct", "sx": 1650.0, "sy": R1, "d": 1.0, "edge": 1728.0, "kind": "wall",
+			"tx0": 1735.0, "tx1": 2100.0, "ty": R3, "moves": NO_SKIP},
+		{"name": "R3 skip: long roof -> the roof (past the conduit)", "sx": 2040.0, "sy": R3, "d": 1.0, "edge": 2112.0, "kind": "wall",
+			"tx0": 2112.0, "tx1": 3000.0, "ty": R5, "moves": NO_SKIP},
 	]
 
 

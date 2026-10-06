@@ -41,6 +41,12 @@ bottom of `limits`, so put basements inside `limits`.
 lag or jitter. It stays out of the way during a CineZoom cutscene, which lifts and restores the
 limits, and resumes after it.
 
+A `ScreenShake` on the camera (any explosion, the conduit, a barrel creates one on first use) resets
+the camera offset to its own resting offset every frame; `LevelCamera._apply` therefore also hands it
+the driver's offset (`set_base_offset`), or the tier view would be dragged back to where the camera was
+when the first shake began. Room 3 (48 rows, `TIERS`) is the reference; `camera_audit.gd` stops at the conduit
+(a shake) to prove it.
+
 ### Camera zones
 
 ```gdscript
@@ -85,3 +91,7 @@ active and the rect is exact (the 25 px shift above does not apply in that room)
 
 Jump numbers to size against (`tools/audit/reach.gd`): a plain jump rises 95 px (3 tiles), a double
 jump 171 px (5.3 tiles); Spring 211 / 284; plain travel 122 / 223 px.
+
+Slab-interior rows: use solid tiles (`CROSS`, `FLAT`), never `GIRDER_H` (a one-way strip): at any exposed
+vertical face (a pit lip, a shaft side) a one-way row is a one-tile slit the cat can enter and get stuck in.
+Room 3 keeps one-way tiles only for its girders (the light well ladder, the vent tower's crane deck).

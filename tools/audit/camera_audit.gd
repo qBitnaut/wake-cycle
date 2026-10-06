@@ -148,6 +148,8 @@ func _main() -> void:
 ## Spots in a tall room's tiers: the cat is placed, the view settles, and the cat must be on screen
 ## (not at the edge) with the view inside the room's rect.
 const TIER_SPOTS := {
+	"room3": [["the foot", 112.0, 1408.0], ["the first tier", 1200.0, 1216.0], ["the switchback", 1900.0, 832.0], ["the vent tower", 3500.0, 640.0],
+		["the upper tier", 3250.0, 256.0], ["the top right", 5300.0, 256.0]],
 	"room2": [["yard floor", 400.0, 768.0], ["roof", 3300.0, 512.0], ["crane cab", 4250.0, 256.0], ["underpass", 2400.0, 1024.0],
 		["vault floor", 1520.0, 1152.0], ["under the pit", 5900.0, 1024.0], ["the lift's foot", 4368.0, 768.0]],
 }

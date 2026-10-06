@@ -189,4 +189,11 @@ func _ease_limits() -> void:
 ## The view centre, whole px, as the camera offset (the camera sits on the cat).
 func _apply() -> void:
 	var cp := cat.global_position
-	cat.camera.offset = Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y) + look_offset
+	var off := Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y) + look_offset
+	cat.camera.offset = off
+	# A ScreenShake on the camera (the first explosion, the conduit, a barrel creates one) puts the offset
+	# back to its own resting offset every frame: tell it where the view rests now, or the view is
+	# dragged back to the spot the camera was at when the shake was created.
+	var shake := cat.camera.get_node_or_null("ScreenShake") as ScreenShake
+	if shake != null:
+		shake.set_base_offset(off)

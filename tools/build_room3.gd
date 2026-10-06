@@ -1,40 +1,37 @@
 ## Generates res://scenes/levels/room3.tscn (Room 3, "The Stacks"); its exit leads to
-## res://scenes/levels/room4.tscn. Run:
+## res://scenes/ui/world_map.tscn. Run:
 ##   godot --headless --path . res://tools/build_runner.tscn -- --builder=res://tools/build_room3.gd
 ##
-## Sizes come from the measured reach (tools/audit/reach.gd), centre travel and
-## rise (px above takeoff):
+## The Stacks is the tall room: 48 rows (1536 px, four screens), 172 columns. It climbs
+## from the yard floor through container towers and a warehouse of stacked corridors to the
+## crane girders and the exit roof, and the route turns back on itself so the tiers overlap:
+##
+##   rows   44  yard floor      A   arrival, a walker, crates                  east
+##          38  shed roof       B1  SPRING 1: pad at the foot of a 6-tile wall
+##          32  floating ledge  B2  SPRING 2: pad, ledge, long roof in one charge
+##          26  long roof / C   C   the underfloor run (east): an electric strip, two ceiling
+##                                  crawlers, a moving platform over a pit, a hopper, three
+##                                  falling platforms over a pit (a Spring pad in each pit),
+##                                  then a LIFT up through the floor above
+##          20  D, the gallery  D   the conduit tunnel (the shockwave), crates, a patrol bot,
+##                                  a shock switch and a shutter (west); the light well and its
+##                                  girder ladder lead out onto the roof
+##          14  E, the roof     E   (east) a crawlspace behind a cracked wall, a turret, an
+##                                  explosive barrel chain and the sealed door of the VENT TOWER
+##                                  (the high route: Spring, falling platforms, steam, the golden
+##                                  bone and the memory fragment on the crane girders at the top),
+##                                  a patrol bot, the mirror bay, a gate
+##   (under the bay)  U   the UNDERCROFT, optional: a cracked wall at the foot of the lift, a corridor
+##                         (crawlers, an electric strip), a 12-deep shaft with a pillar and four
+##                         Spring pads, the loot (mice, bells, a fish) on the far landing
+##           8  exit roof       G   SPRING 3: the tower, falling platforms over a pit, the exit
+##
+## Sizes come from the measured reach (tools/audit/reach.gd), centre travel and rise:
 ##                    single   double jump          rise: single   double
 ##   plain              122 px   223 px                   95 (3.0)   171 (5.3 tiles)
-##   Surge              182 px   334 px
-##   Spring             160 px   297 px                  158 (4.9)   284 (8.9 tiles)
-## (Spring's first jump is now 211 px, 6.6 tiles; its air jump is the plain one, so the
-## double jump numbers below are unchanged.)
-## Every climb is 6 tiles (192 px): past a plain double jump (21 px short), 19 px
-## inside a held Spring single jump, 92 px inside a Spring double jump. The gallery roof is 12 tiles up, out of Spring's reach.
-## The long gap is 9 tiles (288 px, needs 266): Surge double jump 334 (68 spare),
-## Spring double jump 255 (11 short: Spring's air jump is a small extra, 0.6), plain 223.
-## (At 10 tiles the Surge double jump had 36 spare and landed in 45% of the human
-## sweep, tools/audit/margins.gd; Spring's double jump then had to be a pixel short.)
-##
-## The room is tall (rows 0-39, ground surface at row 36) and climbs to the right:
-##   A     0-33   arrival on the yard floor in the easing rain; Bot1 walks the lane
-##   B1   33-34   SPRING 1, discovery: a pad at the foot of a 6-tile wall, the ledge above
-##   B2   34-54   SPRING 2, use it: checkpoint A, a pad, a floating ledge (row 24), the long
-##                roof (row 18): two Spring jumps chained inside one 10 s charge
-##   C    54-66   the long roof, checkpoint B, the gallery mouth
-##   D    66-73   the conduit tunnel (2 tiles high): the sparking panel grants the shockwave
-##   E    73-101  the shockwave lessons in a covered gallery: 3x2 crates to break (3 tiles high),
-##                a patrol bot in a 4-tile corridor (the shockwave stuns it), a shock switch
-##                that opens a shutter
-##   F   101-129  the machine bay: a catwalk over the loader bot's track. The bot wakes as the
-##                augmented cat arrives and copies its steps; walk it onto its plate at the end of
-##                the track and the shutter at the catwalk's end opens
-##   G   130-170  SPRING 3 + SURGE: checkpoint C, a pad at the foot of a 6-tile tower, Spring up it,
-##                a Surge pad on top, a 9-tile gap, the exit roof (checkpoint D), the way
-##                toward the security perimeter. Under the gap: stairs down the tower's right
-##                side to a pit floor 12 tiles under the exit roof, so a fall is never a trap
-##                and the far tower cannot be climbed from the pit
+##   Spring             160 px   297 px                  211 (6.6)  284 (8.9 tiles)
+## Every Spring wall is 6 tiles (192 px): past a plain double jump (21 px short), 19 px inside
+## a held Spring single jump. Plain climbs are 2 tiles a step (a girder ladder, one-way).
 ## Builder for tools/build_runner.gd (autoloads are live there; --script mode lacks them).
 ## Rebuilds are deterministic: names are fixed and the runner re-uses the committed
 ## scene's unique_ids (see build_runner.gd).
@@ -45,16 +42,17 @@ var errors := 0
 
 
 const T := 32
-const ROWS := 40
-const COLS := 170
-const G := 36          ## yard floor surface row (y = 1152)
-const S1 := 30         ## shed roof
-const S2 := 24         ## floating ledge
-const S3 := 18         ## long roof, gallery floor
-const S4 := 12         ## tower tops, exit roof
-const GROOF := 6       ## gallery roof surface: 12 tiles over the long roof (out of Spring's reach)
-const BAY_FLOOR := 22
-const PIT := 24        ## the pit floor under the gap: 12 tiles under the exit roof (a boosted Spring double jump rises up to 340 px, 10.6 tiles)
+const ROWS := 48
+const COLS := 172
+const G := 44          ## yard floor surface row (y = 1408)
+const R1 := 38         ## shed roof
+const R2 := 32         ## floating ledge, the pit floors
+const R3 := 26         ## long roof, the underfloor corridor C
+const R4 := 20         ## the gallery D, the light well floor
+const R5 := 14         ## the roof E, the bay deck
+const R6 := 8          ## the tower top, the exit roof
+const BAY_FLOOR := 18  ## the loader bot's track (4 under the deck)
+const GROOF := 6       ## gate house roof
 
 const STEEL := 0
 const BULKHEAD := 1
@@ -72,31 +70,52 @@ const RIVET := Vector2i(5, 3)
 const GIRDER_V := Vector2i(12, 4)
 const GIRDER_H := Vector2i(13, 4)
 
+# ---- columns -----------------------------------------------------------------
 const START_COL := 3
 const PAD1_COL := 33              ## Spring, at the foot of the first wall (col 34)
 const SHED := [34, 53]
 const PAD2_COL := 41
-const LEDGE := [45, 52]            ## the floating ledge: ends one tile short of the long roof (col 54)
-const LONG := [54, 101]           ## the long roof building (gallery floor)
-const GALLERY := [66, 101]
-const CONDUIT_COL := 69
-const CRATE_COLS := [77, 78]
-const BOT_RANGE := [83, 94]
-const SWITCH_COL := 96
-const GATE_COL := 99
-const BAY := [102, 125]
-const BAY_WALL := 126             ## first solid column after the bay (its face stops the bot)
-const BAY_GATE_COL := 127
-const PLATE_X := 4004.0           ## the plate (56 px), flush with the bay wall: the pinned bot stands on it
-const MIRROR_COL := 105
-const PAD3_COL := 137             ## Spring, at the foot of the tower (col 138)
-const TOWER := [138, 149]       ## the tower, with stairs down its right side to the pit floor
-const SURGE_COL := 142            ## Surge, inside the 1-tile-headroom tunnel (cols 142-144): it cannot be hopped over
-const TUNNEL := [142, 144]
-const TOP_FLAT_END := 145         ## last full-height column of the tower top
-const GAP := [146, 154]           ## nine tiles; the stairs (146-150) and the pit floor (151-154) lie under it
-const LAND := [155, 169]
-const EXIT_COL := 167
+const LEDGE := [45, 52]           ## the floating ledge: ends one tile short of the long roof wall
+const LONG := [54, 65]            ## the long roof (open air)
+const WELL_WALL := 66             ## the west wall of the light well (rows 14-21)
+const WELL := [67, 70]            ## the light well: floor row 20, girder ladder to the roof
+const BLD_E := 119                ## the east wall of the building
+const PIT1 := [85, 92]            ## corridor C: pit with a moving platform
+const PIT2 := [102, 109]          ## corridor C: pit with three falling platforms
+const LIFT := [117, 118]          ## the lift up through the gallery floor
+const STRIP := [59, 61]           ## the electric strip on the long roof
+const CRAWLER_COLS := [74, 79]
+const HOPPER_COL := 99
+const CONDUIT_COL := 110
+const TUNNEL := [107, 112]        ## 2 tiles high
+const CRATE_COLS := [101, 102]
+const CRATE_CEIL := [97, 106]     ## 3 tiles high
+const BOT_RANGE := [82, 95]       ## stopper columns of the patrol bot's 4-tile corridor
+const SWITCH_COL := 78
+const GATE_COL := 75
+const GATE_CEIL := [71, 79]       ## 3 tiles high
+const PUMP := [76, 82]            ## the pump house on the roof, the crawlspace behind its cracked wall
+const TURRET_COL := 81            ## on the pump house top
+const BARRELS := [92, 93, 94]
+const TOWER_W := 96               ## the vent tower: west wall (the blast door at its foot)
+const VENT := [96, 107]
+const VENT_PAD_COL := 99
+const PILLAR := [100, 104]
+const BAY := [120, 143]
+const BAY_WALL := 144
+const BAY_GATE_COL := 145
+const PLATE_X := 144.0 * 32.0 - 28.0   ## the plate (56 px), flush with the bay wall: the pinned bot stands on it
+const MIRROR_COL := 123
+const PAD3_COL := 151             ## Spring, at the foot of the exit tower (col 152)
+const UNDER_WALL := 119           ## the cracked wall at the east end of corridor C (the undercroft)
+const UNDER := [120, 133]         ## the undercroft's corridor under the bay (row 26 floor, 4 tall)
+const USHAFT := [134, 141]        ## the shaft: 12 deep, a pillar in it, a Spring pad on each side
+const UPILLAR := [136, 139]       ## the pillar's top is row 32 (6 under the corridor)
+const ULAND := [142, 143]         ## the far landing, the loot
+const TOWER := [152, 156]
+const XPIT := [157, 164]          ## the exit pit: two falling platforms, a pad in the pit
+const LAND := [165, 171]
+const EXIT_COL := 170
 
 var room: Node2D
 var tiles: TileMapLayer
@@ -145,9 +164,35 @@ func _put(path: String, node_name: String, cx: int, cy: int, props := {}) -> Nod
 	return n
 
 
+## A placed thing at an exact world position (platforms, hazards that are centred on their width).
+func _putx(path: String, node_name: String, x: float, y: float, props := {}) -> Node:
+	var n: Node2D = load(path).instantiate()
+	n.name = node_name
+	for k in props:
+		n.set(k, props[k])
+	n.position = Vector2(x, y)
+	_own(n)
+	return n
+
+
+## A collectible: column `cx`, standing on surface row `row`, `dy` px above that surface.
+## Yarn, bells and mice are all "Gem*" nodes (the world map counts them); the rest are named by the caller.
+func _pick(kind: String, node_name: String, cx: int, row: int, dy := 16.0, props := {}) -> Node:
+	var p := {"_dy": -dy}
+	for k in props:
+		p[k] = props[k]
+	return _put("res://scenes/kit/pickup_%s.tscn" % kind, node_name, cx, row, p)
+
+
 func _cell(x: int, y: int, mat: int, tile: Vector2i, layer: TileMapLayer = null) -> void:
 	var l := layer if layer else tiles
 	l.set_cell(Vector2i(x, y), 0, Vector2i(tile.x, tile.y + mat * 10))
+
+
+func _clear(x0: int, x1: int, y0: int, y1: int) -> void:
+	for x in range(x0, x1 + 1):
+		for y in range(y0, y1 + 1):
+			tiles.erase_cell(Vector2i(x, y))
 
 
 func _course_mat(x: int, y: int) -> int:
@@ -167,19 +212,20 @@ func _mass(x0: int, x1: int, y0: int, y1: int, cap := true) -> void:
 			_cell(x, y, _course_mat(x, y1 - k - k % 2), Vector2i(11, 6 if k % 2 == 0 else 5))
 
 
-## A column of solid with its own top row (a stepped or sloped roof edge).
-func _column(x: int, top: int, bottom: int) -> void:
-	_mass(x, x, top, bottom)
-
-
 func _lip(x: int, y: int) -> void:
 	_cell(x, y, HAZARD, BEVEL)
+
+
+## One-way girders: the cat jumps up through them and lands on top.
+func _girder(x0: int, x1: int, y: int) -> void:
+	for x in range(x0, x1 + 1):
+		_cell(x, y, STEEL, GIRDER_H)
 
 
 func _ground() -> void:
 	for x in range(0, SHED[0]):  # the yard floor, up to the foot of the first wall
 		_cell(x, G, STEEL, BEVEL)
-		_cell(x, G + 1, MAROON, GIRDER_H)
+		_cell(x, G + 1, MAROON, CROSS)   # solid: a one-way row here is a slit the cat can enter at an exposed face
 		_cell(x, G + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
 		_cell(x, G + 3, MAROON, RIVET if x % 2 == 0 else FLAT)
 
@@ -227,6 +273,7 @@ func _build_room3() -> void:
 	room.name = "Room3"
 	room.set_script(load("res://scripts/systems/room3.gd"))
 	room.set("limits", Rect2i(0, 0, COLS * T, ROWS * T))
+	room.set("camera_follow", Level.CameraFollow.TIERS)
 	var w := COLS * T
 
 	var sky := ColorRect.new()
@@ -241,6 +288,7 @@ func _build_room3() -> void:
 	exterior.name = "Exterior"
 	exterior.position = Vector2(0, 700)
 	exterior.moon_position = Vector2(-120, -141)
+	exterior.extend_vertically = true
 	exterior.z_index = -9
 	_own(exterior)
 
@@ -285,7 +333,7 @@ func _build_room3() -> void:
 	var exit_area: Area2D = load("res://scripts/systems/room_exit.gd").new()
 	exit_area.name = "RoomExit"
 	exit_area.set("next_scene", "res://scenes/ui/world_map.tscn")
-	exit_area.position = _p(EXIT_COL, S4)
+	exit_area.position = _p(EXIT_COL, R6)
 	_own(exit_area)
 
 	var cat: Node = load("res://scenes/player/cat.tscn").instantiate()
@@ -313,9 +361,13 @@ func _build_room3() -> void:
 	hud.name = "Hud"
 	_own(hud)
 
+	# Under a roof the near rain stops: the underfloor corridor, the gallery, the gate house, the tower.
 	var covered: Array[Rect2] = [
-		Rect2(GALLERY[0] * T, (GROOF + 1) * T, (GALLERY[1] + 1 - GALLERY[0]) * T, (S3 - GROOF - 1) * T),
-		Rect2(BAY_WALL * T, (GROOF + 1) * T, 4 * T, (S3 - GROOF - 1) * T),
+		Rect2(WELL_WALL * T, (R3 - 4) * T, (BLD_E - WELL_WALL) * T, 4 * T),
+		Rect2(GATE_CEIL[0] * T, (R4 - 4) * T, (LIFT[1] + 1 - GATE_CEIL[0]) * T, 4 * T),
+		Rect2(BAY_WALL * T, (R5 - 3) * T, 4 * T, 3 * T),
+		Rect2((TOWER_W + 1) * T, 5 * T, 8 * T, 9 * T),
+		Rect2(UNDER[0] * T, (R3 - 4) * T, (ULAND[1] + 1 - UNDER[0]) * T, 12 * T),
 	]
 	room.set("covered", covered)
 
@@ -341,69 +393,93 @@ func _build_geometry() -> void:
 	for y in range(0, ROWS):
 		_cell(-1, y, BULKHEAD, FLAT)
 		_cell(COLS, y, BULKHEAD, FLAT)
-	# Arrival: crates to hop on the way.
+	# A: arrival crates to hop on the way.
 	_crates(11, 12, 1)
 	_crates(15, 16, 2)
 	# B1/B2: the shed (the wall the first pad stands at) and the floating ledge.
-	_mass(SHED[0], SHED[1], S1, ROWS - 1)
+	_mass(SHED[0], SHED[1], R1, ROWS - 1)
 	for x in range(SHED[0], SHED[0] + 3):
-		_lip(x, S1)
-	_deck(LEDGE[0], LEDGE[1], S2, 2)
+		_lip(x, R1)
+	_deck(LEDGE[0], LEDGE[1], R2, 2)
 	# A strut under the ledge's left end: its face is a wall from the shed roof up, so a
-	# cat rising beside it never bangs its head on an overhang (a floating edge ate every
-	# jump that started closer than 42 px).
-	_mass(LEDGE[0], LEDGE[0] + 1, S2 + 2, S1 - 1, false)
+	# cat rising beside it never bangs its head on an overhang.
+	_mass(LEDGE[0], LEDGE[0] + 1, R2 + 2, R1 - 1, false)
 	# ...and the ledge is a full column from the deck down to the shed roof, right up to the
-	# one-tile slot beside the long roof (col 53): the open space under the deck was a vault
-	# a cat dropped into through that slot and could not leave (no pad inside, 6 tiles to the
-	# deck, the strut a wall on the left). Now the slot is two tiles deep: a plain jump out.
-	_mass(LEDGE[0] + 2, LEDGE[1] + 1, S2 + 2, S1 - 1, false)
-	# C-F: the long roof building: gallery and its ceilings, the bay.
-	_mass(LONG[0], GALLERY[0] - 1, S3, ROWS - 1)
-	_mass(GALLERY[0], GALLERY[1], S3, ROWS - 1, false)
-	_cell_row_cap(GALLERY[0], GALLERY[1], S3)
-	# Gallery ceilings (solid down to the headroom): conduit 2 tiles, crates 3, bot corridor 4, shutter 3.
-	_mass(GALLERY[0], 72, GROOF, S3 - 3)
-	_mass(73, 81, GROOF, S3 - 4)
-	_mass(82, 94, GROOF, S3 - 5)
-	_mass(95, GALLERY[1], GROOF, S3 - 4)
-	# Bay: a deck over the machine's track, its floor 4 tiles under, walls both ends.
-	_deck(BAY[0], BAY[1], S3, 1)
+	# one-tile slot beside the long roof (col 53): the slot is two tiles deep: a plain jump out.
+	_mass(LEDGE[0] + 2, LEDGE[1] + 1, R2 + 2, R1 - 1, false)
+	# C: the long roof, and the floor of the underfloor corridor: one surface from col 54 to the
+	# east wall of the building.
+	_mass(LONG[0], BLD_E, R3, ROWS - 1)
+	# The light well's west wall (rows 14-21: a 12-tile wall from the long roof), the gallery
+	# floor (the corridor's ceiling, 2 rows; open over the lift), the gallery roof (the roof run),
+	# the building's east wall.
+	_mass(WELL_WALL, WELL_WALL, R5, R4 + 1)
+	_mass(WELL[0], LIFT[0] - 1, R4, R4 + 1)
+	_mass(WELL[1] + 1, BLD_E, R5, R5 + 1)
+	_mass(BLD_E, BLD_E, R5, ROWS - 1)
+	# Gallery ceilings, lowered where the lessons need walls: conduit tunnel 2 tiles high,
+	# crates 3 tiles, the shutter 3 tiles; the bot's corridor and the lift hall keep 4.
+	_mass(TUNNEL[0], TUNNEL[1], R5 + 2, R5 + 3, false)
+	_mass(CRATE_CEIL[0], CRATE_CEIL[1], R5 + 2, R5 + 2, false)
+	_mass(GATE_CEIL[0], GATE_CEIL[1], R5 + 2, R5 + 2, false)
+	# The pits in the corridor floor (6 deep): a Spring pad at the far wall of each, so a fall
+	# is never a trap.
+	for p in [PIT1, PIT2]:
+		_clear(p[0], p[1], R3, R2 - 1)
+		for x in range(p[0], p[1] + 1):
+			_cell(x, R2, STEEL, BEVEL)
+	# E: the pump house on the roof: a 2-tile block, a crawlspace in it behind a cracked wall.
+	_mass(PUMP[0], PUMP[1], R5 - 2, R5 - 1)
+	_clear(PUMP[0], PUMP[0] + 3, R5 - 1, R5 - 1)
+	# The vent tower: a thin west wall with the sealed door at its foot, an east wall, a pillar
+	# the Spring pad lifts the cat onto, and one-way girders across the top (the crane deck and
+	# its skywalk).
+	_mass(TOWER_W, TOWER_W, 5, R5 - 1)
+	_clear(TOWER_W, TOWER_W, R5 - 2, R5 - 1)
+	_mass(105, 107, 5, R5 - 1)
+	_mass(PILLAR[0], PILLAR[1], R6, R5 - 1)
+	_girder(TOWER_W, 112, 4)
+	# F: the bay: a deck over the machine's track, its floor 4 tiles under, walls both ends.
+	_deck(BAY[0], BAY[1], R5, 1)
 	_mass(BAY[0], BAY[1], BAY_FLOOR, ROWS - 1)
-	# After the bay: the roof run, the gate house (a ceiling over the shutter), the tower.
-	_mass(BAY_WALL, TOWER[0] - 1, S3, ROWS - 1)
-	_mass(BAY_WALL, BAY_WALL + 3, GROOF, S3 - 4)
-	for x in range(TOWER[0], TOP_FLAT_END + 1):
-		_column(x, S4, ROWS - 1)
-	for i in range(5):  # the stairs: 2 tiles a step, a single jump each
-		_column(146 + i, S4 + 2 + 2 * i, ROWS - 1)
-	_mass(151, GAP[1], PIT, ROWS - 1)
-	_mass(LAND[0], LAND[1], S4, ROWS - 1)
-	_lip(TOP_FLAT_END, S4)
-	# The Surge pad sits in a low tunnel (32 px of headroom under a block that reaches the
-	# roof): whoever climbed the tower on Spring walks through it, the pad replaces Spring
-	# with Surge, and only then comes the lip. Spring's double jump (297 px) would cross the
-	# nine-tile gap too (266 needed), and Surge's (334) is not far ahead of it, so the pad is
-	# made unavoidable instead of the gap wider.
-	_mass(TUNNEL[0], TUNNEL[1], 0, S4 - 2, false)
-	_lip(LAND[0], S4)
-	# The exit: a parapet on the last tile, then the bulkhead.
-	for y in range(S4 - 4, S4):
+	# After the bay: the gate house (a ceiling over the shutter, solid to the top so it cannot
+	# be hopped), the roof run to the tower foot.
+	_mass(BAY_WALL, PAD3_COL, R5, ROWS - 1)
+	_mass(BAY_WALL, BAY_WALL + 3, GROOF, R5 - 4)
+	# U: the undercroft, carved out of the bay's plinth: a corridor under the bay (4 tall), a shaft with
+	# a pillar, the far landing. The corridor's west end is the east wall of the building (cracked).
+	_clear(UNDER_WALL, UNDER_WALL, R3 - 2, R3 - 1)
+	_clear(UNDER[0], ULAND[1], R3 - 4, R3 - 1)
+	_clear(USHAFT[0], USHAFT[1], R3, 37)
+	for x in range(UNDER[0], UNDER[1] + 1):
+		_cell(x, R3, STEEL, BEVEL)
+	for x in range(ULAND[0], ULAND[1] + 1):
+		_cell(x, R3, STEEL, BEVEL)
+	for x in range(USHAFT[0], USHAFT[1] + 1):
+		_cell(x, 38, STEEL, BEVEL)
+	_mass(UPILLAR[0], UPILLAR[1], R2, 37)
+	# G: the exit tower, the pit with two falling platforms, the exit roof.
+	_mass(TOWER[0], TOWER[1], R6, ROWS - 1)
+	_mass(XPIT[0], XPIT[1], R5, ROWS - 1)
+	_mass(LAND[0], LAND[1], R6, ROWS - 1)
+	for y in range(R6 - 4, R6):
 		_cell(COLS - 1, y, BULKHEAD, FLAT)
-
-
-func _cell_row_cap(x0: int, x1: int, y: int) -> void:
-	## The gallery floor surface (the gallery mass is built without a cap).
-	for x in range(x0, x1 + 1):
-		_cell(x, y, STEEL, BEVEL)
 
 
 func _interiors() -> void:
 	## Dark back walls behind the covered spaces (so the sky does not show through them).
-	var gal := Rect2(GALLERY[0] * T, (S3 - 4) * T, (GALLERY[1] + 1 - GALLERY[0]) * T, 4 * T)
+	var corr := Rect2(WELL_WALL * T, (R3 - 4) * T, (BLD_E - WELL_WALL) * T, 4 * T)
+	_interior("CorridorInterior", corr, Color("0f111e"))
+	for p in [PIT1, PIT2]:
+		_interior("PitInterior%d" % p[0], Rect2(p[0] * T, R3 * T, (p[1] + 1 - p[0]) * T, (R2 - R3) * T), Color("0b0d19"))
+	_interior("UndercroftInterior", Rect2(UNDER[0] * T, (R3 - 4) * T, (ULAND[1] + 1 - UNDER[0]) * T, 4 * T), Color("0b0d19"))
+	_interior("UndercroftShaft", Rect2(USHAFT[0] * T, R3 * T, (USHAFT[1] + 1 - USHAFT[0]) * T, (38 - R3) * T), Color("080a14"))
+	var gal := Rect2((WELL[1] + 1) * T, (R4 - 4) * T, (LIFT[1] + 1 - WELL[1] - 1) * T, 4 * T)
 	_interior("GalleryInterior", gal, Color("10121f"))
-	_interior("GatehouseInterior", Rect2(BAY_WALL * T, (S3 - 3) * T, 4 * T, 3 * T), Color("10121f"))
-	var bay := Rect2(BAY[0] * T, (S3 + 1) * T, (BAY[1] + 1 - BAY[0]) * T, (BAY_FLOOR - S3 - 1) * T)
+	_interior("ClosetInterior", Rect2((PUMP[0] + 1) * T, (R5 - 1) * T, 3 * T, T), Color("0b0d19"))
+	_interior("TowerInterior", Rect2((TOWER_W + 1) * T, 5 * T, 8 * T, 9 * T), Color("0d1020"))
+	_interior("GatehouseInterior", Rect2(BAY_WALL * T, (R5 - 3) * T, 4 * T, 3 * T), Color("10121f"))
+	var bay := Rect2(BAY[0] * T, (R5 + 1) * T, (BAY[1] + 1 - BAY[0]) * T, (BAY_FLOOR - R5 - 1) * T)
 	_interior("BayInterior", bay, Color("141a2c"))
 	# Bay detail: ribs and a pipe along the back wall, the track on the floor.
 	for i in range(BAY[0] + 2, BAY[1], 4):
@@ -428,7 +504,7 @@ func _interiors() -> void:
 	rail.size = Vector2(bay.size.x - 8, 3)
 	rail.z_index = 1
 	_own(rail)
-	# The gallery's wiring.
+	# The gallery's wiring and the corridor's pipe run.
 	var cable := ColorRect.new()
 	cable.name = "GalleryConduitPipe"
 	cable.color = Color("2a4658")
@@ -436,6 +512,21 @@ func _interiors() -> void:
 	cable.size = Vector2(gal.size.x, 6)
 	cable.z_index = -1
 	_own(cable)
+	var cpipe := ColorRect.new()
+	cpipe.name = "CorridorPipe"
+	cpipe.color = Color("26404f")
+	cpipe.position = Vector2(corr.position.x, corr.position.y + 10)
+	cpipe.size = Vector2(corr.size.x, 5)
+	cpipe.z_index = -1
+	_own(cpipe)
+	# Tower ladder rungs of light: a vertical conduit up the tower's back wall.
+	var vent := ColorRect.new()
+	vent.name = "TowerVentPipe"
+	vent.color = Color("2a4658")
+	vent.position = Vector2(97 * T + 10, 5 * T)
+	vent.size = Vector2(6, 9 * T)
+	vent.z_index = -1
+	_own(vent)
 
 
 func _interior(node_name: String, r: Rect2, c: Color) -> void:
@@ -449,41 +540,42 @@ func _interior(node_name: String, r: Rect2, c: Color) -> void:
 
 
 func _back_decor() -> void:
-	# Far container stacks behind the yard floor and the roofs, and the gantry crane.
+	# Far container stacks behind the yard floor and the roofs, and the gantry cranes.
 	for d in [[0, 8, G, 2, TEAL], [10, 17, G, 1, RUST], [19, 25, G, 2, MAROON], [26, 32, G, 3, TEAL]]:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
-	for d in [[36, 43, S1, 2, RUST], [44, 52, S1, 1, TEAL], [56, 64, S3, 2, TEAL], [58, 63, S3 - 4, 1, MAROON]]:
+	for d in [[36, 43, R1, 3, RUST], [44, 52, R1, 2, TEAL], [54, 64, R3, 3, TEAL], [57, 63, R3 - 6, 1, MAROON]]:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
-	for d in [[130, 136, S3, 2, RUST], [152, 155, PIT, 2, TEAL], [158, 164, S4, 2, TEAL], [165, 169, S4, 3, RUST]]:
+	for d in [[72, 90, R5, 2, RUST], [108, 118, R5, 3, TEAL], [146, 151, R5, 2, MAROON], [158, 164, R5, 3, TEAL], [165, 171, R6, 3, RUST]]:
 		_back_stack(d[0], d[1], d[2], d[3], d[4])
-	# The gantry crane: two posts, a jib and a hanging cable with its hook block.
-	_truss(24, 12, G - 1)
-	_truss(26, 12, G - 1)
-	_beam(24, 48, 11)
-	_beam(24, 48, 12)
-	for y in range(13, 24):
+	# The gantry crane over the yard: two posts, a jib and a hanging cable with its hook block.
+	_truss(24, 19, G - 1)
+	_truss(26, 19, G - 1)
+	_beam(24, 48, 18)
+	_beam(24, 48, 19)
+	for y in range(20, 31):
 		_cell(41, y, STEEL, Vector2i(12, 4), back_tiles)
-	_cell(41, 24, STEEL, Vector2i(3, 2), back_tiles)
-	# A second, lower crane over the long roof, and a lattice mast by the tower.
-	_truss(60, 8, S3 - 1)
-	_beam(52, 64, 8)
-	_truss(133, 6, S3 - 1)
-	_beam(126, 134, 6)
-	_truss(161, 3, S4 - 1)
-	_truss(163, 3, S4 - 1)
-	_beam(161, 163, 3)
+	_cell(41, 31, STEEL, Vector2i(3, 2), back_tiles)
+	# A second crane over the long roof, a mast by the tower, and the crane over the vent tower's skywalk.
+	_truss(60, 12, R3 - 1)
+	_beam(52, 64, 12)
+	_truss(114, 2, R5 - 1)
+	_beam(106, 120, 2)
+	_truss(160, 0, R6 - 1)
+	_truss(162, 0, R6 - 1)
+	_beam(160, 162, 0)
 
 
 func _place_actors() -> void:
+	var yarn := "yarn"
 	# --- A: arrival ---
 	_mono("StacksArrival", "stacks_arrival", Vector2(START_COL * T + 16, G * T), Vector2(192, 96))
-	_put("res://scenes/actors/gem.tscn", "GemA1", 11, G - 2)
-	_put("res://scenes/actors/gem.tscn", "GemA2", 16, G - 3)
+	_pick(yarn, "GemA1", 11, G, 62)
+	_pick("bell", "GemBellA2", 16, G, 94)
 	var bot1 := _put("res://scenes/actors/patrol_bot.tscn", "Bot1", 23, G, {"stomps_to_befriend": 99})
 	bot1.set("dir", -1)
-	_put("res://scenes/actors/gem.tscn", "GemA3", 21, G - 1)
-	_put("res://scenes/actors/gem.tscn", "GemA4", 26, G - 1)
-	_put("res://scenes/actors/gem.tscn", "GemA5", 30, G - 1)
+	_pick(yarn, "GemA3", 21, G)
+	_pick(yarn, "GemA4", 26, G)
+	_pick(yarn, "GemA5", 30, G)
 
 	# --- B1: Spring, discovery: the pad at the foot of the wall ---
 	_mono("SpringHint", "spring_hint", _p(PAD1_COL - 5, G), Vector2(96, 96))
@@ -491,22 +583,55 @@ func _place_actors() -> void:
 	_mono("SpringFirst", "spring_first", _p(PAD1_COL, G), Vector2(44, 40))
 
 	# --- B2: use it ---
-	_put("res://scenes/actors/checkpoint.tscn", "CheckpointA", 36, S1, {"checkpoint_id": "cp_a"})
-	_put("res://scenes/actors/gem.tscn", "GemShed1", 38, S1 - 1)
-	_mono("SpringHintLedge", "spring_hint_ledge", _p(PAD2_COL - 3, S1), Vector2(64, 96))
-	_pad("PadSpring2", PAD2_COL, S1, 2)
-	_put("res://scenes/actors/gem.tscn", "GemLedge1", 46, S2 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemLedge2", 49, S2 - 1)
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointA", 36, R1, {"checkpoint_id": "cp_a"})
+	_pick(yarn, "GemShed1", 38, R1)
+	_mono("SpringHintLedge", "spring_hint_ledge", _p(PAD2_COL - 3, R1), Vector2(64, 96))
+	_pad("PadSpring2", PAD2_COL, R1, 2)
+	_pick(yarn, "GemLedge1", 46, R2)
+	_pick(yarn, "GemLedge2", 49, R2)
 
-	# --- C: the long roof ---
-	_put("res://scenes/actors/checkpoint.tscn", "CheckpointB", 57, S3, {"checkpoint_id": "cp_b"})
-	_put("res://scenes/actors/gem.tscn", "GemRoof1", 60, S3 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemRoof2", 63, S3 - 1)
+	# --- C: the long roof: an electric strip, the underfloor corridor ---
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointB", 57, R3, {"checkpoint_id": "cp_b"})
+	_putx("res://scenes/kit/electric_floor.tscn", "StripFloor", (STRIP[0] + 1.5) * T, R3 * T, {"width_tiles": 3})
+	_pick("mouse", "GemMouseStrip", STRIP[0] + 1, R3, 76)
+	_pick(yarn, "GemRoof2", 64, R3)
+	_pick(yarn, "GemCorr1", 68, R3)
+	_pick(yarn, "GemCorr2", 71, R3)
+	for c in CRAWLER_COLS:
+		_put("res://scenes/kit/crawler_bot.tscn", "Crawler%d" % c, c, R4 + 2, {"crawl_range": 30.0})
+	_pick(yarn, "GemCrawl1", 77, R3)
+	_pick(yarn, "GemCrawl2", 85 - 1, R3)
+	_put("res://scenes/kit/pickup_fish.tscn", "FishC1", 83, R3, {"_dy": -16.0})
+	# Pit 1: a moving platform across, a Spring pad at the far wall of the pit.
+	_mono("SpringHintPit1", "spring_hint_roof", _p(PIT1[0] - 1, R3), Vector2(64, 96))
+	_putx("res://scenes/kit/platform_horizontal.tscn", "MoverPit1", PIT1[0] * T + 48.0, R3 * T,
+		{"width_tiles": 3, "travel": (PIT1[1] + 1 - PIT1[0]) * T - 96.0, "speed": 52.0, "pause": 0.8})
+	_pad("PadSpringPit1", PIT1[1], R2, 2)
+	_pick("bell", "GemBellPit1", 88, R3, 78)
+	# The hopper's stretch.
+	_put("res://scenes/kit/hopper_bot.tscn", "Hopper1", HOPPER_COL, R3, {"detect_range": 150.0})
+	_pick(yarn, "GemHop1", 96, R3)
+	_pick(yarn, "GemHop2", 101, R3)
+	# Pit 2: three falling platforms across, a pad at the far wall.
+	_mono("SpringHintPit2", "spring_hint_roof", _p(PIT2[0] - 1, R3), Vector2(64, 96))
+	for k in 3:
+		_putx("res://scenes/kit/platform_falling.tscn", "FallPit2%d" % k, (PIT2[0] + 1 + k * 3) * T, R3 * T,
+			{"width_tiles": 2, "fall_delay": 0.9, "respawn_time": 3.0})
+	_pad("PadSpringPit2", PIT2[1], R2, 2)
+	_pick("bell", "GemBellPit2", 105, R3, 84)
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointC", 112, R3, {"checkpoint_id": "cp_c"})
+	_pick(yarn, "GemC3", 114, R3)
+	# The lift up through the gallery floor.
+	_mono("LiftLine", "stacks_lift", _p(LIFT[0] - 3, R3), Vector2(96, 96))
+	_putx("res://scenes/kit/platform_vertical.tscn", "LiftC", (LIFT[0] + 1) * T, R4 * T,
+		{"width_tiles": 2, "travel": (R3 - R4) * T, "speed": 56.0, "pause": 0.8})
 
-	# --- D: the conduit ---
+	# --- D: the gallery: the conduit, the crates, the patrol bot, the switch ---
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointD", 114, R4, {"checkpoint_id": "cp_d"})
+	_pick(yarn, "GemD1", 113, R4)
 	var conduit: Area2D = load("res://scripts/actors/conduit.gd").new()
 	conduit.name = "Conduit"
-	conduit.position = _p(CONDUIT_COL, S3)
+	conduit.position = _p(CONDUIT_COL, R4)
 	conduit.set("size", Vector2(96, 64))
 	conduit.set("cable_anchor", Vector2(0, -64))
 	_own(conduit)
@@ -514,59 +639,126 @@ func _place_actors() -> void:
 	line.name = "ConduitLine"
 	line.set("line_id", "conduit")
 	line.set("size", Vector2(192, 64))
-	line.position = _p(CONDUIT_COL + 1, S3)
+	line.position = _p(CONDUIT_COL - 1, R4)
 	_own(line)
-
-	# --- E: the shockwave lessons ---
+	_pick(yarn, "GemD2", 107, R4)
+	# E-lessons: the shockwave breaks the crates (3 tall, 2 wide, filling the 3-tile corridor).
 	var n := 0
 	for x in CRATE_COLS:
 		for k in range(3):
-			var drop := 2 if (x == CRATE_COLS[1] and k == 0) else 0
-			_put("res://scenes/actors/crate_breakable.tscn", "Crate%d" % n, x, S3 - k, {"drop": drop})
+			var drop := 2 if (x == CRATE_COLS[0] and k == 0) else 0
+			_put("res://scenes/actors/crate_breakable.tscn", "Crate%d" % n, x, R4 - k, {"drop": drop})
 			n += 1
-	var stack_bot := _put("res://scenes/actors/patrol_bot.tscn", "StackBot", 91, S3, {"stomps_to_befriend": 99})
+	_put("res://scenes/kit/pickup_fish.tscn", "FishD1", 98, R4, {"_dy": -16.0})
+	_pick(yarn, "GemD3", 104, R4)
+	var stack_bot := _put("res://scenes/actors/patrol_bot.tscn", "StackBot", 90, R4, {"stomps_to_befriend": 99})
 	stack_bot.set("dir", -1)
-	var sw := _put("res://scenes/actors/shock_switch.tscn", "ShockSwitch", SWITCH_COL, S3, {"auto_off": 6.0})
-	sw.position = Vector2(SWITCH_COL * T + 16, S3 * T - 52)
+	_pick(yarn, "GemD4", 92, R4)
+	_pick(yarn, "GemD5", 86, R4)
+	var sw := _put("res://scenes/actors/shock_switch.tscn", "ShockSwitch", SWITCH_COL, R4, {"auto_off": 6.0})
+	sw.position = Vector2(SWITCH_COL * T + 16, R4 * T - 52)
 	sw.z_index = -1
-	_put("res://scenes/actors/shutter.tscn", "GalleryShutter", GATE_COL, S3, {
+	_put("res://scenes/actors/shutter.tscn", "GalleryShutter", GATE_COL, R4, {
 		"height_tiles": 3, "controller": NodePath("../ShockSwitch")})
-	_put("res://scenes/actors/gem.tscn", "GemGallery1", 75, S3 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemGallery2", 86, S3 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemGallery3", 97, S3 - 1)
+	_pick(yarn, "GemD6", 80, R4)
+	# The light well: the girder ladder out onto the roof.
+	_girder(WELL[0], WELL[0] + 1, R4 - 2)
+	_girder(WELL[0] + 2, WELL[1], R4 - 4)
+	_pick(yarn, "GemWell1", WELL[0], R4 - 2)
+	_pick(yarn, "GemWell2", WELL[0] + 2, R4 - 4)
+
+	# --- E: the roof ---
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointRoof", 73, R5, {"checkpoint_id": "cp_roof"})
+	_pick(yarn, "GemE1", 74, R5)
+	# The pump house: a crawlspace behind a cracked wall, taught by the crates.
+	_mono("CrackLine", "stacks_crack", _p(PUMP[0] - 2, R5), Vector2(96, 96))
+	_put("res://scenes/kit/wall_cracked.tscn", "CrackedWall1", PUMP[0], R5, {"size_tiles": Vector2i(1, 1)})
+	_pick("mouse", "GemMouseCloset", PUMP[0] + 3, R5, 16)
+	_pick("bell", "GemBellCloset", PUMP[0] + 2, R5, 16)
+	_put("res://scenes/kit/pickup_fish.tscn", "FishCloset", PUMP[0] + 1, R5, {"_dy": -16.0})
+	_pick(yarn, "GemPump", PUMP[0] + 4, R5 - 2)
+	# The turret on the pump house roof: the shockwave stuns it.
+	_put("res://scenes/kit/sentry_turret.tscn", "Turret1", TURRET_COL, R5 - 2, {"detect_range": 220.0})
+	_pick(yarn, "GemE3", 85, R5)
+	_pick(yarn, "GemE4", 89, R5)
+	# The barrel chain and the sealed door of the vent tower.
+	_mono("BarrelLine", "stacks_barrels", _p(BARRELS[0] - 4, R5), Vector2(96, 96))
+	for b in BARRELS:
+		_put("res://scenes/kit/barrel_explosive.tscn", "Barrel%d" % b, b, R5, {"fuse": 1.0, "persist": true})
+	_put("res://scenes/kit/wall_blast.tscn", "BlastDoor", TOWER_W, R5, {"size_tiles": Vector2i(1, 2)})
+	_pick("bell", "GemBellBarrels", BARRELS[1], R5, 92)
+	# The vent tower: Spring up the pillar, steam on the pillar top, a falling platform to the
+	# crane deck, a flame vent between the arrival and the treasure.
+	_mono("VentLine", "spring_hint_tower", _p(VENT_PAD_COL - 1, R5), Vector2(64, 96))
+	_pad("PadSpringVent", VENT_PAD_COL, R5, 2)
+	_pick("bell", "GemBellVent1", 101, R6, 16)
+	_putx("res://scenes/kit/vent_steam.tscn", "VentSteam1", 102 * T + 16.0, R6 * T)
+	_put("res://scenes/kit/pickup_fish.tscn", "FishVent", 100, R6, {"_dy": -16.0})
+	_putx("res://scenes/kit/platform_falling.tscn", "FallVent", 104 * T, 6 * T, {"width_tiles": 2, "fall_delay": 0.9, "respawn_time": 3.0})
+	_putx("res://scenes/kit/vent_flame.tscn", "VentFlame1", 101 * T + 16.0, 4 * T + 4.0, {"idle_time": 1.8})
+	_mono("VentTopLine", "stacks_vent_top", _p(103, 4), Vector2(96, 96))
+	_pick("bone", "GemBoneStacks", 98, 4, 14, {"_dy": -14.0})
+	_pick("memory", "MemoryStacks", 97, 4, 18, {"memory_id": "memory_stacks"})
+	_pick(yarn, "GemSky1", 109, 4, 12)
+	_pick(yarn, "GemSky2", 111, 4, 12)
+	_pick("bell", "GemBellSky", 106, 4, 40)
+	# The patrol bot with a laser, between the turret and the barrels (the barrel chain can catch it too).
+	_put("res://scenes/kit/kit_patrol_bot.tscn", "RoofBot", 85, R5)
+	_pick(yarn, "GemE5", 109, R5)
+	_pick(yarn, "GemE6", 116, R5)
 
 	# --- F: the machine bay ---
-	_put("res://scenes/actors/checkpoint.tscn", "CheckpointBay", 101, S3, {"checkpoint_id": "cp_bay"})
-	_mono("MirrorLine", "mirror_bot", _p(BAY[0] + 1, S3), Vector2(96, 96))
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointBay", BAY[0] - 1, R5, {"checkpoint_id": "cp_bay"})
+	_mono("MirrorLine", "mirror_bot", _p(BAY[0] + 1, R5), Vector2(96, 96))
 	var bot: Node2D = load("res://scripts/actors/mirror_bot.gd").new()
 	bot.name = "MirrorBot"
+	bot.set("wake_dy", 150.0)   # it wakes for a cat on the catwalk, not for one in the undercroft below
 	bot.position = _p(MIRROR_COL, BAY_FLOOR)
 	_own(bot)
 	var plate := _put("res://scenes/actors/floor_plate.tscn", "BayPlate", 0, BAY_FLOOR, {"width": 56.0})
 	plate.position = Vector2(PLATE_X, BAY_FLOOR * T)
-	_put("res://scenes/actors/shutter.tscn", "BayShutter", BAY_GATE_COL, S3, {
+	_put("res://scenes/actors/shutter.tscn", "BayShutter", BAY_GATE_COL, R5, {
 		"height_tiles": 3, "controller": NodePath("../BayPlate")})
-	for c in range(106, 124, 4):
-		_put("res://scenes/actors/gem.tscn", "GemBay%d" % c, c, S3 - 1)
+	for c in range(124, 142, 4):
+		_pick(yarn, "GemBay%d" % c, c, R5)
 
-	# --- G: Spring up the tower, Surge across the gap ---
-	_put("res://scenes/actors/checkpoint.tscn", "CheckpointC", 131, S3, {"checkpoint_id": "cp_c"})
-	_put("res://scenes/actors/gem.tscn", "GemTower1", 133, S3 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemTower2", 135, S3 - 1)
-	_mono("SpringHintCombine", "spring_hint_combine", _p(PAD3_COL - 4, S3), Vector2(96, 96))
-	_pad("PadSpring3", PAD3_COL, S3, 2)
-	_pad("PadSurge1", SURGE_COL, S4, 1)
-	_put("res://scenes/actors/gem.tscn", "GemTop1", 142, S4 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemTop2", 144, S4 - 1)
-	for c in [152, 154]:
-		_put("res://scenes/actors/gem.tscn", "GemPit%d" % c, c, PIT - 1)
-	# The gap: a trail of gems in the arc of the Surge jump.
-	for c in range(148, 154, 2):
-		_put("res://scenes/actors/gem.tscn", "GemArc%d" % c, c, S4 - 3)
-	_put("res://scenes/actors/checkpoint.tscn", "CheckpointD", 158, S4, {"checkpoint_id": "cp_d"})
-	_mono("StacksExit", "stacks_exit", _p(161, S4), Vector2(128, 96))
-	_put("res://scenes/actors/gem.tscn", "GemExit1", 162, S4 - 1)
-	_put("res://scenes/actors/gem.tscn", "GemExit2", 164, S4 - 1)
+	# --- U: the undercroft (optional): through the cracked wall at the foot of the lift ---
+	_put("res://scenes/kit/wall_cracked.tscn", "CrackedWall2", UNDER_WALL, R3, {"size_tiles": Vector2i(1, 2)})
+	_pick("bell", "GemBellLiftFoot", 116, R3, 40)
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointUnder", 122, R3, {"checkpoint_id": "cp_under"})
+	_put("res://scenes/kit/pickup_fish.tscn", "FishUnder", 121, R3, {"_dy": -16.0})
+	for c in [124, 126]:
+		# a short roll (90 px/s for 2.5 s = 225 px): a ball burns out before it can reach the shaft's edge at col 134
+		_put("res://scenes/kit/crawler_bot.tscn", "UnderCrawler%d" % c, c, R3 - 4, {"crawl_range": 20.0, "roll_speed": 90.0, "roll_time": 2.5})
+	_putx("res://scenes/kit/electric_floor.tscn", "StripUnder", 128.0 * T + 16.0, R3 * T, {"width_tiles": 3, "start_offset": 0.7})
+	_pick(yarn, "GemUnder1", 124, R3)
+	_pick(yarn, "GemUnder2", 133, R3)
+	_pick("mouse", "GemMouseUnder1", 128, R3, 76)
+	_pad("PadSpringU1", 135, 38, 2)
+	_pad("PadSpringU2", 140, 38, 2)
+	_pad("PadSpringU3", 136, R2, 2)
+	_pad("PadSpringU4", 139, R2, 2)
+	_pick("bell", "GemBellUnderPillar", 137, R2, 16)
+	_put("res://scenes/kit/sentry_turret.tscn", "TurretUnder", 143, R3, {"detect_range": 190.0})
+	_pick("mouse", "GemMouseUnder2", 142, R3, 16)
+	_pick("bell", "GemBellUnder", 142, R3, 62)
+	_put("res://scenes/kit/pickup_fish.tscn", "FishUnder2", 139, R2, {"_dy": -16.0})
+
+	# --- G: Spring up the exit tower, falling platforms over the pit, the exit ---
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointGate", 149, R5, {"checkpoint_id": "cp_gate"})
+	_mono("SpringHintCombine", "spring_hint_combine", _p(PAD3_COL - 3, R5), Vector2(96, 96))
+	_pad("PadSpring3", PAD3_COL, R5, 2)
+	_pick(yarn, "GemTower1", 153, R6)
+	_pick(yarn, "GemTower2", 155, R6)
+	for k in 2:
+		_putx("res://scenes/kit/platform_falling.tscn", "FallExit%d" % k, (XPIT[0] + 2 + k * 4) * T, R6 * T,
+			{"width_tiles": 2, "fall_delay": 0.9, "respawn_time": 3.0})
+	_pad("PadSpringExit", XPIT[1], R5, 2)
+	_pick("bell", "GemBellExit", 160, R6, 70)
+	_put("res://scenes/actors/checkpoint.tscn", "CheckpointExit", 166, R6, {"checkpoint_id": "cp_exit"})
+	_mono("StacksExit", "stacks_exit", _p(167, R6), Vector2(128, 96))
+	_pick(yarn, "GemExit1", 168, R6)
+	_pick(yarn, "GemExit2", 169, R6)
 
 
 func _pad(node_name: String, col: int, row: int, power: int) -> void:
@@ -584,14 +776,15 @@ func _mono(node_name: String, line_id: String, pos: Vector2, size: Vector2) -> v
 
 
 func _stoppers() -> void:
-	## Invisible bot walls (physics layer 7): Bot1 walks cols 20-27, the gallery bot cols 84-93.
-	for col in [19, 28, BOT_RANGE[0], BOT_RANGE[1]]:
-		var floor_row := G if col < 40 else S3
+	## Invisible bot walls (physics layer 7): Bot1 walks cols 20-27, the gallery bot cols 83-94,
+	## the hopper cols 95-100 (so it cannot hop into a pit), the roof bot cols 84-87.
+	for d in [[19, G], [28, G], [94, R3], [101, R3], [BOT_RANGE[0], R4], [BOT_RANGE[1], R4], [83, R5], [88, R5]]:
+		var col: int = d[0]
 		var sb := StaticBody2D.new()
 		sb.name = "Stopper%d" % col
 		sb.collision_layer = 64
 		sb.collision_mask = 0
-		sb.position = Vector2(col * T + T / 2.0, floor_row * T)
+		sb.position = Vector2(col * T + T / 2.0, d[1] * T)
 		var cs := CollisionShape2D.new()
 		var r := RectangleShape2D.new()
 		r.size = Vector2(T, 3 * T)
@@ -606,9 +799,9 @@ func _stoppers() -> void:
 func _puddles() -> void:
 	## [name, centre col, row, width px]
 	var defs := [
-		["PuddleA1", 9.0, G, 128.0], ["PuddleA2", 25.0, G, 160.0], ["PuddleShed", 47.0, S1, 128.0],
-		["PuddleRoof", 61.0, S3, 160.0], ["PuddleRun", 133.0, S3, 128.0], ["PuddleTop", 143.0, S4, 96.0],
-		["PuddleLand", 160.0, S4, 128.0],
+		["PuddleA1", 9.0, G, 128.0], ["PuddleA2", 25.0, G, 160.0], ["PuddleShed", 47.0, R1, 128.0],
+		["PuddleRoof", 64.0, R3, 96.0], ["PuddleRoofE1", 83.0, R5, 128.0], ["PuddleRoofE2", 111.0, R5, 160.0],
+		["PuddleRun", 149.0, R5, 96.0], ["PuddleTop", 154.0, R6, 96.0], ["PuddleLand", 168.0, R6, 128.0],
 	]
 	for d in defs:
 		var z := PuddleZone.new()
@@ -621,9 +814,9 @@ func _puddles() -> void:
 func _poles() -> void:
 	## Floodlights on poles. [col, base row, flicker, energy, height px]
 	var defs := [
-		[8, G, false, 1.5, 170], [30, G, true, 1.6, 150], [35, S1, false, 1.6, 120], [52, S1, true, 1.5, 150],
-		[62, S3, false, 1.5, 170], [131, S3, false, 1.4, 150], [136, S3, true, 1.5, 120], [141, S4, false, 1.5, 150],
-		[157, S4, false, 1.4, 170], [165, S4, true, 1.6, 150],
+		[8, G, false, 1.5, 170], [30, G, true, 1.6, 150], [35, R1, false, 1.6, 120], [52, R1, true, 1.5, 150],
+		[62, R3, false, 1.5, 170], [72, R5, false, 1.5, 150], [89, R5, true, 1.5, 150], [115, R5, false, 1.4, 150],
+		[150, R5, false, 1.4, 140], [153, R6, true, 1.5, 120], [165, R6, false, 1.4, 170], [168, R6, true, 1.6, 150],
 	]
 	var i := 0
 	for d in defs:
@@ -665,13 +858,18 @@ func _poles() -> void:
 
 
 func _lamps() -> void:
-	## Lamps inside the gallery and the bay, and the rotating beacons on the perimeter side.
+	## Lamps inside the corridor, the gallery, the tower and the bay, and the rotating beacon at the exit.
 	var defs := [
-		["LampConduit", 67, S3 - 2, 1.5, WarningLight.Mode.FLICKER], ["LampCrates", 75, S3 - 3, 1.4, WarningLight.Mode.STEADY],
-		["LampBot", 88, S3 - 4, 1.5, WarningLight.Mode.STEADY], ["LampShutter", 97, S3 - 3, 1.4, WarningLight.Mode.STEADY],
-		["LampBay1", 108, S3 + 1, 1.6, WarningLight.Mode.STEADY], ["LampBay2", 120, S3 + 1, 1.6, WarningLight.Mode.STEADY],
-		["LampGate", 127, S3 - 3, 1.4, WarningLight.Mode.STEADY],
-		["BeaconA", 168, S4 - 5, 1.2, WarningLight.Mode.ROTATE],
+		["LampCorr1", 74, R3 - 3, 1.4, WarningLight.Mode.STEADY], ["LampCorr2", 96, R3 - 3, 1.4, WarningLight.Mode.STEADY],
+		["LampCorr3", 113, R3 - 3, 1.4, WarningLight.Mode.STEADY],
+		["LampConduit", 109, R4 - 2, 1.5, WarningLight.Mode.FLICKER], ["LampCrates", 100, R4 - 3, 1.4, WarningLight.Mode.STEADY],
+		["LampBot", 88, R4 - 4, 1.5, WarningLight.Mode.STEADY], ["LampShutter", 77, R4 - 3, 1.4, WarningLight.Mode.STEADY],
+		["LampTower", 100, 7, 1.4, WarningLight.Mode.STEADY], ["LampTop", 100, 6, 1.3, WarningLight.Mode.FLICKER],
+		["LampUnder1", 124, R3 - 3, 1.3, WarningLight.Mode.STEADY], ["LampUnder2", 131, R3 - 3, 1.3, WarningLight.Mode.FLICKER],
+		["LampUnder3", 137, 29, 1.4, WarningLight.Mode.STEADY], ["LampUnder4", 137, 35, 1.3, WarningLight.Mode.STEADY],
+		["LampBay1", 126, R5 + 1, 1.6, WarningLight.Mode.STEADY], ["LampBay2", 138, R5 + 1, 1.6, WarningLight.Mode.STEADY],
+		["LampGate", 145, R5 - 3, 1.4, WarningLight.Mode.STEADY],
+		["BeaconA", 171, R6 - 5, 1.2, WarningLight.Mode.ROTATE],
 	]
 	for d in defs:
 		var lamp := WarningLight.new()

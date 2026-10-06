@@ -6,10 +6,13 @@
 extends SceneTree
 
 const DEFAULT_STOPS := [
-	"130:a_arrival:1152", "900:b1_wall_foot:1152", "1072:b1_pad:1152", "1250:b2_shed:960", "1500:b2_ledge:768",
-	"1900:c_long_roof:576", "2150:d_conduit:576", "2500:e_crates:576", "2800:e_bot:576", "3100:e_switch:576",
-	"3300:f_bay_enter:576", "3700:f_bay_mid:576", "4020:f_bay_gate:576", "4300:g_roof_run:576", "4440:g_tower_foot:576",
-	"4600:g_tower_top:384", "4900:g_gap:384", "5200:g_exit_roof:384", "5340:g_exit:384",
+	"130:a_arrival:1408", "1000:b1_wall_foot:1408", "1250:b2_shed:1216", "1500:b2_ledge:1024", "1800:c_long_roof:832",
+	"2150:c_corridor_mouth:832", "2500:c_crawlers:832", "2800:c_pit1:832", "3100:c_hopper:832", "3350:c_pit2:832",
+	"3650:c_lift_foot:832", "3640:d_lift_top:640", "3440:d_conduit:640", "3260:d_crates:640", "2900:d_bot:640",
+	"2520:d_switch:640", "2200:d_light_well:640", "2400:e_roof_start:448", "2620:e_pump_house:448", "2820:e_turret:448",
+	"2960:e_barrels:448", "3170:e_vent_pad:448", "3250:e_vent_pillar:256", "3230:e_crane_deck:128", "3560:e_skywalk:128",
+	"3700:e_roof_east:448", "3770:u_lift_foot:832", "4000:u_corridor:832", "4300:u_shaft_edge:832", "4420:u_pillar:1024", "4330:u_west_pit:1216", "4580:u_far_landing:832", "4000:f_bay:448", "4560:f_gate:448", "4900:g_tower_foot:448", "5000:g_tower_top:256",
+	"5300:g_exit_pit:256", "5420:g_exit:256",
 ]
 
 var _stops: Array = []

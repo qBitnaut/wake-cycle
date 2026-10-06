@@ -9,6 +9,8 @@
 ##   edge      x of the wall face (kind "wall") or of the take-off lip (kind "gap")
 ##   kind      "wall" (a climb: take-off before a face) or "gap" (a long jump)
 ##   tx0, tx1  the landing box x range; ty its surface y (standing, +-6 px)
+##   alt       optional: more landing boxes [[x0, x1, y], ...] that also count (a higher ledge a strong
+##             Spring double jump reaches; the climb is still made)
 ##   offsets   optional: take-off offsets to sweep instead of the defaults (a short tread)
 ##   moves     [[power, style, intended]] power 0 plain, 1 Surge, 2 Spring;
 ##             style "single" or "double"; intended true -> must land in at least
@@ -68,6 +70,9 @@ func prepare() -> void:
 	# intact one would only get in the way of a climb that starts on the far side of it.
 	for w in room.get_tree().get_nodes_in_group("kit_wall"):
 		w.queue_free()
+	# A long hop must not carry the cat through the room's exit (it would leave the scene mid-sweep).
+	for ex in room.find_children("RoomExit", "Area2D", true, false):
+		ex.set("monitoring", false)
 	for n in room.find_children("*", "Node", true, false):
 		var path := String(n.get_script().resource_path) if n.get_script() != null else ""
 		if n.get("phase_through") != null:
@@ -112,6 +117,18 @@ func _apex_frames(power: int) -> float:
 	return v / g * 60.0
 
 
+## Is the cat standing in the spot's landing box, or in one of its `alt` boxes ([[x0, x1, y], ...]: a
+## higher surface a strong jump may also land on, which is no failure of the climb)?
+func _in_box(spot: Dictionary) -> bool:
+	var p: Vector2 = cat.global_position
+	if p.x >= spot["tx0"] and p.x <= spot["tx1"] and absf(p.y - spot["ty"]) < 6.0:
+		return true
+	for a in spot.get("alt", []):
+		if p.x >= a[0] and p.x <= a[1] and absf(p.y - a[2]) < 6.0:
+			return true
+	return false
+
+
 ## One trial. dj < 0: a single jump released after `hold` frames (< 0: never).
 ## dj >= 0: a double jump pressed on frame dj (the jump held until just before it).
 func trial(spot: Dictionary, power: int, jump_x: float, dj: int, hold: int) -> bool:
@@ -150,7 +167,7 @@ func trial(spot: Dictionary, power: int, jump_x: float, dj: int, hold: int) -> b
 			break
 		if cat.global_position.y > y0 + 700.0:
 			break
-	var ok: bool = cat.is_on_floor() and cat.global_position.x >= spot["tx0"] and cat.global_position.x <= spot["tx1"] and absf(cat.global_position.y - spot["ty"]) < 6.0
+	var ok: bool = cat.is_on_floor() and _in_box(spot)
 	_stop()
 	await _ticks(2)
 	return ok
@@ -202,7 +219,7 @@ func trial_events(spot: Dictionary, power: int, jump_x: float, events: Array) ->
 			break
 		if cat.global_position.y > y0 + 700.0:
 			break
-	var ok: bool = cat.is_on_floor() and cat.global_position.x >= spot["tx0"] and cat.global_position.x <= spot["tx1"] and absf(cat.global_position.y - spot["ty"]) < 6.0
+	var ok: bool = cat.is_on_floor() and _in_box(spot)
 	_stop()
 	await _ticks(2)
 	return ok

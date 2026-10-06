@@ -4,14 +4,18 @@ extends Level
 ## easing. The cat arrives with its mind awake and Surge behind it, and the
 ## room teaches Spring and then the shockwave with level design and the cat's
 ## own thoughts only:
-##   1 discovery  a Spring pad at the foot of a 7-tile wall, a ledge above
+##   1 discovery  a Spring pad at the foot of a 6-tile wall, a ledge above
 ##   2 use it     a chain of Spring jumps up two ledges to the long roof
+##   corridor     the underfloor run: crawlers, a moving platform, a hopper, falling platforms,
+##                a Spring pad in each pit, a lift up to the gallery
 ##   conduit      a sparking power conduit (unavoidable, harmless): the shockwave
 ##   shockwave    a crate stack, a patrol bot in a low corridor, a shock switch and shutter
-##   mirror       a loader bot that copies the cat's steps: walk it onto its plate
-##   3 combine    Spring up a tower, Surge across a ten-tile gap, to the exit roof
+##   roof         a cracked wall and its crawlspace, a turret, barrels that blow a sealed door
+##                (the vent tower: bone and memory), a laser bot, the mirror bay
+##   3 combine    Spring up the exit tower, falling platforms over the exit pit, the exit roof
 ##
-## Powers come only from the PowerPads here (Spring and Surge); the shockwave
+## The room is 48 rows tall (the tier camera, Level.CameraFollow.TIERS). Powers come only
+## from the PowerPads here (Spring; Surge is allowed but not used); the shockwave
 ## only from the ConduitEvent. `power_grants`, `power_violations` and
 ## `shock_unlocks` are audit hooks. The rain follows the camera in both axes
 ## (the room is tall), the night skyline sits on the horizon below the view and
@@ -45,7 +49,8 @@ func _ready() -> void:
 	_suburbs = get_node_or_null("Suburbs")
 	for c in get_tree().get_nodes_in_group("breakable"):
 		# Crates already broken in an earlier visit free themselves in their own _ready.
-		if is_ancestor_of(c) and not c.is_queued_for_deletion():
+		# (The kit's cracked walls are in the group too: they are secrets, not the lesson.)
+		if is_ancestor_of(c) and not c.is_queued_for_deletion() and not c is KitWall:
 			_crates.append(c)
 	crates_total = _crates.size()
 	_follow_camera(1.0)
@@ -129,6 +134,16 @@ func _setup_web() -> void:
 	win["wakeTeleport"] = cb
 
 
+func _pos_of(node_name: String) -> Variant:
+	var n := get_node_or_null(node_name) as Node2D
+	return [n.global_position.x, n.global_position.y] if n else null
+
+
+func _stunned(node_name: String) -> Variant:
+	var n := get_node_or_null(node_name)
+	return n.is_stunned() if n and n.has_method("is_stunned") else null
+
+
 func _flag(node_name: String, prop: String) -> Variant:
 	var n := get_node_or_null(node_name)
 	return n.get(prop) if n else null
@@ -159,6 +174,14 @@ func _publish() -> void:
 		"patrol": [patrol.global_position.x, patrol.global_position.y, int(patrol.state)] if patrol else null,
 		"mirror": [bot.global_position.x, bot.global_position.y, bot.awake] if bot else null,
 		"plate": _flag("BayPlate", "active"), "bayShutter": _flag("BayShutter", "open"),
+		"mover": _pos_of("MoverPit1"), "lift": _pos_of("LiftC"),
+		"phase": {"strip": _flag("StripFloor", "phase"), "steam": _flag("VentSteam1", "phase"), "flame": _flag("VentFlame1", "phase")},
+		"phaseT": {"strip": _flag("StripFloor", "phase_time"), "steam": _flag("VentSteam1", "phase_time"), "flame": _flag("VentFlame1", "phase_time")},
+		"turretStun": _stunned("Turret1"), "rbotStun": _stunned("RoofBot"),
+		"door": get_node_or_null("BlastDoor") != null and not get_node("BlastDoor").is_queued_for_deletion(),
+		"crack": get_node_or_null("CrackedWall1") != null and not get_node("CrackedWall1").is_queued_for_deletion(),
+		"got": {"bone": GameState.is_collected("/root/Room3/GemBoneStacks"), "memory": GameState.is_collected("/root/Room3/MemoryStacks"), "mouse": GameState.is_collected("/root/Room3/GemMouseCloset")},
+		"groundAhead": _probe(cat.global_position + Vector2(26, -2), cat.global_position + Vector2(26, 70)),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 		# Probes for the audit's reactive runner: a wall 34 px ahead, floor within 80 px below, patrol bots.
 		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),

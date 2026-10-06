@@ -18,8 +18,9 @@ signal credential_accepted
 signal gate_opened
 
 const GATE_ID := "r4_gate"
-## World y of the camera's resting view centre on the street (limit top 24 + 180, offset -25).
-const STREET_VIEW_Y := 179.0
+## The camera's view centre on the street is this far above the gate's base (the ground sits near
+## the bottom of the view and the 7-tile gate fits under the lintel).
+const STREET_VIEW_UP := 140.0
 
 var relays: Array[PowerRelay] = []
 var scanner: SecurityScanner
@@ -36,7 +37,10 @@ var panning := false
 var pans := 0
 var events: Array[String] = []
 
-var _shaker: ScreenShake
+## The level's camera driver (made in Level._ready, after this node's).
+var _rig: LevelCamera:
+	get:
+		return (get_parent() as Level).camera_rig
 
 
 func _ready() -> void:
@@ -81,25 +85,17 @@ func _on_relay(_index: int) -> void:
 	_pan_to_gate(2.6 if count >= 3 else 1.6)
 
 
-## The camera centre that shows the scanner and the gate together, on the street line
-## (the level's pinned camera centre), wherever the cat is: up a tower or down a vault.
+## The camera centre that shows the scanner and the gate together, on the street line,
+## wherever the cat is: up a tower or down a vault.
 func gate_view() -> Vector2:
-	return Vector2((scanner.global_position.x + gate.global_position.x) * 0.5, STREET_VIEW_Y)
+	return Vector2((scanner.global_position.x + gate.global_position.x) * 0.5, gate.global_position.y - STREET_VIEW_UP)
 
 
-## The camera offset that puts the view centre at `world`: the level's limits clamp the
-## camera's own position, the offset is added after, so it is `world` minus that position.
-func _offset_for(world: Vector2) -> Vector2:
-	return world - (cat.camera.get_screen_center_position() - cat.camera.offset)
-
-
-func _shake() -> ScreenShake:
-	if _shaker == null or not is_instance_valid(_shaker):
-		ScreenShake.shake_at(self, 0.0, 0.05)
-		for c in cat.camera.get_children():
-			if c is ScreenShake:
-				_shaker = c
-	return _shaker
+## Tween the level camera's pan blend (0 follows the cat, 1 sits on `pan_to`).
+func _blend(to: float, secs: float) -> void:
+	var tw := create_tween()
+	tw.tween_property(_rig, "pan_blend", to, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw.finished
 
 
 ## Pan the camera to the gatehouse, hold, and come back. The cat is held still
@@ -112,18 +108,13 @@ func _pan_to_gate(hold: float) -> void:
 	var was_free := cat.can_move
 	cat.set_can_move(false)
 	cat.velocity.x = 0.0
-	var s := _shake()
-	var from := s.get_base_offset()
-	var target := _offset_for(gate_view())
-	var dist := absf(target.x - from.x)
-	var secs := clampf(dist / 1800.0, 0.6, 1.5)
-	var tw := create_tween()
-	tw.tween_method(s.set_base_offset, from, target, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tw.finished
+	var target := gate_view()
+	var from := cat.camera.get_screen_center_position()
+	var secs := clampf(from.distance_to(target) / 1800.0, 0.6, 1.5)
+	_rig.pan_to = target
+	await _blend(1.0, secs)
 	await get_tree().create_timer(hold).timeout
-	var back := create_tween()
-	back.tween_method(s.set_base_offset, s.get_base_offset(), from, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await back.finished
+	await _blend(0.0, secs)
 	panning = false
 	if was_free and not scanning:
 		cat.set_can_move(true)
@@ -160,16 +151,11 @@ func _scan() -> void:
 	gate.open_gate()
 	if sky:
 		sky.set_dawn(1.0, 6.0)
-	var s := _shake()
-	var from := s.get_base_offset()
-	var target := _offset_for(Vector2(gate.global_position.x - 50.0, STREET_VIEW_Y))
-	var tw := create_tween()
-	tw.tween_method(s.set_base_offset, from, target, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_rig.pan_to = Vector2(gate.global_position.x - 50.0, gate.global_position.y - STREET_VIEW_UP)
+	_blend(1.0, 1.0)
 	await gate.opened
 	await get_tree().create_timer(0.8).timeout
-	var back := create_tween()
-	back.tween_method(s.set_base_offset, s.get_base_offset(), from, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await back.finished
+	await _blend(0.0, 1.0)
 	if exit_door:
 		exit_door.set("enabled", true)
 	scanning = false

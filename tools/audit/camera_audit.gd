@@ -127,8 +127,20 @@ func _main() -> void:
 	await ticks(60)
 	note("the driver resumes after the cutscene", cam.limit_top == saved[1] and absf(centre().y - (cat.global_position.y - 25.0)) < 90.0, str(centre()))
 
-	# The 360 px rooms and Room 3 are untouched; a redesigned tall room (camera_follow TIERS) is
-	# driven, with the exact view rect, and gets a walk through its tiers.
+	# A camera shake (a pound, an explosion) must not freeze the tier camera: ScreenShake restores a base offset
+	# every frame, and the driver keeps that base on its own view.
+	await load_room("res://scenes/levels/tall_demo.tscn")
+	place(Vector2(3 * 32 + 16, 30 * 32))
+	await ticks(60)
+	ScreenShake.shake_at(room, 0.6, 0.3)
+	await ticks(40)
+	var y_before := centre().y
+	place(Vector2(3 * 32 + 16, 20 * 32))
+	await ticks(150)
+	note("after a camera shake the tier camera still follows the cat", absf(centre().y - y_before) > 100.0 and absf(centre().y - (cat.global_position.y - 25.0)) < 60.0, "view y %.0f -> %.0f, cat y %.0f" % [y_before, centre().y, cat.global_position.y])
+
+	# The rooms that keep the old centred camera are untouched; a redesigned tall room (TIERS) is driven,
+	# with the exact view rect, and gets a walk through its tiers.
 	for id in ["room1", "room2", "room3", "room4", "home", "test_room"]:
 		await load_room("res://scenes/levels/%s.tscn" % id)
 		await ticks(30)

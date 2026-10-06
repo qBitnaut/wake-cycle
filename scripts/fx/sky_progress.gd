@@ -42,6 +42,8 @@ extends Node
 var progress := 0.0
 var target := 0.0
 var dawn := 0.0
+## 0..1: the cat is under a roof or underground (a room sets it): the rain loop falls silent.
+var shelter := 0.0
 
 var _cat: Node2D
 var _ambience: Node  # the sibling Ambience (untyped: a typed reference drags cat.gd in before the autoloads exist when a tool loads this script)
@@ -129,7 +131,7 @@ func _apply(force: bool, delta := 0.0) -> void:
 		var moon := backdrop.get_node_or_null("MoonLayer") as Node2D
 		if moon:
 			moon.modulate.a = clampf(1.0 - p * 1.2, 0.0, 1.0)
-	var raw := lerpf(1.0, rain_floor, p) * (1.0 - dawn)
+	var raw := lerpf(1.0, rain_floor, p) * (1.0 - dawn) * (1.0 - shelter)
 	var k := snappedf(raw, 0.1)
 	if _ambience:
 		_ambience.set("rain_level", raw)

@@ -40,6 +40,10 @@ var _lim := Rect2()            ## exact view limits as applied (eased towards th
 var _was_owned := false
 ## A cinematic drift added to the view centre after clamping (Room 1's opening pan).
 var look_offset := Vector2.ZERO
+## A cutscene pan (the Master Gate finale): the view centre blends from the follow position to
+## `pan_to` (world px) by `pan_blend` (0 follow .. 1 on `pan_to`). Tween `pan_blend`; set `pan_to` first.
+var pan_to := Vector2.ZERO
+var pan_blend := 0.0
 
 
 func _init() -> void:
@@ -189,11 +193,13 @@ func _ease_limits() -> void:
 ## The view centre, whole px, as the camera offset (the camera sits on the cat).
 func _apply() -> void:
 	var cp := cat.global_position
-	var off := Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y) + look_offset
+	var c := Vector2(_cx, _cy)
+	if pan_blend > 0.0:
+		c = c.lerp(pan_to, pan_blend)
+	var off := Vector2(roundf(c.x) - cp.x, roundf(c.y) - cp.y) + look_offset
 	cat.camera.offset = off
-	# A ScreenShake on the camera (the first explosion, the conduit, a barrel creates one) puts the offset
-	# back to its own resting offset every frame: tell it where the view rests now, or the view is
-	# dragged back to the spot the camera was at when the shake was created.
-	var shake := cat.camera.get_node_or_null("ScreenShake") as ScreenShake
-	if shake != null:
-		shake.set_base_offset(off)
+	# A ScreenShake on the camera restores its own base offset every frame: keep that base on the driver's
+	# view, or the first shake (a pound, an explosion) would freeze the camera where it was.
+	for k in cat.camera.get_children():
+		if k is ScreenShake:
+			(k as ScreenShake).set_base_offset(off)

@@ -218,26 +218,67 @@ static func room3() -> Array:
 
 
 static func room4() -> Array:
-	var g := 320.0
-	return [
+	## Coordinates are tools/build_room4.gd's: the surface is row 12 (y = 384); the floors of L1..L4 are
+	## rows 17, 22, 27, 35. Every required step is a plain hop of 2 rows at most; the Spring climbs and the
+	## double-jump gap are the intended exceptions.
+	var g := 384.0
+	var tread := [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0]
+	var out := [
 		{"name": "R4 P3 guardhouse roof (6 rows)", "sx": 115.0 * T + 20.0, "sy": g, "d": 1.0, "edge": 118.0 * T, "kind": "wall",
-			"tx0": 118.0 * T + 10.0, "tx1": 130.0 * T, "ty": 128.0, "moves": SPRING_CLIMB},
-		{"name": "R4 Relay 1 tower (6 rows)", "sx": 220.0 * T + 20.0, "sy": g, "d": 1.0, "edge": 222.0 * T, "kind": "wall",
-			"tx0": 222.0 * T + 10.0, "tx1": 229.0 * T, "ty": 128.0, "moves": SPRING_CLIMB},
+			"tx0": 118.0 * T + 10.0, "tx1": 130.0 * T, "ty": 6.0 * T, "moves": SPRING_CLIMB},
+		{"name": "R4 catwalk gap (5 tiles, west from the roof)", "sx": 121.0 * T, "sy": 6.0 * T, "d": -1.0, "edge": 118.0 * T, "kind": "gap",
+			"tx0": 100.0 * T, "tx1": 113.0 * T + 10.0, "ty": 6.0 * T,
+			"moves": [[0, "double", true], [0, "single", false], [1, "single", null], [1, "double", null]]},
 		{"name": "R4 Impact ledge (2 tiles up)", "sx": 139.0 * T - 60.0, "sy": g, "d": 1.0, "edge": 141.0 * T, "kind": "wall",
-			"tx0": 141.0 * T + 8.0, "tx1": 146.0 * T - 8.0, "ty": 8.0 * T, "moves": PLAIN_HOP},
-		{"name": "R4 trench stair (2 tiles up)", "sx": 196.0 * T + 8.0, "sy": 19.0 * T, "d": 1.0, "edge": 198.0 * T, "kind": "wall",
-			"tx0": 198.0 * T + 8.0, "tx1": 199.0 * T + 24.0, "ty": 17.0 * T, "offsets": [12.0, 18.0, 24.0, 30.0, 36.0, 42.0],
-			"moves": PLAIN_HOP},
-		{"name": "R4 vault stair, riser 1 (floor -> tread 1, 1 tile)", "sx": 313.0 * T - 120.0, "sy": 14.0 * T, "d": 1.0, "edge": 313.0 * T, "kind": "wall",
-			"tx0": 313.0 * T + 8.0, "tx1": 315.0 * T - 8.0, "ty": 13.0 * T, "moves": PLAIN_HOP},
-		{"name": "R4 vault stair, riser 2 (tread 1 -> tread 2, 1 tile)", "sx": 313.0 * T + 16.0, "sy": 13.0 * T, "d": 1.0, "edge": 315.0 * T, "kind": "wall",
-			"tx0": 315.0 * T + 8.0, "tx1": 317.0 * T - 8.0, "ty": 12.0 * T, "offsets": [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0],
-			"moves": PLAIN_HOP},
-		{"name": "R4 vault stair, riser 3 (tread 2 -> the surface, 2 tiles)", "sx": 315.0 * T + 16.0, "sy": 12.0 * T, "d": 1.0, "edge": 317.0 * T, "kind": "wall",
-			"tx0": 317.0 * T + 8.0, "tx1": 330.0 * T, "ty": g, "offsets": [12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0, 54.0],
-			"moves": PLAIN_HOP},
+			"tx0": 141.0 * T + 8.0, "tx1": 146.0 * T - 8.0, "ty": 10.0 * T, "moves": PLAIN_HOP},
+		{"name": "R4 Relay 1 tower (6 rows, from the second girder)", "sx": 260.0 * T - 4.0, "sy": 8.0 * T, "d": -1.0, "edge": 258.0 * T, "kind": "wall",
+			"tx0": 249.0 * T + 8.0, "tx1": 265.0 * T - 8.0, "ty": 2.0 * T, "moves": SPRING_CLIMB},
+		{"name": "R4 cistern: hall -> first stone (2 tiles, 1 up)", "sx": 201.0 * T, "sy": 35.0 * T, "d": 1.0, "edge": 205.0 * T, "kind": "gap",
+			"tx0": 206.0 * T - 10.0, "tx1": 211.0 * T, "ty": 34.0 * T, "moves": [[0, "single", true]]},
+		{"name": "R4 cistern: stone -> stone over acid (2 tiles)", "sx": 206.0 * T + 8.0, "sy": 34.0 * T, "d": 1.0, "edge": 211.0 * T, "kind": "gap",
+			"tx0": 213.0 * T - 10.0, "tx1": 217.0 * T, "ty": 34.0 * T, "moves": [[0, "single", true]]},
 	]
+	# The shaft's ladder: the floor (27) -> girders at rows 25 (right), 23 (left), 21, 19, 17, 15, 13 -> the surface.
+	out.append({"name": "R4 ladder 0 (floor -> row 25)", "sx": 226.0 * T, "sy": 27.0 * T, "d": 1.0, "edge": 229.0 * T, "kind": "wall",
+		"tx0": 229.0 * T + 8.0, "tx1": 234.0 * T - 8.0, "ty": 25.0 * T, "offsets": tread, "moves": PLAIN_HOP})
+	var rows := [25, 23, 21, 19, 17, 15, 13]
+	for i in range(1, rows.size()):
+		var right: bool = i % 2 == 0     # the target girder is on the right (cols 229-233)
+		var from_row: int = rows[i - 1]
+		var to_row: int = rows[i]
+		if right:
+			out.append({"name": "R4 ladder %d (row %d -> %d)" % [i, from_row, to_row], "sx": 227.0 * T + 16.0, "sy": from_row * T, "d": 1.0,
+				"edge": 229.0 * T, "kind": "wall", "tx0": 229.0 * T + 8.0, "tx1": (238.0 if to_row == 13 else 234.0) * T - 8.0, "ty": to_row * T, "offsets": tread, "moves": PLAIN_HOP})
+		else:
+			out.append({"name": "R4 ladder %d (row %d -> %d)" % [i, from_row, to_row], "sx": 231.0 * T + 16.0, "sy": from_row * T, "d": -1.0,
+				"edge": 229.0 * T, "kind": "wall", "tx0": 224.0 * T + 8.0, "tx1": 229.0 * T - 8.0, "ty": to_row * T, "offsets": tread, "moves": PLAIN_HOP})
+	out.append({"name": "R4 ladder top (row 13 -> the plaza)", "sx": 235.0 * T, "sy": 13.0 * T, "d": 1.0, "edge": 238.0 * T, "kind": "wall",
+		"tx0": 238.0 * T + 8.0, "tx1": 244.0 * T, "ty": g, "offsets": tread, "moves": PLAIN_HOP})
+	# The vault's stair (floor row 18, treads at rows 17, 16, 15, 14, the surface) and the armoury's (floor 17, treads 16, 15, 14).
+	var stair := [["vault", 300.0, 18, 302, [17, 16, 15, 14]], ["armoury", 326.0, 17, 328, [16, 15, 14]]]
+	for st in stair:
+		var x0: float = st[1] * T
+		var edge: float = float(st[3]) * T
+		var prev_row: int = st[2]
+		var k := 0
+		for tr in st[4]:
+			if k < st[4].size() - 1:
+				prev_row = tr
+				edge += 2.0 * T
+				k += 1
+				continue
+			out.append({"name": "R4 %s stair tread %d (row %d -> %d)" % [st[0], k + 1, prev_row, tr], "sx": x0 if k == 0 else edge - 16.0, "sy": prev_row * T,
+				"d": 1.0, "edge": edge, "kind": "wall", "tx0": edge + 8.0, "tx1": edge + 2.0 * T - 8.0, "ty": tr * T, "offsets": tread if k > 0 else null,
+				"moves": PLAIN_HOP})
+			prev_row = tr
+			edge += 2.0 * T
+			k += 1
+		out.append({"name": "R4 %s stair out (row %d -> the surface)" % [st[0], prev_row], "sx": edge - 16.0, "sy": prev_row * T, "d": 1.0, "edge": edge,
+			"kind": "wall", "tx0": edge + 8.0, "tx1": edge + 6.0 * T, "ty": g, "offsets": tread, "moves": PLAIN_HOP})
+	for sp in out:
+		if sp.has("offsets") and sp["offsets"] == null:
+			sp.erase("offsets")
+	return out
 
 
 static func test_room() -> Array:

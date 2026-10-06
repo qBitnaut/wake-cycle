@@ -13,8 +13,12 @@ extends Level
 ## and then the Master Gate: three power relays (Spring to a high console,
 ## Phase through a laser maze, Impact and the shockwave in a lower vault), the
 ## security scanner, "supervisor credential accepted", and the way out to the
-## dawn-lit road. See PerimeterFinale. The sky lightens with the cat's x
-## (SkyProgress).
+## dawn-lit road. See PerimeterFinale. The sky lightens along the route (SkyProgress,
+## the cat's x: the route only ever advances east, down through the hatches and back up the shafts).
+##
+## A tall room (camera_follow = TIERS, docs/LEVELS.md): the surface perimeter over four underground
+## levels (service ducts, a bunker, a flooded cistern), reached by ground-pounding through floors.
+## Underground the rain is shut off (the sheltered cat hears none and sees none).
 ##
 ## Direct start or test: the room makes sure the mind and the shockwave are set.
 ##
@@ -22,7 +26,8 @@ extends Level
 ## every physics frame; window.wakeTeleport(x, y) moves the cat and
 ## window.wakeStrike() fires a lightning strike.
 
-const RAIN_NODES := ["RainFar", "RainNear"]
+## The surface row's y (tools/build_room4.gd: G = 12): deeper than this is underground.
+const SURFACE_Y := 384.0
 ## Phase's dash lasts a little longer here than the cat's default (0.16 s): a
 ## fence is 6 px of beam to a 22 px cat, and 0.2 s (82 px) makes the window to
 ## press Shift about a third of a second.
@@ -32,7 +37,9 @@ var power_grants: Array = []     ## [power, on_a_pad] per grant, in order
 var thunders := 0
 var finale: PerimeterFinale
 var sky: SkyProgress
+var _shelter := 0.0
 var _js_callbacks: Array = []
+var _hazards: Array = []
 var _fences: Array = []
 var _drones: Array = []
 var _lightning: LightningFX
@@ -50,7 +57,6 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	super()
-	cat.death_y = deep_bottom + 200
 	cat.dash_time = DASH_TIME
 	_thunder = AudioStreamPlayer.new()
 	_thunder.bus = &"SFX"
@@ -62,11 +68,13 @@ func _ready() -> void:
 	finale = get_node_or_null("Finale") as PerimeterFinale
 	GameState.power_changed.connect(_on_power)
 	if sky:
+		_shelter = 1.0 if cat.global_position.y > SURFACE_Y + 24.0 else 0.0
+		sky.shelter = _shelter
 		sky.snap()
-	_follow_camera()
 	if OS.has_feature("web"):
 		_fences = find_children("*", "LaserFence", true, false)
 		_drones = find_children("*", "GuardDrone", true, false)
+		_hazards = find_children("*", "KitHazard", true, false)
 		_setup_web()
 
 
@@ -88,21 +96,13 @@ func _on_power(p: int, _duration: float) -> void:
 	power_grants.append([p, on_pad])
 
 
-func _follow_camera() -> void:
-	var cx := cat.camera.get_screen_center_position().x
-	for n in RAIN_NODES:
-		var r := get_node_or_null(n) as Node2D
-		if r:
-			r.global_position.x = cx
-
-
 func _physics_process(delta: float) -> void:
 	super(delta)
-	_follow_camera()
-	# Falling through a hatch: the camera floor drops with the cat (Level eases it at 6 px a frame,
-	# which would leave the cat at the bottom edge for the first drop).
-	if cat.global_position.y > 330.0:
-		cat.camera.limit_bottom = maxi(cat.camera.limit_bottom, mini(int(cat.global_position.y) + 150, deep_bottom))
+	# Underground (below the surface row) the rain falls silent and invisible, easing in and out.
+	var under := cat.global_position.y > SURFACE_Y + 24.0
+	_shelter = move_toward(_shelter, 1.0 if under else 0.0, delta * 2.5)
+	if sky:
+		sky.shelter = _shelter
 	if OS.has_feature("web"):
 		_publish()
 
@@ -128,6 +128,19 @@ func _setup_web() -> void:
 func _flag(node_name: String, prop: String) -> Variant:
 	var n := get_node_or_null(node_name)
 	return n.get(prop) if n else null
+
+
+func _pos_of(node_name: String) -> Variant:
+	var n := get_node_or_null(node_name) as Node2D
+	return [n.global_position.x, n.global_position.y] if n else null
+
+
+## [mode, armour left, dead, x, y, stunned] of the heavy mech, or null.
+func _mech_state() -> Variant:
+	var m := get_node_or_null("Mech")
+	if m == null or not is_instance_valid(m):
+		return null
+	return [m.get("mode"), m.get("hp"), m.is_dead(), m.global_position.x, m.global_position.y, m.is_stunned()]
 
 
 func _probe(from: Vector2, to: Vector2) -> bool:
@@ -168,8 +181,17 @@ func _publish() -> void:
 		"sky": sky.progress if sky else 0.0, "dawn": sky.dawn if sky else 0.0,
 		"tint": [tint.r, tint.g, tint.b],
 		"hatches": get_tree().get_nodes_in_group("breakable").size(),
-		"shields": [is_instance_valid(get_node_or_null("ShieldS1")), is_instance_valid(get_node_or_null("ShieldS2"))],
+		"shields": [is_instance_valid(get_node_or_null("ShieldS1"))],
 		"turret": _flag("TurretP2", "state"),
+		"mech": _mech_state(),
+		"liftA": _pos_of("LiftA"), "liftB": _pos_of("LiftB"),
+		"camU3": _flag("CameraU3a", "alarms"), "turU3": _flag("TurretU3a", "alert_left"),
+		"sealArchive": is_instance_valid(get_node_or_null("SealArchive")), "sealUc": is_instance_valid(get_node_or_null("SealUndercroft")),
+		"sealArmoury": is_instance_valid(get_node_or_null("SealArmoury")), "barrel": is_instance_valid(get_node_or_null("BarrelArmoury")),
+		"gems": GameState.collected.filter(func(c): return String(c).get_file().begins_with("Gem")).size(),
+		"memory": GameState.is_collected("/root/Room4/GemMemory"), "bone": GameState.is_collected("/root/Room4/GemBone"),
+		"shelter": _shelter,
+		"haz": _hazards.filter(func(h): return is_instance_valid(h)).map(func(h): return [h.global_position.x, h.global_position.y, h.get("phase"), h.get("phase_time"), h.get("idle_time"), h.get("width_tiles") if h.get("width_tiles") != null else 1]),
 		"thunders": thunders, "flash": _lightning._level if _lightning else 0.0,
 		"wallAhead": _probe(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(34, -8)),
 		"groundBelow": _probe(cat.global_position + Vector2(0, -2), cat.global_position + Vector2(0, 80)),

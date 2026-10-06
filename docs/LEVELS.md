@@ -41,11 +41,10 @@ bottom of `limits`, so put basements inside `limits`.
 lag or jitter. It stays out of the way during a CineZoom cutscene, which lifts and restores the
 limits, and resumes after it.
 
-A `ScreenShake` on the camera (any explosion, the conduit, a barrel creates one on first use) resets
-the camera offset to its own resting offset every frame; `LevelCamera._apply` therefore also hands it
-the driver's offset (`set_base_offset`), or the tier view would be dragged back to where the camera was
-when the first shake began. Room 3 (48 rows, `TIERS`) is the reference; `camera_audit.gd` stops at the conduit
-(a shake) to prove it.
+A `ScreenShake` on the camera (a pound, an explosion) restores its own base offset every frame; the
+driver keeps that base on its own view each physics step, so a shake never freezes the tier camera
+(`camera_audit.gd` checks it). A cutscene pan (the Master Gate finale) sets `LevelCamera.pan_to` (world
+px) and tweens `pan_blend` 0..1: the view centre blends from the follow position to the target.
 
 ### Camera zones
 

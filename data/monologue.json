@@ -101,6 +101,18 @@
 		"Fences. Lasers. Lights that watch.",
 		"'Authorised units only.' ...Am I a unit now?"
 	],
+	"perimeter_depths": [
+		{"text": "Under the fence. They built a second perimeter below the first.", "text_only": true}
+	],
+	"perimeter_hollow": [
+		{"text": "This wall is thicker than the rest. It rings hollow.", "text_only": true}
+	],
+	"perimeter_cistern": [
+		{"text": "Flooded, and wired. Keep to the stones.", "text_only": true}
+	],
+	"perimeter_mech": [
+		{"text": "Armour like a wall. Only something heavy, falling, will rattle it.", "text_only": true}
+	],
 	"phase_first": [
 		"Through it?! I went through it!",
 		"Cyan. Like slipping between raindrops."

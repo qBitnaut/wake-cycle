@@ -49,7 +49,7 @@
       "pos": [1430, 302],
       "landmark": "perimeter",
       "unlocks": ["home", "signal_box"],
-      "collectibles": {"letters": [], "gems": 28},
+      "collectibles": {"letters": [], "gems": 67},
       "map_line": "map_perimeter"
     },
     {

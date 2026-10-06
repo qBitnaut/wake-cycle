@@ -127,7 +127,15 @@ The human-margin audit (`tools/audit/margins.gd`, spots in `spots.gd`, method in
 `human_sweep.gd`; every room audit and `full_game.gd` run it too) sweeps every required
 climb and long jump with ordinary input spread (take-off position, double-jump press time,
 jump hold) and asserts the intended move lands in at least 90% of it and the unintended
-ways (no power, the wrong power, a skip) in none. Looping sounds go through `LoopSfx`
+ways (no power, the wrong power, a skip) in none.
+
+The soft-lock audit (`tools/audit/softlock.gd`, usage in its header; `full_game.gd` runs it
+too) finds every place the cat can enter (by walking, falling or jumping, with a power that
+may then run out) and cannot leave: a pocket under a floor or a ledge, a hollow tunnel, or an
+area only an expired power could leave with no pad inside. Zero soft-locks, zero pockets in
+every room. It simulates the cat's real movement (calibrated against `reach.gd`), and
+`VALIDATE=1` drops the cat into each flagged region in the real scene to confirm. Re-run it
+(and `margins.gd`) after any builder change. Looping sounds go through `LoopSfx`
 (`scripts/systems/loop_sfx.gd`): a child of its source, volume set by hand from the
 distance to the cat (the web export plays audio as samples, where positional audio is not
 reliable), stopped out of range and freed with its source; the audits assert no looping

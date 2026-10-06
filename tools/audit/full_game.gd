@@ -12,7 +12,8 @@
 ##   godot --headless --path . --fixed-fps 60 --script res://tools/audit/full_game.gd
 ## FROM=room2|room3|room4|home starts the chain at that room as the previous exit leaves
 ## the cat (for iterating; the full run is the one that counts).
-## Exit code 1 on any failure. Deletes user://save.json and user://complete.json (use
+## It also runs the soft-lock audit (tools/audit/softlock.gd) over every room: zero soft-locks,
+## zero pockets. Exit code 1 on any failure. Deletes user://save.json and user://complete.json (use
 ## XDG_DATA_HOME to keep a real profile out of it).
 ##
 ## The routines extend SceneTree so each can run alone; here their source is loaded
@@ -252,6 +253,15 @@ func _main() -> void:
 		ss().session_checkpoint = ""
 		ss().session_snapshot = {}
 		RoomTransition.arriving = false
+
+	# ---- The soft-lock audit (tools/audit/softlock.gd): no room has a place the cat can enter and
+	# not leave (a pocket, or an area only a power that has run out could leave). Pure geometry
+	# and the cat's movement model: no scene is played. SOFTLOCK=0 skips it. ----
+	if OS.get_environment("SOFTLOCK") != "0":
+		var sl := routine(base + "softlock.gd")
+		sl.selftest(note)
+		await sl.audit(note, ["room1", "room2", "room3", "room4", "home", "test_room"])
+		sl.queue_free()
 
 	# ---- Room 3's lab first: the hop parameters its route uses (its own throwaway room) ----
 	var r3 := routine(base + "room3_playthrough.gd")

@@ -38,6 +38,8 @@ var _x_free := true            ## the view follows the cat horizontally (not loc
 var _y_free := true            ## CENTRED mode: the view is centred on the cat vertically
 var _lim := Rect2()            ## exact view limits as applied (eased towards the target)
 var _was_owned := false
+## A cinematic drift added to the view centre after clamping (Room 1's opening pan).
+var look_offset := Vector2.ZERO
 
 
 func _init() -> void:
@@ -187,4 +189,4 @@ func _ease_limits() -> void:
 ## The view centre, whole px, as the camera offset (the camera sits on the cat).
 func _apply() -> void:
 	var cp := cat.global_position
-	cat.camera.offset = Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y)
+	cat.camera.offset = Vector2(roundf(_cx) - cp.x, roundf(_cy) - cp.y) + look_offset

@@ -115,8 +115,13 @@ func _start_intro() -> void:
 		_hud.visible = false
 	# The camera drifts in from the room towards the sleeping cat.
 	# (The camera limit applies before the offset, so the pan is just the offset easing to 0.)
-	cat.camera.offset = Vector2(150, -25)
-	create_tween().tween_property(cat.camera, "offset", Vector2(0, -25), 7.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if camera_rig != null and camera_rig.managed:
+		# The tall room's driver owns the camera offset: the drift is its look_offset.
+		camera_rig.look_offset = Vector2(150, 0)
+		create_tween().tween_property(camera_rig, "look_offset", Vector2.ZERO, 7.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		cat.camera.offset = Vector2(150, -25)
+		create_tween().tween_property(cat.camera, "offset", Vector2(0, -25), 7.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_title = (load("res://scenes/fx/title_overlay.tscn") as PackedScene).instantiate()
 	add_child(_title)
 	_title.finished.connect(_wake)
@@ -168,8 +173,8 @@ func _physics_process(delta: float) -> void:
 ## The close-up that follows must pan its focus to the cat; starting nearer the
 ## middle makes that pan about half as long, instead of one hard drop.
 func _ease_pool_framing() -> void:
-	if (beat != Beat.PLAY and not _revisit) or cat.dead:
-		return
+	if camera_tiers() or (beat != Beat.PLAY and not _revisit) or cat.dead:
+		return  # the tall room's camera driver frames the basement floor itself
 	var k := smoothstep(pool_trigger_x - 420.0, pool_trigger_x - 60.0, cat.global_position.x)
 	var want := limits.end.y + int(roundf(POOL_FRAMING_DROP * k))
 	cat.camera.limit_bottom = want
@@ -290,13 +295,36 @@ func _rect_arr(r: Rect2) -> Array:
 	return [r.position.x, r.position.y, r.size.x, r.size.y]
 
 
+## Named actors the route audits wait on: name -> [x, y, phase/mode, dangerous, open].
+const WATCH := ["Drone1", "Camera1", "ShutterMezz", "FreightLift", "FallA", "RideA", "SpikesG", "Electric1", "Electric2",
+	"Crusher1", "SpikesMachine", "Steam1", "Steam2", "Steam3", "BotDeck", "BotMezz", "BotMachine"]
+
+
+func _watch() -> Dictionary:
+	var out := {}
+	for n in WATCH:
+		var a := get_node_or_null(n)
+		if a == null:
+			continue
+		var e := [a.global_position.x, a.global_position.y, 0, false, true]
+		if a.has_method("is_dangerous"):
+			e[3] = a.is_dangerous()
+		if a.has_method("is_warning"):
+			e[3] = e[3] or a.is_warning()
+		var ph = a.get("phase")
+		if ph == null:
+			ph = a.get("mode")
+		if ph == null:
+			ph = a.get("state")
+		e[2] = ph if ph is int else (str(ph) if ph != null else 0)
+		var op = a.get("open")
+		if op != null:
+			e[4] = op
+		out[n] = e
+	return out
+
+
 func _publish() -> void:
-	var bot := get_node_or_null("Bot") as PatrolBot
-	var crate := get_node_or_null("PushCrate")
-	var steam := []
-	for n in ["Steam1", "Steam2", "Steam3"]:
-		var s := get_node_or_null(n) as SteamHazard
-		steam.append(s.is_dangerous() if s else false)
 	var ripples := 0
 	for z in _zones:
 		ripples = maxi(ripples, z.puddle._ripples.size())
@@ -313,9 +341,6 @@ func _publish() -> void:
 		"anim": cat.sprite.animation, "hud": _hud.visible if _hud else false,
 		"title": _title != null and is_instance_valid(_title) and _title.visible,
 		"ripples": ripples, "inert": _inert, "pool_y": pool.position.y if pool else 0.0,
-		"bot": [bot.global_position.x, bot.global_position.y, bot.stomps, int(bot.state)] if bot else null,
-		"botVx": bot.velocity.x if bot else 0.0, "botFlip": bot.sprite.flip_h if bot else false,
-		"botFlinch": bot._flinch if bot else 0.0,
 		"sw": cat.anim_switches, "mono": Monologue.history.size(),
 		"monoLast": Monologue.history.back() if Monologue.history.size() else null,
 		"monoIds": Monologue.history.map(func(l): return l[0]),
@@ -331,10 +356,7 @@ func _publish() -> void:
 		"glintA": fposmod(_flag("LetterA", "_t") if get_node_or_null("LetterA") else -1.0, 2.6),
 		"glintC": fposmod(_flag("LetterC", "_t") if get_node_or_null("LetterC") else -1.0, 2.6),
 		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),
-		"crate": [crate.global_position.x, crate.global_position.y] if crate else null,
-		"plate": _flag("PlateA", "active"), "shutter": _flag("Shutter", "open"),
-		"fenceT": _flag("FenceTimed", "active"), "steam": steam,
-		"door": get_node_or_null("DoorBrass") != null,
+		"n": _watch(),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
 	d["audio"] = AudioDirector.web_state()

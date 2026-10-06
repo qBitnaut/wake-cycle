@@ -6,10 +6,12 @@
 extends SceneTree
 
 const DEFAULT_STOPS := [
-	"180:a_nook", "400:a_hall", "560:b_crate_stairs", "800:b_catwalk_start:200", "1040:b_catwalk_gap:200", "1230:b_descent",
-	"1500:c_hall_start", "1700:c_puddle_window", "2000:d_crawl_entry", "2350:e_fence", "2700:e_plate",
-	"3000:f_key_deck", "3300:f_door", "3600:g_steam", "4000:h_flood", "4300:i_pool_approach",
-	"4800:i_in_pool", "5000:j_door",
+	"144:a_nook:766", "480:b_crates:766", "760:b_deck_bot:766", "1200:b_belt_spikes:766", "1500:b_racks:766", "1700:b_rack_top:574",
+	"1640:c_mezz_arrival:510", "1300:c_mezz_camera:510", "900:c_detour_deck:638", "520:c_bot_lane:510", "350:c_lift_foot:510",
+	"380:d_roof_start:254", "720:d_falling:254", "980:d_drone:254", "1300:d_loft:254", "1560:d_ride:254", "1840:d_doorway:254",
+	"1980:e_shaft_top:254", "2000:e_shaft_drop:700", "2080:f_machine:766", "2400:f_crusher:766", "2900:f_hatch:766",
+	"2000:g_base:1054", "2320:g_drain:1054", "2640:g_electric:1054", "2950:g_lab:1054", "3560:h_pool_approach:1054",
+	"3880:h_pool:1054", "4120:i_crate:1054", "300:j_closet:1054", "600:j_tunnel:1054",
 ]
 
 var _stops: Array = []
@@ -50,7 +52,8 @@ func _process(_d: float) -> bool:
 	if _stop >= 0:
 		var label: String = String(_stops[_stop]).split(":")[1]
 		root.get_texture().get_image().save_png("%s/%02d_%s.png" % [_outdir, _stop + 1, label])
-		print("SHOT ", label)
+		var cam: Camera2D = _cat.camera
+		print("SHOT ", label, " cat ", _cat.global_position, " view centre ", cam.get_screen_center_position())
 	_stop += 1
 	if _stop >= _stops.size():
 		quit()

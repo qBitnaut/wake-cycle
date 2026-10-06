@@ -130,6 +130,18 @@
 		{"text": "Warm sun. Soft cushion. Safe.", "hold": 4.2, "after": 2.0},
 		{"text": "...Wake cycle complete.", "hold": 4.6}
 	],
+	"warehouse_climb": [
+		"The way on is blocked. The racks climb. So do I."
+	],
+	"warehouse_roof": [
+		"The moon is close up here. Quiet, and very high."
+	],
+	"warehouse_shaft": [
+		"A vent shaft. The air below smells of water. Down is the way."
+	],
+	"warehouse_lab": [
+		"Pipes, tanks, a low hum. Something was kept down here."
+	],
 	"memory_warehouse": [
 		"A food bowl with my name on it.",
 		"Someone filled it every morning."

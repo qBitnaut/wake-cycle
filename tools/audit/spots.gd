@@ -40,24 +40,41 @@ static func for_room(room_id: String) -> Array:
 
 
 static func room1() -> Array:
-	## Room 1 needs no power: the plain single jump must do every required hop. The key
-	## deck (1, 2, 3 tiles of steps) is on the way to the brass door; the catwalk and the
-	## crate stairs of beat B are a bonus route (the floor below is open), measured only.
-	var g := 320.0
+	## Room 1 (the tall warehouse) needs no power: the plain single jump does every required hop
+	## (rises of 1-2 tiles, gaps of at most 3). Required: the rack steps up to the mezzanine, the
+	## mezzanine hole, the service-deck steps, the roof girder gap. Optional but fair: the crate
+	## steps, the electric-floor bypass, the machine corridor's crate steps.
+	var g := 768.0
+	var m := 512.0
+	var r := 256.0
+	var b := 1056.0
 	return [
-		# The one-tile crates are 32 px wide: a held direction overshoots them, so those two
-		# steps are measured, not asserted (a player lets go).
-		{"name": "R1 key deck step 1 (floor -> 1 tile)", "sx": 92.0 * T - 120.0, "sy": g, "d": 1.0, "edge": 93.0 * T, "kind": "wall",
-			"tx0": 93.0 * T + 8.0, "tx1": 94.0 * T - 8.0, "ty": g - 32.0, "moves": [[0, "single", null]]},
-		{"name": "R1 key deck step 2 (1 -> 2 tiles)", "sx": 93.0 * T + 16.0, "sy": g - 32.0, "d": 1.0, "edge": 94.0 * T, "kind": "wall",
-			"tx0": 94.0 * T + 8.0, "tx1": 95.0 * T - 8.0, "ty": g - 64.0, "offsets": [12.0, 16.0, 20.0], "moves": [[0, "single", null]]},
-		{"name": "R1 key deck step 3 (2 tiles -> the deck, 3 tiles)", "sx": 94.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 95.0 * T, "kind": "wall",
-			"tx0": 95.0 * T + 8.0, "tx1": 99.0 * T, "ty": g - 96.0, "offsets": [12.0, 16.0, 20.0], "moves": PLAIN_HOP},
-		{"name": "R1 bonus catwalk gap (3 tiles)", "sx": 22.0 * T, "sy": g - 96.0, "d": 1.0, "edge": 28.0 * T, "kind": "gap",
-			"tx0": 31.0 * T - 10.0, "tx1": 35.0 * T, "ty": g - 96.0, "moves": [[0, "single", null]]},
-		{"name": "R1 bonus letter T perch (3 tiles up from the crates)", "sx": 128.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 130.0 * T, "kind": "wall",
-			"tx0": 130.0 * T + 8.0, "tx1": 132.0 * T - 8.0, "ty": g - 160.0, "offsets": [12.0, 16.0, 20.0, 24.0, 28.0, 32.0],
-			"moves": [[0, "double", null]]},
+		{"name": "R1 crate 1 (floor -> 1 tile)", "sx": 13.0 * T - 120.0, "sy": g, "d": 1.0, "edge": 13.0 * T, "kind": "wall",
+			"tx0": 13.0 * T + 8.0, "tx1": 14.0 * T - 8.0, "ty": g - 32.0, "moves": [[0, "single", null]]},
+		{"name": "R1 crate 2 (crate 1 -> 2 tiles)", "sx": 13.0 * T + 16.0, "sy": g - 32.0, "d": 1.0, "edge": 14.0 * T, "kind": "gap",
+			"tx0": 15.0 * T - 10.0, "tx1": 17.0 * T, "ty": g - 64.0, "moves": [[0, "single", null]]},
+		{"name": "R1 deck over the bot (crate 2 -> the deck, 3 tiles)", "sx": 15.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 17.0 * T, "kind": "wall",
+			"tx0": 17.0 * T + 8.0, "tx1": 27.0 * T, "ty": g - 96.0, "offsets": [12.0, 16.0, 20.0], "moves": PLAIN_HOP},
+		{"name": "R1 rack step 1 (floor -> 2 tiles)", "sx": 44.0 * T - 120.0, "sy": g, "d": 1.0, "edge": 44.0 * T, "kind": "wall",
+			"tx0": 44.0 * T + 8.0, "tx1": 47.0 * T - 8.0, "ty": g - 64.0, "moves": PLAIN_HOP},
+		{"name": "R1 rack step 2 (step 1 -> step 2)", "sx": 44.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 47.0 * T, "kind": "gap",
+			"tx0": 48.0 * T - 10.0, "tx1": 51.0 * T, "ty": g - 128.0, "moves": PLAIN_HOP},
+		{"name": "R1 rack step 3 (step 2 -> step 3)", "sx": 48.0 * T + 16.0, "sy": g - 128.0, "d": 1.0, "edge": 51.0 * T, "kind": "gap",
+			"tx0": 52.0 * T - 10.0, "tx1": 55.0 * T, "ty": g - 192.0, "moves": PLAIN_HOP},
+		{"name": "R1 rack top -> the mezzanine", "sx": 52.0 * T + 16.0, "sy": g - 192.0, "d": 1.0, "edge": 55.0 * T, "kind": "gap",
+			"tx0": 55.0 * T - 10.0, "tx1": 58.0 * T, "ty": m, "moves": PLAIN_HOP},
+		{"name": "R1 mezzanine hole (3 tiles, walked west)", "sx": 47.0 * T, "sy": m, "d": -1.0, "edge": 44.0 * T, "kind": "gap",
+			"tx0": 30.0 * T, "tx1": 41.0 * T + 10.0, "ty": m, "moves": PLAIN_HOP},
+		{"name": "R1 service deck step (deck -> the rack of steps)", "sx": 29.0 * T + 4.0, "sy": m + 128.0, "d": 1.0, "edge": 30.0 * T, "kind": "wall",
+			"tx0": 30.0 * T + 8.0, "tx1": 33.0 * T - 8.0, "ty": m + 64.0, "offsets": [12.0, 16.0, 20.0], "moves": PLAIN_HOP},
+		{"name": "R1 roof girder gap (3 tiles)", "sx": 30.0 * T, "sy": r, "d": 1.0, "edge": 34.0 * T, "kind": "gap",
+			"tx0": 37.0 * T - 10.0, "tx1": 44.0 * T, "ty": r, "moves": PLAIN_HOP},
+		{"name": "R1 drain deck (floor -> 2 tiles)", "sx": 70.0 * T - 120.0, "sy": b, "d": 1.0, "edge": 70.0 * T, "kind": "wall",
+			"tx0": 70.0 * T + 8.0, "tx1": 74.0 * T - 8.0, "ty": b - 64.0, "moves": PLAIN_HOP},
+		{"name": "R1 electric-floor bypass deck (floor -> 2 tiles)", "sx": 87.0 * T - 120.0, "sy": b, "d": 1.0, "edge": 87.0 * T, "kind": "wall",
+			"tx0": 87.0 * T + 8.0, "tx1": 92.0 * T - 8.0, "ty": b - 64.0, "moves": PLAIN_HOP},
+		{"name": "R1 machine corridor crate step (crate 2 -> the deck)", "sx": 84.0 * T + 16.0, "sy": g - 64.0, "d": 1.0, "edge": 85.0 * T, "kind": "wall",
+			"tx0": 85.0 * T + 8.0, "tx1": 93.0 * T, "ty": g - 96.0, "offsets": [12.0, 16.0, 20.0], "moves": PLAIN_HOP},
 	]
 
 

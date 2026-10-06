@@ -1,0 +1,415 @@
+{
+	"absorb_pulse": {
+		"db": -6,
+		"files": [
+			"absorb_pulse.ogg"
+		],
+		"jitter": 0.04
+	},
+	"augment_click": {
+		"db": -12,
+		"files": [
+			"augment_click.ogg"
+		],
+		"jitter": 0.06
+	},
+	"augment_reveal": {
+		"db": -10,
+		"files": [
+			"augment_reveal.ogg"
+		],
+		"jitter": 0.04
+	},
+	"bot_stomp": {
+		"db": -7,
+		"files": [
+			"bot_stomp_clank.ogg"
+		],
+		"jitter": 0.04
+	},
+	"checkpoint": {
+		"db": -8,
+		"files": [
+			"checkpoint_chime.ogg"
+		],
+		"jitter": 0.04
+	},
+	"crate_break": {
+		"db": -6,
+		"files": [
+			"crate_break.ogg"
+		],
+		"jitter": 0.04
+	},
+	"crawl": {
+		"db": -16,
+		"files": [
+			"crawl.ogg"
+		],
+		"jitter": 0.04
+	},
+	"credential_accepted": {
+		"db": -8,
+		"files": [
+			"credential_accepted.ogg"
+		],
+		"jitter": 0.04
+	},
+	"door_open": {
+		"db": -8,
+		"files": [
+			"door_open.ogg"
+		],
+		"jitter": 0.04
+	},
+	"double_jump": {
+		"db": -9,
+		"files": [
+			"double_jump.ogg"
+		],
+		"jitter": 0.04
+	},
+	"drone_hover": {
+		"db": -14,
+		"files": [
+			"drone_hover.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"drop": {
+		"db": -16,
+		"files": [
+			"drop_1.ogg",
+			"drop_2.ogg",
+			"drop_3.ogg",
+			"drop_4.ogg",
+			"drop_5.ogg"
+		],
+		"jitter": 0.12
+	},
+	"gate_grind": {
+		"db": -8,
+		"files": [
+			"gate_grind.ogg"
+		],
+		"jitter": 0.04
+	},
+	"goo_bubble": {
+		"db": -12,
+		"files": [
+			"goo_bubble.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"hurt": {
+		"db": -8,
+		"files": [
+			"hurt.ogg"
+		],
+		"jitter": 0.04
+	},
+	"impact_pound": {
+		"db": -5,
+		"files": [
+			"impact_pound.ogg"
+		],
+		"jitter": 0.04
+	},
+	"jump": {
+		"db": -9,
+		"files": [
+			"jump.ogg"
+		],
+		"jitter": 0.04
+	},
+	"land": {
+		"db": -12,
+		"files": [
+			"land.ogg"
+		],
+		"jitter": 0.04
+	},
+	"land_hard": {
+		"db": -8,
+		"files": [
+			"land_hard.ogg"
+		],
+		"jitter": 0.04
+	},
+	"laser_hum": {
+		"db": -14,
+		"files": [
+			"laser_hum.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"laser_zap": {
+		"db": -9,
+		"files": [
+			"laser_zap.ogg"
+		],
+		"jitter": 0.04
+	},
+	"map_node_unlock": {
+		"db": -10,
+		"files": [
+			"map_node_unlock.ogg"
+		],
+		"jitter": 0.04
+	},
+	"map_step": {
+		"db": -14,
+		"files": [
+			"map_step.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pad_impact": {
+		"db": -7,
+		"files": [
+			"pad_impact.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pad_phase": {
+		"db": -7,
+		"files": [
+			"pad_phase.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pad_spring": {
+		"db": -7,
+		"files": [
+			"pad_spring.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pad_surge": {
+		"db": -7,
+		"files": [
+			"pad_surge.ogg"
+		],
+		"jitter": 0.04
+	},
+	"phase_dash": {
+		"db": -8,
+		"files": [
+			"phase_dash.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pickup_big": {
+		"db": -8,
+		"files": [
+			"pickup_big.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pickup_fish": {
+		"db": -7,
+		"files": [
+			"pickup_fish.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pickup_letter": {
+		"db": -6,
+		"files": [
+			"pickup_letter.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pickup_rare": {
+		"db": -7,
+		"files": [
+			"pickup_rare.ogg"
+		],
+		"jitter": 0.04
+	},
+	"pickup_small": {
+		"db": -9,
+		"files": [
+			"pickup_small.ogg"
+		],
+		"jitter": 0.04
+	},
+	"plate_click": {
+		"db": -9,
+		"files": [
+			"plate_click.ogg"
+		],
+		"jitter": 0.04
+	},
+	"plate_release": {
+		"db": -11,
+		"files": [
+			"plate_release.ogg"
+		],
+		"jitter": 0.04
+	},
+	"power_up": {
+		"db": -8,
+		"files": [
+			"power_up.ogg"
+		],
+		"jitter": 0.04
+	},
+	"robot_beep": {
+		"db": -12,
+		"files": [
+			"robot_beep_1.ogg",
+			"robot_beep_2.ogg",
+			"robot_beep_3.ogg"
+		],
+		"jitter": 0.05
+	},
+	"robot_chirp": {
+		"db": -11,
+		"files": [
+			"robot_chirp_1.ogg",
+			"robot_chirp_2.ogg"
+		],
+		"jitter": 0.05
+	},
+	"robot_debris": {
+		"db": -8,
+		"files": [
+			"robot_debris.ogg"
+		],
+		"jitter": 0.04
+	},
+	"robot_explosion": {
+		"db": -5,
+		"files": [
+			"robot_explosion.ogg"
+		],
+		"jitter": 0.04
+	},
+	"scanner_sweep": {
+		"db": -10,
+		"files": [
+			"scanner_sweep.ogg"
+		],
+		"jitter": 0.04
+	},
+	"shockwave_burst": {
+		"db": -6,
+		"files": [
+			"shockwave_burst.ogg"
+		],
+		"jitter": 0.04
+	},
+	"shutter_open": {
+		"db": -9,
+		"files": [
+			"shutter_open.ogg"
+		],
+		"jitter": 0.04
+	},
+	"splash": {
+		"db": -12,
+		"files": [
+			"splash.ogg"
+		],
+		"jitter": 0.04
+	},
+	"spring_boost": {
+		"db": -8,
+		"files": [
+			"spring_boost.ogg"
+		],
+		"jitter": 0.04
+	},
+	"step_concrete": {
+		"db": -16,
+		"files": [
+			"step_concrete_1.ogg",
+			"step_concrete_2.ogg",
+			"step_concrete_3.ogg"
+		],
+		"jitter": 0.08
+	},
+	"step_metal": {
+		"db": -16,
+		"files": [
+			"step_metal_1.ogg",
+			"step_metal_2.ogg",
+			"step_metal_3.ogg"
+		],
+		"jitter": 0.08
+	},
+	"step_wet": {
+		"db": -15,
+		"files": [
+			"step_wet_1.ogg",
+			"step_wet_2.ogg",
+			"step_wet_3.ogg"
+		],
+		"jitter": 0.08
+	},
+	"step_wood": {
+		"db": -16,
+		"files": [
+			"step_wood_1.ogg",
+			"step_wood_2.ogg",
+			"step_wood_3.ogg"
+		],
+		"jitter": 0.08
+	},
+	"surge_loop": {
+		"db": -14,
+		"files": [
+			"surge_loop.ogg"
+		],
+		"jitter": 0.0,
+		"loop": true
+	},
+	"surge_whoosh": {
+		"db": -9,
+		"files": [
+			"surge_whoosh.ogg"
+		],
+		"jitter": 0.04
+	},
+	"thunder": {
+		"db": -8,
+		"files": [
+			"thunder_1.ogg",
+			"thunder_2.ogg",
+			"thunder_3.ogg"
+		],
+		"jitter": 0.03
+	},
+	"turret_charge": {
+		"db": -9,
+		"files": [
+			"turret_charge.ogg"
+		],
+		"jitter": 0.04
+	},
+	"turret_fire": {
+		"db": -7,
+		"files": [
+			"turret_fire.ogg"
+		],
+		"jitter": 0.04
+	},
+	"vein_rise": {
+		"db": -10,
+		"files": [
+			"vein_rise.ogg"
+		],
+		"jitter": 0.04
+	},
+	"wing_flap": {
+		"db": -18,
+		"files": [
+			"wing_flap.ogg"
+		],
+		"jitter": 0.04
+	}
+}

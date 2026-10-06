@@ -6,7 +6,8 @@
 ## fall keeps the cat on screen, looks ahead, moves smoothly, lands settled within the rest band;
 ## the view centre is whole pixels at every frame; a locking CameraZone holds the screen and
 ## releases it; a CineZoom-style limit lift leaves the camera alone and the driver resumes;
-## rooms 1-4, home and the test room are not driven (managed == false, offset unchanged).
+## rooms 1, 2, 4, home and the test room are not driven (managed == false, offset unchanged); Room 3
+## (48 rows tall) is, and its view settles on the cat on every tier.
 ## Exit code 1 if a check fails. Deletes user://save.json.
 extends SceneTree
 
@@ -126,8 +127,20 @@ func _main() -> void:
 	await ticks(60)
 	note("the driver resumes after the cutscene", cam.limit_top == saved[1] and absf(centre().y - (cat.global_position.y - 25.0)) < 90.0, str(centre()))
 
-	# The 360 px rooms and Room 3 are untouched.
-	for id in ["room1", "room2", "room3", "room4", "home", "test_room"]:
+	# Room 3 is a tall room (48 rows) on the tier camera: the driver is on, the view is inside the
+	# room, and the cat is never left off screen on the way up or down.
+	await load_room("res://scenes/levels/room3.tscn")
+	await ticks(30)
+	var r3 = room.camera_rig
+	note("room3: tall room, the tier camera driver is active", r3 != null and r3.managed and room.limits == Rect2i(0, 0, 172 * 32, 48 * 32), str(room.limits))
+	for stop in [[112.0, 1408.0], [1200.0, 1216.0], [1900.0, 832.0], [3500.0, 640.0], [3250.0, 256.0], [5300.0, 256.0]]:
+		place(Vector2(stop[0], stop[1]))
+		await ticks(240)
+		var c: Vector2 = cat.global_position + cat.camera.offset   # the driver's view centre (the camera node reports it a frame late headless)
+		var at_floor: bool = stop[1] > 1300.0   # the view stops at the room's floor
+		note("room3: the view settles on the cat at (%d, %d) and stays inside the room" % [stop[0], stop[1]], (at_floor or absf(c.y - (stop[1] - 25.0)) < 24.0) and c.y - 180.0 >= -1.0 and c.y + 180.0 <= 1537.0, "cat %s floor %s view centre %s" % [str(cat.global_position.round()), str(cat.is_on_floor()), str(c)])
+	# The 360 px rooms are untouched.
+	for id in ["room1", "room2", "room4", "home", "test_room"]:
 		await load_room("res://scenes/levels/%s.tscn" % id)
 		await ticks(30)
 		var r = room.camera_rig

@@ -37,7 +37,7 @@
       "pos": [1010, 188],
       "landmark": "stacks",
       "unlocks": ["perimeter", "water_tower"],
-      "collectibles": {"letters": [], "gems": 29},
+      "collectibles": {"letters": [], "gems": 58},
       "map_line": "map_stacks"
     },
     {

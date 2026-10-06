@@ -67,6 +67,18 @@
 		"It's copying me. Every step.",
 		"It thinks I'm in charge. Maybe the goo made me something they recognise."
 	],
+	"stacks_lift": [
+		"A lift. Slow, but it knows the way up."
+	],
+	"stacks_crack": [
+		"Cracks in that wall. My shockwave might finish it."
+	],
+	"stacks_barrels": [
+		"A sealed hatch, and a row of barrels. They look... touchy."
+	],
+	"stacks_vent_top": [
+		"Up here the whole city glows. And something glows closer."
+	],
 	"stacks_exit": [
 		"There, past the fences. Trees. Rooftops. Little lights in windows.",
 		"Home is that way. I can almost smell it."

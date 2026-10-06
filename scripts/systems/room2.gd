@@ -16,12 +16,15 @@ extends Level
 ## every physics frame; window.wakeTeleport(x, y) moves the cat and
 ## window.wakeStrike() fires a lightning strike.
 
-## Rain is a moving window of RainFX that follows the camera.
-const RAIN_NODES := ["RainFar", "RainNear"]
+## The rain is two RainFX windows that follow the camera view (RainFX.follow_camera); the near
+## layer is faded out while the cat is in `covered` (the underpass, under the yard slab).
 
 var power_grants: Array = []     ## [power, on_a_pad] per grant, in order
 var power_violations := 0        ## grants that were not Surge, or not from a pad
 var thunders := 0
+## World rects (set by the builder) under the yard slab: the near rain is switched off in them.
+@export var covered: Array[Rect2] = []
+var _rain_near_k := 1.0
 var _js_callbacks: Array = []
 var _lightning: LightningFX
 var _thunder: AudioStreamPlayer
@@ -39,7 +42,6 @@ func _ready() -> void:
 	GameState.shockwave_unlock_changed.connect(func(on: bool):
 		if on:
 			power_violations += 1)
-	_follow_camera()
 	if OS.has_feature("web"):
 		_setup_web()
 
@@ -64,17 +66,21 @@ func _on_power(p: int, _duration: float) -> void:
 		power_violations += 1
 
 
-func _follow_camera() -> void:
-	var cx := cat.camera.get_screen_center_position().x
-	for n in RAIN_NODES:
-		var r := get_node_or_null(n) as Node2D
+func _fade_rain(delta: float) -> void:
+	var under := false
+	for rc in covered:
+		if rc.has_point(cat.global_position + Vector2(0, -16)):
+			under = true
+	_rain_near_k = move_toward(_rain_near_k, 0.0 if under else 1.0, delta * 2.5)
+	for n in ["RainNear", "RainFar"]:
+		var r := get_node_or_null(n) as CanvasItem
 		if r:
-			r.global_position.x = cx
+			r.modulate.a = _rain_near_k
 
 
 func _physics_process(delta: float) -> void:
 	super(delta)
-	_follow_camera()
+	_fade_rain(delta)
 	if OS.has_feature("web"):
 		_publish()
 

@@ -25,7 +25,7 @@
       "pos": [600, 302],
       "landmark": "yard",
       "unlocks": ["stacks", "drain"],
-      "collectibles": {"letters": [], "gems": 30},
+      "collectibles": {"letters": [], "gems": 58},
       "map_line": "map_yard"
     },
     {

@@ -420,6 +420,96 @@
 				"use_speaker_boost": true,
 				"speed": 0.9
 			}
+		},
+		"yard_roof_0": {
+			"file": "yard_roof_0.ogg",
+			"text": "Those rooftops go on for a while. If I stay fast, I can run them.",
+			"seconds": 4.5
+		},
+		"yard_underpass_0": {
+			"file": "yard_underpass_0.ogg",
+			"text": "Down here it's dry... almost. A drain, running right under the yard.",
+			"seconds": 5.5
+		},
+		"yard_vault_0": {
+			"file": "yard_vault_0.ogg",
+			"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me...",
+			"seconds": 5.6
+		},
+		"yard_vault_1": {
+			"file": "yard_vault_1.ogg",
+			"text": "If only something big were in the way.",
+			"seconds": 2.39
+		},
+		"yard_closet_0": {
+			"file": "yard_closet_0.ogg",
+			"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it.",
+			"seconds": 5.5
+		},
+		"yard_closet_1": {
+			"file": "yard_closet_1.ogg",
+			"text": "I should not still be under it when it lands.",
+			"seconds": 2.63
+		},
+		"stacks_lift_0": {
+			"file": "stacks_lift_0.ogg",
+			"text": "A lift. Slow, but it knows the way up.",
+			"seconds": 3.21
+		},
+		"stacks_crack_0": {
+			"file": "stacks_crack_0.ogg",
+			"text": "Cracks in that wall. My shockwave might finish it.",
+			"seconds": 3.53
+		},
+		"stacks_barrels_0": {
+			"file": "stacks_barrels_0.ogg",
+			"text": "A sealed hatch, and a row of barrels. They look... touchy.",
+			"seconds": 4.9
+		},
+		"stacks_vent_top_0": {
+			"file": "stacks_vent_top_0.ogg",
+			"text": "Up here the whole city glows. And something glows closer.",
+			"seconds": 5.0
+		},
+		"perimeter_depths_0": {
+			"file": "perimeter_depths_0.ogg",
+			"text": "Under the fence. They built a second perimeter below the first.",
+			"seconds": 4.2
+		},
+		"perimeter_hollow_0": {
+			"file": "perimeter_hollow_0.ogg",
+			"text": "This wall is thicker than the rest. It rings hollow.",
+			"seconds": 3.61
+		},
+		"perimeter_cistern_0": {
+			"file": "perimeter_cistern_0.ogg",
+			"text": "Flooded, and wired. Keep to the stones.",
+			"seconds": 3.12
+		},
+		"perimeter_mech_0": {
+			"file": "perimeter_mech_0.ogg",
+			"text": "Armour like a wall. Only something heavy, falling, will rattle it.",
+			"seconds": 4.9
+		},
+		"warehouse_climb_0": {
+			"file": "warehouse_climb_0.ogg",
+			"text": "The way on is blocked. The racks climb. So do I.",
+			"seconds": 4.0
+		},
+		"warehouse_roof_0": {
+			"file": "warehouse_roof_0.ogg",
+			"text": "The moon is close up here. Quiet, and very high.",
+			"seconds": 4.1
+		},
+		"warehouse_shaft_0": {
+			"file": "warehouse_shaft_0.ogg",
+			"text": "A vent shaft. The air below smells of water. Down is the way.",
+			"seconds": 4.8
+		},
+		"warehouse_lab_0": {
+			"file": "warehouse_lab_0.ogg",
+			"text": "Pipes, tanks, a low hum. Something was kept down here.",
+			"seconds": 5.1
 		}
 	}
 }

@@ -34,18 +34,18 @@
 		"The fence goes on forever. There has to be a way through."
 	],
 	"yard_roof": [
-		{"text": "Those rooftops go on for a while. If I stay fast, I can run them.", "text_only": true}
+		{"text": "Those rooftops go on for a while. If I stay fast, I can run them."}
 	],
 	"yard_underpass": [
-		{"text": "Down here it's dry... almost. A drain, running right under the yard.", "text_only": true}
+		{"text": "Down here it's dry... almost. A drain, running right under the yard."}
 	],
 	"yard_vault": [
-		{"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me...", "text_only": true},
-		{"text": "If only something big were in the way.", "text_only": true}
+		{"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me..."},
+		{"text": "If only something big were in the way."}
 	],
 	"yard_closet": [
-		{"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it.", "text_only": true},
-		{"text": "I should not still be under it when it lands.", "text_only": true}
+		{"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it."},
+		{"text": "I should not still be under it when it lands."}
 	],
 	"stacks_arrival": [
 		"The rain's easing up.",
@@ -82,16 +82,16 @@
 		"It thinks I'm in charge. Maybe the goo made me something they recognise."
 	],
 	"stacks_lift": [
-		{"text": "A lift. Slow, but it knows the way up.", "text_only": true}
+		{"text": "A lift. Slow, but it knows the way up."}
 	],
 	"stacks_crack": [
-		{"text": "Cracks in that wall. My shockwave might finish it.", "text_only": true}
+		{"text": "Cracks in that wall. My shockwave might finish it."}
 	],
 	"stacks_barrels": [
-		{"text": "A sealed hatch, and a row of barrels. They look... touchy.", "text_only": true}
+		{"text": "A sealed hatch, and a row of barrels. They look... touchy."}
 	],
 	"stacks_vent_top": [
-		{"text": "Up here the whole city glows. And something glows closer.", "text_only": true}
+		{"text": "Up here the whole city glows. And something glows closer."}
 	],
 	"stacks_exit": [
 		"There, past the fences. Trees. Rooftops. Little lights in windows.",
@@ -102,16 +102,16 @@
 		"'Authorised units only.' ...Am I a unit now?"
 	],
 	"perimeter_depths": [
-		{"text": "Under the fence. They built a second perimeter below the first.", "text_only": true}
+		{"text": "Under the fence. They built a second perimeter below the first."}
 	],
 	"perimeter_hollow": [
-		{"text": "This wall is thicker than the rest. It rings hollow.", "text_only": true}
+		{"text": "This wall is thicker than the rest. It rings hollow."}
 	],
 	"perimeter_cistern": [
-		{"text": "Flooded, and wired. Keep to the stones.", "text_only": true}
+		{"text": "Flooded, and wired. Keep to the stones."}
 	],
 	"perimeter_mech": [
-		{"text": "Armour like a wall. Only something heavy, falling, will rattle it.", "text_only": true}
+		{"text": "Armour like a wall. Only something heavy, falling, will rattle it."}
 	],
 	"phase_first": [
 		"Through it?! I went through it!",
@@ -169,16 +169,16 @@
 		{"text": "...Wake cycle complete.", "hold": 4.6}
 	],
 	"warehouse_climb": [
-		{"text": "The way on is blocked. The racks climb. So do I.", "text_only": true}
+		{"text": "The way on is blocked. The racks climb. So do I."}
 	],
 	"warehouse_roof": [
-		{"text": "The moon is close up here. Quiet, and very high.", "text_only": true}
+		{"text": "The moon is close up here. Quiet, and very high."}
 	],
 	"warehouse_shaft": [
-		{"text": "A vent shaft. The air below smells of water. Down is the way.", "text_only": true}
+		{"text": "A vent shaft. The air below smells of water. Down is the way."}
 	],
 	"warehouse_lab": [
-		{"text": "Pipes, tanks, a low hum. Something was kept down here.", "text_only": true}
+		{"text": "Pipes, tanks, a low hum. Something was kept down here."}
 	],
 	"memory_warehouse": [
 		"A food bowl with my name on it.",

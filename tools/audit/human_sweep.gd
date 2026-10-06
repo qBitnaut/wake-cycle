@@ -66,10 +66,13 @@ func prepare() -> void:
 	cat.set("death_y", 1e9)
 	for pad in room.find_children("*", "PowerPad", true, false):
 		pad.set("_cd", 1e9)
-	# Breakable walls count as already broken: their gaps are the (optional) way on, and an
-	# intact one would only get in the way of a climb that starts on the far side of it.
+	# Blast hatches count as already broken: their gaps are the (optional) way on, and an intact
+	# one would only get in the way of a climb that starts on the far side of it. Cracked walls
+	# stay: they are part of the architecture a hop is measured against (Room 3's pump house, where
+	# the broken wall would open a crawlspace in the hop's landing).
 	for w in room.get_tree().get_nodes_in_group("kit_wall"):
-		w.queue_free()
+		if not String(w.scene_file_path).ends_with("wall_cracked.tscn"):
+			w.queue_free()
 	# A long hop must not carry the cat through the room's exit (it would leave the scene mid-sweep).
 	for ex in room.find_children("RoomExit", "Area2D", true, false):
 		ex.set("monitoring", false)

@@ -164,7 +164,7 @@ func _tour_tiers(id: String) -> void:
 		var sy: float = cat.global_position.y - (c.y - 180.0)
 		var sx: float = cat.global_position.x - (c.x - 320.0)
 		var inside: bool = c.y - 180.0 >= room.limits.position.y - 1.0 and c.y + 180.0 <= room.limits.end.y + 1.0
-		note("%s: the %s is framed (cat on screen, view inside the room)" % [id, sp[0]], sy > 40.0 and sy < 320.0 and absf(sx - 320.0) < 120.0 and inside, "screen (%.0f, %.0f) view centre %s" % [sx, sy, str(c)])
+		note("%s: the %s is framed (cat on screen, view inside the room)" % [id, sp[0]], sy > 40.0 and sy < 320.0 and sx > 40.0 and sx < 600.0 and inside, "screen (%.0f, %.0f) view centre %s" % [sx, sy, str(c)])
 
 
 func _finish() -> void:

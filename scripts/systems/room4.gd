@@ -123,6 +123,20 @@ func _setup_web() -> void:
 			_lightning.strike(1.0))
 	_js_callbacks.append(strike)
 	win["wakeStrike"] = strike
+	# wakeFx(kind): spawn a one-shot effect at the cat (tools/audit/web_particles_stress.mjs).
+	var fx := JavaScriptBridge.create_callback(func(a):
+		var kind := String(a[0])
+		var at := cat.global_position + Vector2(0, -16)
+		if kind == "shock":
+			ShockwaveFX.spawn(self, at, 56.0, FXPalette.IMPACT, 0.55)
+		elif kind == "bell":
+			ShockwaveFX.spawn(self, at, 32.0, FXPalette.IMPACT, 0.0)
+		elif kind == "explode":
+			ExplosionFX.spawn(self, at, 1.5, 0)
+		elif kind == "die":
+			cat.kill())
+	_js_callbacks.append(fx)
+	win["wakeFx"] = fx
 
 
 func _flag(node_name: String, prop: String) -> Variant:

@@ -40,12 +40,11 @@ static func spawn(parent: Node, pos: Vector2, radius_px := 48.0, ring_color: Col
 
 func _ready() -> void:
 	z_index = 50
-	# Fresh copy of the screen under the ring, so it refracts everything drawn
-	# so far (not a stale copy made earlier in the frame).
-	var bbc := BackBufferCopy.new()
-	bbc.copy_mode = BackBufferCopy.COPY_MODE_RECT
-	bbc.rect = Rect2(-Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
-	add_child(bbc)
+	# No BackBufferCopy here: on the web export (Godot 4.7.2, Compatibility) a
+	# BackBufferCopy under a node with a non-zero z_index is an engine FATAL
+	# (CowData index out of bounds) whenever it is off screen, e.g. the camera
+	# jumps while the effect is alive. The ring's shader reads the renderer's
+	# own screen copy instead.
 	_ring = ColorRect.new()
 	_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ring.size = Vector2.ONE * radius * 2.0

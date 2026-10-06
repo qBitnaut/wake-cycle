@@ -91,11 +91,9 @@ var _wading := false
 
 func _ready() -> void:
 	add_to_group("goo_pool")
-	# Fresh copy of the screen above the pool for the mirror.
-	var bbc := BackBufferCopy.new()
-	bbc.name = "Mirror"
-	bbc.copy_mode = BackBufferCopy.COPY_MODE_RECT
-	add_child(bbc)
+	# No BackBufferCopy for the mirror: on the web export (Godot 4.7.2, Compatibility) a
+	# BackBufferCopy under a z-indexed node is an engine FATAL when it is off screen
+	# (see ShockwaveFX). The shader reads the renderer's own screen copy.
 	_rect = ColorRect.new()
 	_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mat := ShaderMaterial.new()
@@ -241,9 +239,6 @@ func _apply() -> void:
 		return
 	_rect.position = Vector2(0, -TOP_MARGIN)
 	_rect.size = Vector2(width, depth + TOP_MARGIN)
-	var bbc := get_node_or_null("Mirror") as BackBufferCopy
-	if bbc:
-		bbc.rect = Rect2(-4, -depth * 2.0 - TOP_MARGIN - 4.0, width + 8, depth * 3.0 + TOP_MARGIN + 8.0)
 	var mat := _rect.material as ShaderMaterial
 	mat.set_shader_parameter("color_a", color_a)
 	mat.set_shader_parameter("color_b", color_b)

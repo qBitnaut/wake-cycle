@@ -72,6 +72,14 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var c := _color()
 	var bob := Vector2(0, -16.0 + roundf(sin(_t * 3.0) * 3.0))
+	if kind == Kind.GEM or kind == Kind.FISH:
+		# The kit's art: the old diamond is now a ball of yarn (still 100), the fish a fish.
+		var tex := KitArt.frame_texture("pickup_yarn" if kind == Kind.GEM else "pickup_fish", "body", "idle")
+		if tex != null:
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			draw_circle(bob, 12.0, Color(c.r * 1.5, c.g * 1.5, c.b * 1.5, 0.12))
+			draw_texture(tex, bob - tex.get_size() * 0.5)
+			return
 	draw_set_transform(bob, 0.0, Vector2(2, 2))  # 2x: placeholder art stays pixel-exact
 	match kind:
 		Kind.KEY:

@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/crawler_bot.gd" id="1"]
+
+[node name="CrawlerBot" type="CharacterBody2D"]
+script = ExtResource("1")

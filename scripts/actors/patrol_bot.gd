@@ -28,6 +28,9 @@ const BOUNDS_MASK := 64
 ## True: plated against everything but the ground pound. Stomps and the
 ## double-jump shockwave only clank off the plating (Room 4's armoured bot).
 @export var shielded := false
+## 1 = the size the rooms use. Smaller shrinks the art and every box with it (the kit
+## runs patrol bots at about 0.7, 1.3 tiles tall). Boxes follow the art.
+@export var sprite_scale := 1.0
 
 var state := State.PATROL
 var dir := -1
@@ -57,8 +60,26 @@ func _ready() -> void:
 	hitbox.collision_mask = 2
 	sprite.sprite_frames = _build_frames()
 	sprite.play("walk")
+	_apply_scale()
 	if shielded:
 		sprite.self_modulate = Color(1.0, 0.92, 0.72)
+
+
+func _apply_scale() -> void:
+	if is_equal_approx(sprite_scale, 1.0):
+		return
+	var k := sprite_scale
+	sprite.scale = Vector2(k, k)
+	sprite.position.y = -32.0 * k
+	for cs: CollisionShape2D in [$Shape, $Hitbox/Shape]:
+		var r := (cs.shape as RectangleShape2D).duplicate() as RectangleShape2D
+		r.size *= k
+		cs.shape = r
+		cs.position *= k
+	edge.position.y *= k
+	edge.target_position *= k
+	shock_offset *= k
+	shock_half *= k
 
 
 func _build_frames() -> SpriteFrames:
@@ -88,7 +109,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y = minf(velocity.y + 1600.0 * delta, 533.0)
 	match state:
 		State.PATROL:
-			edge.position.x = dir * 20.0
+			edge.position.x = dir * 20.0 * sprite_scale
 			edge.force_raycast_update()
 			var blocked := is_on_wall() and get_wall_normal().x * dir < 0.0
 			if is_on_floor() and (blocked or not edge.is_colliding()):
@@ -123,13 +144,13 @@ func _physics_process(delta: float) -> void:
 func _touch(cat: Cat) -> void:
 	if cat.is_phasing() or cat.dead:
 		return
-	var above := cat.global_position.y <= global_position.y - 40.0 and cat.velocity.y > 0.0
+	var above := cat.global_position.y <= global_position.y - 40.0 * sprite_scale and cat.velocity.y > 0.0
 	if above:
 		if _stomp_lock <= 0.0:
 			_stomp(cat)
 	elif state == State.PATROL:
 		# Hopping over an armoured bot is free: only the sides hurt.
-		if not can_be_harmed() and cat.global_position.y <= global_position.y - 40.0:
+		if not can_be_harmed() and cat.global_position.y <= global_position.y - 40.0 * sprite_scale:
 			return
 		cat.hurt(global_position)
 

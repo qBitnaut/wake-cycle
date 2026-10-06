@@ -257,9 +257,10 @@ func _stack(x0: int, x1: int, mats: Array) -> void:
 
 
 ## A rung (one-way grating) row: the cat stands at y = 32 * row.
-func _rungs(x0: int, x1: int, row: int, mat := STEEL) -> void:
+func _rungs(x0: int, x1: int, row: int, mat := BULKHEAD) -> void:
 	for x in range(x0, x1 + 1):
 		_cell(x, row, mat, Vector2i(GRATING.x + x % 3, GRATING.y))
+		_cell(x, row + 1, STEEL, GIRDER_H, back_tiles)   # a truss rail under the deck, so it reads as a catwalk
 
 
 ## Girder posts under a floating container (back layer, no collision): decor that explains
@@ -508,7 +509,7 @@ func _terrain() -> void:
 		if _in_hole(x):
 			pass
 		elif not gr.is_empty():
-			_cell(x, G, STEEL, Vector2i(GRATING.x + x % 3, GRATING.y))
+			_cell(x, G, BULKHEAD, Vector2i(GRATING.x + x % 3, GRATING.y))
 		else:
 			var lip := (x + 1 < COLS and _in_hole(x + 1)) or (x > 0 and _in_hole(x - 1))
 			if not _in_conveyor(x):
@@ -523,10 +524,13 @@ func _terrain() -> void:
 				var left: bool = x <= gr[0] + 2
 				var right: bool = x >= gr[0] + 2
 				if left:
-					_cell(x, U - 2, STEEL, Vector2i(GRATING.x + x % 3, GRATING.y))
-					_cell(x, U - 6, STEEL, Vector2i(GRATING.x + x % 3, GRATING.y))
+					_cell(x, U - 2, BULKHEAD, Vector2i(GRATING.x + x % 3, GRATING.y))
+					_cell(x, U - 6, BULKHEAD, Vector2i(GRATING.x + x % 3, GRATING.y))
+					_cell(x, U - 1, STEEL, GIRDER_H, back_tiles)
+					_cell(x, U - 5, STEEL, GIRDER_H, back_tiles)
 				if right:
-					_cell(x, U - 4, STEEL, Vector2i(GRATING.x + x % 3, GRATING.y))
+					_cell(x, U - 4, BULKHEAD, Vector2i(GRATING.x + x % 3, GRATING.y))
+					_cell(x, U - 3, STEEL, GIRDER_H, back_tiles)
 			_cell(x, U, STEEL, BEVEL)
 			_fill(x, x, U + 1, ROWS - 1, MAROON)
 	for y in range(0, ROWS):

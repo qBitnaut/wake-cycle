@@ -590,8 +590,8 @@ func _place_actors() -> void:
 	_gem("GemCrate", "yarn", 15, G - 2)
 	for i in 3:
 		_gem("GemDeck%d" % (i + 1), "yarn", 19 + i * 3, G - 3)
-	_kit("kit_patrol_bot", "BotDeck", 22, G, {"speed": 36.0, "laser_range": 170.0})
-	_gem("GemBellLane", "bell", 25, G)
+	_kit("kit_patrol_bot", "BotDeck", 21, G, {"speed": 36.0, "laser_range": 140.0})
+	_gem("GemBellLane", "bell", 23, G)
 	_put("res://scenes/actors/checkpoint.tscn", "CheckpointA", 33, G, {"checkpoint_id": "cp_a"})
 	_kitx("conveyor", "Belt1", _mid(35, 40), G * T, {"width_tiles": 6, "speed": -55.0})
 	_gem("GemBelt", "yarn", 37, G)
@@ -824,7 +824,7 @@ func _stoppers() -> void:
 	# The deck bot keeps to its lane (cols 18-30); the mezzanine bot to cols 14-20 of the
 	# catwalk; the machine bot to cols 85-92 (crates west, a stopper east).
 	_stopper("Stopper17", 17, G)
-	_stopper("Stopper28", 28, G)
+	_stopper("Stopper25", 25, G)
 	_stopper("StopperX93", 93, G)
 
 

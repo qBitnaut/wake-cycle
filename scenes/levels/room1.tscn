@@ -469,13 +469,13 @@ position = Vector2(816, 664)
 script = ExtResource("17_43xej")
 
 [node name="BotDeck" type="CharacterBody2D" parent="." unique_id=1806457396 instance=ExtResource("20_girk8")]
-position = Vector2(720, 768)
+position = Vector2(688, 768)
 script = ExtResource("21_icnv1")
 speed = 36.0
-laser_range = 170.0
+laser_range = 140.0
 
 [node name="GemBellLane" type="Area2D" parent="." unique_id=1103952994 instance=ExtResource("22_bo6tq")]
-position = Vector2(816, 760)
+position = Vector2(752, 760)
 script = ExtResource("17_43xej")
 kind = 2
 
@@ -1105,12 +1105,12 @@ collision_mask = 0
 position = Vector2(0, -32)
 shape = SubResource("RectangleShape2D_t1hwq")
 
-[node name="Stopper28" type="StaticBody2D" parent="." unique_id=756536079]
-position = Vector2(912, 768)
+[node name="Stopper25" type="StaticBody2D" parent="." unique_id=1137371756]
+position = Vector2(816, 768)
 collision_layer = 64
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Stopper28" unique_id=219741008]
+[node name="Shape" type="CollisionShape2D" parent="Stopper25" unique_id=1784217420]
 position = Vector2(0, -32)
 shape = SubResource("RectangleShape2D_q3gry")
 

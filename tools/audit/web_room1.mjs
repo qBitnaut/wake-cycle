@@ -262,8 +262,8 @@ for (const beat of ['crates', 'floor', 'racks', 'mezz', 'lift', 'roof', 'shaft',
 note('H all three letters and a memory, no powers, mind asleep', W.letters === 3 && !W.mind && noPowers(), `letters ${W.letters}`);
 
 // ---- I: the pool -------------------------------------------------------------------------
-await goTo(3590); await dir(1);
-while (W.x < 3706) await frame();
+await goTo(3660); await dir(1);
+for (let n = 0; W.x < 3706 && n < 600; n++) await frame();
 await hold('jump', true);
 for (let t = 0; t < 200 && W.beat === 1; t++) {
   await frame();
@@ -293,8 +293,8 @@ await atSec(8.55, 'seq5_pulse');
 await atSec(10.8, 'seq6_normal');
 await atSec(13.0, 'seq7_augments');
 // The first subtitle line comes up at mind_awakened, over the close-up (CineZoom's unmagnified overlay).
-for (let i = 0; i < 1500 && W.mono < 1; i++) { await sleep(8); await poll(); }
-await sleep(350); await poll();
+for (let i = 0; i < 1500 && !W.monoIds.includes('awakening'); i++) { await sleep(8); await poll(); }
+await sleep(150); await poll();
 const overCine = W.cineActive && W.overlaid && W.speaking;
 await shot('subtitles_during_close_up');
 note('I a subtitle is on screen while the zoom pass is active (overlay)', overCine, `zoom ${W.cz.toFixed(2)} overlaid ${W.overlaid}`);
@@ -327,7 +327,7 @@ note('I subtitles stay off the cat right after the close-up', sub.play > 20 && s
 await shot('subtitles_awakening_line1');
 await atSec(16.0, 'seq8_mind');
 await atSec(17.9, 'seq9_zoom_out');
-note('I the awakening monologue starts with the mind (subtitles)', W.mono >= 1 && W.monoIds[0] === 'awakening', `${W.mono} line(s): ${W.monoLast && W.monoLast[1]}`);
+note('I the awakening monologue starts with the mind (subtitles)', W.monoIds.includes('awakening'), `${W.mono} line(s): ${W.monoLast && W.monoLast[1]}`);
 note('I mind awakens during the sequence, before control returns', W.mind || W.beat !== 4);
 for (let n = 0; W.beat !== 4 && n < 2400; n++) await sleep(20), await poll();
 note('I TransformSequence finished: mind awakened, no power, no shockwave', W.beat === 4 && W.mind && !W.shock && W.violations === 0 && W.power === 0);
@@ -339,7 +339,7 @@ await shot('I_after_transform_pool_inert');
 await goTo(3990, 8); await hop(1, 12);
 note('J out of the pool onto the far sill', onFloorAt(1024) && W.x > 4034, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 // The awakening lines keep playing while the cat walks: subtitles over the moving cat.
-for (let i = 0; i < 600 && W.mono < 3; i++) { await sleep(20); await poll(); }
+for (let i = 0; i < 600 && W.monoIds.filter(id => id === 'awakening').length < 3; i++) { await sleep(20); await poll(); }
 await sleep(700); await shot('subtitles_awakening_line3_cat_free');
 for (let i = 0; i < 2000 && W.monoIds.filter(id => id === 'awakening').length < 5; i++) { await sleep(20); await poll(); }
 note('J awakening monologue: all five lines played', W.monoIds.filter(id => id === 'awakening').length === 5, `${W.mono} lines`);

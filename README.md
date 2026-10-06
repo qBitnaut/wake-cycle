@@ -110,10 +110,20 @@ Regenerating generated content (all optional; the results are committed):
   cat, the pad plate). The scripts take the downloaded CC0 packs as arguments;
   see each script's docstring.
 - TileSet: `godot --headless --path . --script res://tools/build_tileset_hd.gd`
-- Test room: `godot --headless --path . --script res://tools/build_test_room.gd`
-- Rooms: `godot --headless --path . --script res://tools/build_room1.gd` (also Room 2), then
-  `build_room3.gd`, `build_room4.gd` and `build_home.gd` the same way. Each room's exit
-  is set in its builder, so a rebuild keeps the chain.
+- Scene builders (test room, Rooms 1-4, Home) run through a runner scene, so the project's
+  autoloads (GameState, AudioDirector, ...) are live; `--script` mode does not register
+  them and the builders fail to compile there. From the project root:
+
+      godot --headless --path . res://tools/build_runner.tscn -- --builder=res://tools/build_room3.gd
+
+  Builders: `build_test_room.gd`, `build_room1.gd` ... `build_room4.gd`, `build_home.gd`
+  (Home also writes the credits scene). The runner exits 0 on success, 1 if a build or
+  save failed, 2 for a bad `--builder`. Each room's exit is set in its builder, so a
+  rebuild keeps the chain. Node names are fixed, and after saving, the runner restores the
+  unique_ids and resource ids of the previous version of each scene it rewrote (nodes by
+  path, resources by path or type and order), so rebuilding unchanged content leaves
+  the .tscn unchanged and diffs show only real changes. Godot may add or drop redundant
+  defaults on a first re-save (for example a `script` on the Cat instance); that is harmless.
 
 Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and

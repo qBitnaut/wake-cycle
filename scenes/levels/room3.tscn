@@ -29,6 +29,7 @@
 [ext_resource type="Script" path="res://scripts/fx/rain_fx.gd" id="27_7afgb"]
 [ext_resource type="Script" path="res://scripts/systems/room_exit.gd" id="28_tl0rd"]
 [ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="29_hglvn"]
+[ext_resource type="Script" path="res://scripts/player/cat.gd" id="30_hglvn"]
 [ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="30_d0bw8"]
 [ext_resource type="Script" path="res://scripts/systems/ambience.gd" id="31_t7pa3"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="34_sshm8"]
@@ -950,6 +951,7 @@ z_index = 5
 collision_layer = 2
 collision_mask = 17
 floor_snap_length = 7.0
+script = ExtResource("30_hglvn")
 
 [node name="LightingRig" type="Node2D" parent="." unique_id=1791612438 node_paths=PackedStringArray("solid_layers")]
 script = ExtResource("30_d0bw8")
@@ -962,7 +964,6 @@ solid_layers = [NodePath("../Tiles")]
 [node name="Ambience" type="Node" parent="." unique_id=2013722898]
 script = ExtResource("31_t7pa3")
 bed = "amb_stacks"
-surface = "step_concrete"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=1992444664 instance=ExtResource("34_sshm8")]
 layer = 10

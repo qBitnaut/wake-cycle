@@ -1,7 +1,7 @@
 ## Generates res://scenes/levels/test_room.tscn: the HD test room at 640x360 on
 ## the 32 px wake_hd TileSet, lit like Mock C (LightingRig, moon shafts, warning
 ## lamps), with every actor from scenes/actors. Run:
-##   godot --headless --path . --script res://tools/build_test_room.gd
+##   godot --headless --path . res://tools/build_runner.tscn -- --builder=res://tools/build_test_room.gd
 ##
 ## Sizes are chosen against the real jump arcs (see tools/audit/reach.gd):
 ## a plain jump is 3.1 tiles high; the double jump adds about 2.5; Surge and
@@ -11,7 +11,14 @@
 ##   E crawl tunnel                        F push crate onto plate (fence)
 ##   G shock switch, timed fence           H phase pad, dash fence, key, door
 ##   I patrol bot, spikes, impact pad, cracked floor over the T chamber
-extends SceneTree
+## Builder for tools/build_runner.gd (autoloads are live there; --script mode lacks them).
+## Rebuilds are deterministic: names are fixed and the runner re-uses the committed
+## scene's unique_ids (see build_runner.gd).
+extends RefCounted
+
+## Set by _save on a pack or save failure; the runner turns it into the exit code.
+var errors := 0
+
 
 const T := 32
 const G := 10          ## ground surface row (y = 320)
@@ -50,7 +57,7 @@ var room: Node2D
 var tiles: TileMapLayer
 
 
-func _initialize() -> void:
+func build() -> void:
 	room = Node2D.new()
 	room.name = "TestRoom"
 	room.set_script(load("res://scripts/systems/test_room.gd"))
@@ -141,9 +148,10 @@ func _initialize() -> void:
 	_own(hud)
 
 	var packed := PackedScene.new()
-	print("pack: ", packed.pack(room))
-	print("save: ", ResourceSaver.save(packed, "res://scenes/levels/test_room.tscn"))
-	quit()
+	var e1 := packed.pack(room)
+	var e2 := ResourceSaver.save(packed, "res://scenes/levels/test_room.tscn") if e1 == OK else e1
+	print("save: ", e2)
+	errors += 0 if e2 == OK else 1
 
 
 # ---- helpers --------------------------------------------------------------

@@ -1,7 +1,7 @@
 ## Generates res://scenes/levels/home.tscn (Home, the ending) and
 ## res://scenes/ui/credits.tscn. Run under a display (MultiMesh-free, but the
 ## FX nodes build their children in _ready, so a GL context is safest):
-##   xvfb-run -a godot --path . --rendering-driver opengl3 --script res://tools/build_home.gd
+##   godot --headless --path . res://tools/build_runner.tscn -- --builder=res://tools/build_home.gd
 ##
 ## World, left to right (floor surface y 320; the sidewalk's back edge 312):
 ##     0-700   the end of the road: a street sign, the first tree, the dusty
@@ -13,7 +13,14 @@
 ##  3150-3692  the cat's house: steps, porch, the door with the flap; inside, the
 ##             living room and the sunbeam on the cushion under the window
 ## Art: tools/art/home_art.py (assets/art_hd/home/).
-extends SceneTree
+## Builder for tools/build_runner.gd (autoloads are live there; --script mode lacks them).
+## Rebuilds are deterministic: names are fixed and the runner re-uses the committed
+## scene's unique_ids (see build_runner.gd).
+extends RefCounted
+
+## Set by _save on a pack or save failure; the runner turns it into the exit code.
+var errors := 0
+
 
 const G := 320            ## floor surface
 const BACK := 314         ## the sidewalk's back edge: fence feet
@@ -39,16 +46,17 @@ var back_drips: Array[Vector4] = []
 var occluders: Node2D
 
 
-func _initialize() -> void:
+func build() -> void:
 	_build_home()
 	_build_credits()
-	quit()
 
 
 func _save(root: Node, path: String) -> void:
 	var packed := PackedScene.new()
-	print("pack ", path, ": ", packed.pack(root))
-	print("save ", path, ": ", ResourceSaver.save(packed, path))
+	var e1 := packed.pack(root)
+	var e2 := ResourceSaver.save(packed, path) if e1 == OK else e1
+	print("save ", path, ": ", e2)
+	errors += 0 if e2 == OK else 1
 
 
 func _own(n: Node, parent: Node = null) -> Node:
@@ -443,6 +451,7 @@ func _build_house() -> void:
 	_own(facade)
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://shaders/dither_fade.gdshader")
+	mat.set_shader_parameter("amount", 1.0)   # explicit: headless saves an unset uniform as null
 	mat.set_shader_parameter("sweep_dir", Vector2(-1.2, 0.5))
 	var front := Sprite2D.new()
 	front.name = "Front"

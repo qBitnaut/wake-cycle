@@ -1,6 +1,6 @@
 ## Generates res://scenes/levels/room4.tscn (Room 4, "The Perimeter"); its exit leads to
 ## res://scenes/levels/home.tscn. Run:
-##   godot --headless --path . --script res://tools/build_room4.gd
+##   godot --headless --path . res://tools/build_runner.tscn -- --builder=res://tools/build_room4.gd
 ##
 ## Reach (tools/audit/reach.gd, centre travel; vertical rise is v^2/2g):
 ##   plain single jump 95 px, plain double jump 171 px up
@@ -31,7 +31,14 @@
 ##                (Impact hatch 299-301, shield wall 305, vault 293-312), the
 ##                scanner (330) and the gate (342)
 ##   G   347-374  the dawn road, exit at 368
-extends SceneTree
+## Builder for tools/build_runner.gd (autoloads are live there; --script mode lacks them).
+## Rebuilds are deterministic: names are fixed and the runner re-uses the committed
+## scene's unique_ids (see build_runner.gd).
+extends RefCounted
+
+## Set by _save on a pack or save failure; the runner turns it into the exit code.
+var errors := 0
+
 
 const T := 32
 const G := 10          ## ground surface row (y = 320)
@@ -68,9 +75,8 @@ var back_tiles: TileMapLayer
 var _mats := {}
 
 
-func _initialize() -> void:
+func build() -> void:
 	_build_room4()
-	quit()
 
 
 # ---- helpers ------------------------------------------------------------------
@@ -78,8 +84,10 @@ func _initialize() -> void:
 func _save(root: Node, path: String) -> void:
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var packed := PackedScene.new()
-	print("pack ", path, ": ", packed.pack(root))
-	print("save ", path, ": ", ResourceSaver.save(packed, path))
+	var e1 := packed.pack(root)
+	var e2 := ResourceSaver.save(packed, path) if e1 == OK else e1
+	print("save ", path, ": ", e2)
+	errors += 0 if e2 == OK else 1
 
 
 func _p(cx: int, cy: int) -> Vector2:

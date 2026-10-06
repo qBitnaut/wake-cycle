@@ -34,6 +34,7 @@
 [ext_resource type="Script" path="res://scripts/fx/rain_fx.gd" id="32_2oqrh"]
 [ext_resource type="Script" path="res://scripts/systems/room_exit.gd" id="33_3qqpc"]
 [ext_resource type="PackedScene" path="res://scenes/player/cat.tscn" id="34_xh64v"]
+[ext_resource type="Script" path="res://scripts/player/cat.gd" id="35_xh64v"]
 [ext_resource type="Script" path="res://scripts/fx/lighting_rig.gd" id="35_3ngag"]
 [ext_resource type="Script" path="res://scripts/fx/lightning_fx.gd" id="36_m314q"]
 [ext_resource type="Script" path="res://scripts/fx/sky_progress.gd" id="37_1rbst"]
@@ -1916,6 +1917,7 @@ z_index = 5
 collision_layer = 2
 collision_mask = 17
 floor_snap_length = 7.0
+script = ExtResource("35_xh64v")
 
 [node name="LightingRig" type="Node2D" parent="." unique_id=1762598827 node_paths=PackedStringArray("solid_layers")]
 script = ExtResource("35_3ngag")

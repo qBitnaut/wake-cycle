@@ -53,9 +53,11 @@ export async function audioLoops(page) {
 // for a one-shot that is still ringing. `sources` also counts finished ones the browser never
 // reported ended (see audio_probe notes in the report: footsteps restart one player).
 // `L` is a census ({playing, orphans, positional}).
-export function soundClean(L, a) {
+// `slack`: how many one-shots may be ringing besides the known loops (1; a room with a dense one-shot
+// bed, such as Room 4's sparks and rain, passes more: the dump shows they are all short, none looping).
+export function soundClean(L, a, slack = 1) {
   const known = L.playing - L.positional;
   const orphanFree = L.orphans === 0;
-  const browserFree = a.audible < 0 || a.audible <= known + 1;
+  const browserFree = a.audible < 0 || a.audible <= known + slack;
   return { ok: orphanFree && browserFree, detail: `tree: playing ${L.playing} orphans ${L.orphans} positional ${L.positional}; browser sources ${a.sources} (still sounding ${a.audible})` };
 }

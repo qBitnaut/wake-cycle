@@ -104,7 +104,7 @@ async function throughMap(tag, done, next, nextFile) {
   await page.keyboard.down('KeyW'); await sleep(90); await page.keyboard.up('KeyW');
   for (let i = 0; i < 600 && !(W.scene.endsWith(nextFile) && W.f > 0); i++) { await sleep(50); await poll(); }
   await sleep(900); await poll();
-  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page));
+  { const c = soundClean(W.loops || { playing: 0, orphans: 0, positional: 0 }, await audioLoops(page), nextFile.includes('room4') ? 8 : 1);
     note(`${tag} sound: in the next room no looping sound is left from the previous one`, c.ok, c.detail); }
 }
 

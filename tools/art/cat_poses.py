@@ -9,18 +9,18 @@
   push         leaning into a crate: shoulders and head low, the brow at
                the crate's face, hind legs driving back, short steps
 
-The HD sheets (cat_hd.py) are Scale2x of the 50 px Cat-6 frames plus a
-one-pixel ink outline. Scale2x keeps the source pixel in the majority of
-each 2x2 block, so the walk's 1x art is recovered exactly (ink dropped),
-the poses are built at 1x out of its parts (head, torso, legs, tail) and
-then run through the same Scale2x and outline, so they share the HD cat's
-pixel scale, palette (the brown tabby, untouched) and #161630 ink. Frames
-are 100x100 with the same baseline (paws on row 63, ink on 64) and the
-same anchor (the sprite's origin is the frame centre).
+The poses are built at 1x out of the walk's parts (head, torso, legs, tail),
+read from its 1x master (tools/art/cat_src/cat_walk.png, see cat_hd.py),
+then run through the same 1.5x and outline as every other sheet (cat_hd.hd),
+so they share the HD cat's pixel scale, palette (the brown tabby, untouched)
+and #161630 ink. Frames are 75x75 with the same baseline (paws on row 47,
+ink on 48) and the same anchor (the sprite's origin is the frame centre).
 
 The push frames sit back in the frame so the brow meets the cat's
 collision edge (11 px ahead of its origin, where a crate's face is),
-instead of the walk's head reaching 13 px into the crate.
+instead of the walk's head reaching into the crate: the brow's fur ends
+on column 48 of the HD frame, x 11 in front of the origin (facing right),
+with its ink one pixel further, as the 100 px frames had it.
 
 Run cat_anchors.py and then cat_augments.py afterwards: they pick up every
 cat_*.png, so the nano maps, veins and augments cover these sheets too.
@@ -28,7 +28,6 @@ cat_*.png, so the nano maps, veins and augments cover these sheets too.
 Usage: cat_poses.py [--preview out.png]
 """
 import sys
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -36,13 +35,10 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cat_hd  # noqa: E402
-import palette as P  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[2]
-CAT_DIR = ROOT / "assets" / "sprites" / "cat"
-INK = P.hex_to_rgb(P.SINGLES["cat_outline"])
-F1 = 50                      # source frame, px
-FEET = 31                    # the paws' row at 1x (63 at 2x)
+F1 = cat_hd.F1               # source frame, px
+FRAME = cat_hd.FRAME         # HD frame, px
+FEET = 31                    # the paws' row at 1x (47 at 1.5x)
 
 # The coat as the HD sheets carry it (tools/recolor_cat.py's gradient map).
 TAIL = (134, 84, 42, 255)    # mid fur
@@ -56,24 +52,9 @@ REAR = 20                    # the rump's column
 
 # ---- the walk at 1x -------------------------------------------------------
 
-def recover(path):
-    """The 1x frames of an HD sheet: the majority colour of each 2x2 block
-    with the ink outline treated as empty."""
-    a = np.asarray(Image.open(path).convert("RGBA")).copy()
-    ink = np.all(a[..., :3] == INK, axis=2) & (a[..., 3] > 0)
-    a[ink] = 0
-    a[a[..., 3] == 0] = 0
-    h, w, _ = a.shape
-    out = np.zeros((h // 2, w // 2, 4), np.uint8)
-    for y in range(h // 2):
-        for x in range(w // 2):
-            block = [tuple(a[2 * y + dy, 2 * x + dx]) for dy in (0, 1) for dx in (0, 1)]
-            out[y, x] = Counter(block).most_common(1)[0][0]
-    return [out[:, i * F1:(i + 1) * F1] for i in range(w // 2 // F1)]
-
-
-def hd(frame):
-    return np.asarray(cat_hd.outline(cat_hd.scale2x(Image.fromarray(frame))))
+def walk_1x():
+    """The walk's 1x frames, from its master."""
+    return cat_hd.frames_1x(cat_hd.SRC / "cat_walk.png")
 
 
 def parts(f):
@@ -253,7 +234,8 @@ CROUCH_IDLE = [(False, False), (False, False), (True, False), (False, False),
 
 # ---- push --------------------------------------------------------------------
 
-PUSH_FRONT = 30              # the brow's column at 1x: 61/62 at 2x, the crate face
+PUSH_FRONT = 30              # the brow's column at 1x (the HD frame is then set by PUSH_FRONT_HD)
+PUSH_FRONT_HD = 48           # the brow's last fur column in the 75 px frame: x 11, the crate face
 LEAN = 3                     # how much lower the shoulders sit than the rump, px
 PUSH_TAIL = [0, 0, 0, 0, -1, -1, -1, -2, -2]
 PUSH_FLICK = [0, 0, 0, 0, -1, -1, -2, -2, -3]
@@ -296,24 +278,28 @@ def push_frame(f, flick=False):
 
 # ---- sheets --------------------------------------------------------------------
 
-def sheet(frames):
-    strip = np.zeros((F1 * 2, F1 * 2 * len(frames), 4), np.uint8)
-    for i, fr in enumerate(frames):
-        strip[:, i * F1 * 2:(i + 1) * F1 * 2] = hd(fr)
-    return strip
+def push_sheet(frames):
+    """HD push frames, each moved so the brow's fur ends on PUSH_FRONT_HD."""
+    out = []
+    for f in frames:
+        h = cat_hd.hd(f)
+        fur = (h[..., 3] > 0) & ~np.all(h == cat_hd.INK, axis=2)
+        front = int(np.nonzero(fur.any(axis=0))[0].max())
+        out.append(shift(h, PUSH_FRONT_HD - front, 0))
+    return np.concatenate(out, axis=1)
 
 
 def build():
-    walk = recover(CAT_DIR / "cat_walk.png")
+    walk = walk_1x()
     n = len(walk)
     crawl = [crawl_frame(w, flick=i in (3, 4)) for i, w in enumerate(walk)]
     rest = walk[7]  # all four paws gathered under the body
     crouch = [crawl_frame(rest, flick=fl, blink=bl) for fl, bl in CROUCH_IDLE]
     push = [push_frame(w, flick=i in (2, 3, 6, 7)) for i, w in enumerate(walk)]
-    print(f"walk: {n} frames recovered at 1x")
+    print(f"walk: {n} frames at 1x")
     for name, frames in (("crawl", crawl), ("crouch_idle", crouch), ("push", push)):
         check_whole(frames, name)
-    return {"crawl": sheet(crawl), "crouch_idle": sheet(crouch), "push": sheet(push)}
+    return {"crawl": cat_hd.sheet(crawl), "crouch_idle": cat_hd.sheet(crouch), "push": push_sheet(push)}
 
 
 def check_whole(frames, name):
@@ -337,22 +323,22 @@ def check_whole(frames, name):
 
 
 def check_baseline(strip):
-    """Every frame stands on row 63 with its ink on row 64."""
-    for i in range(strip.shape[1] // 100):
-        a = strip[:, i * 100:(i + 1) * 100, 3] > 0
+    """Every frame stands on row 47 with its ink on row 48."""
+    for i in range(strip.shape[1] // FRAME):
+        a = strip[:, i * FRAME:(i + 1) * FRAME, 3] > 0
         rows = np.nonzero(a.any(axis=1))[0]
-        assert rows.max() == 64, (i, rows.max())
+        assert rows.max() == cat_hd.FEET + 1, (i, rows.max())
 
 
-def write_preview(sheets, path, z=4, cell=(80, 44)):
+def write_preview(sheets, path, z=4, cell=(60, 33)):
     rows = list(sheets.items())
-    cols = max(s.shape[1] // 100 for _, s in rows)
+    cols = max(s.shape[1] // FRAME for _, s in rows)
     w, h = cell
     img = Image.new("RGBA", (cols * w, len(rows) * h), (64, 72, 96, 255))
     for r, (_name, s) in enumerate(rows):
-        for c in range(s.shape[1] // 100):
-            fr = Image.fromarray(s[:, c * 100:(c + 1) * 100])
-            img.alpha_composite(fr.crop((10, 24, 10 + w, 24 + h)), (c * w, r * h))
+        for c in range(s.shape[1] // FRAME):
+            fr = Image.fromarray(s[:, c * FRAME:(c + 1) * FRAME])
+            img.alpha_composite(fr.crop((8, 18, 8 + w, 18 + h)), (c * w, r * h))
     img.resize((img.width * z, img.height * z), Image.NEAREST).save(path)
 
 
@@ -360,8 +346,7 @@ def main():
     sheets = build()
     for name, s in sheets.items():
         check_baseline(s)
-        Image.fromarray(s).save(CAT_DIR / f"cat_{name}.png")
-        print(f"{name}: {s.shape[1] // 100} frames -> cat_{name}.png ({s.shape[1]}x{s.shape[0]})")
+        cat_hd.write_sheet(name, s)
     if "--preview" in sys.argv:
         write_preview(sheets, sys.argv[sys.argv.index("--preview") + 1])
 

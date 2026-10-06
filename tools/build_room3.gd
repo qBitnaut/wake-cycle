@@ -343,6 +343,11 @@ func _build_geometry() -> void:
 	# cat rising beside it never bangs its head on an overhang (a floating edge ate every
 	# jump that started closer than 42 px).
 	_mass(LEDGE[0], LEDGE[0] + 1, S2 + 2, S1 - 1, false)
+	# ...and the ledge is a full column from the deck down to the shed roof, right up to the
+	# one-tile slot beside the long roof (col 53): the open space under the deck was a vault
+	# a cat dropped into through that slot and could not leave (no pad inside, 6 tiles to the
+	# deck, the strut a wall on the left). Now the slot is two tiles deep: a plain jump out.
+	_mass(LEDGE[0] + 2, LEDGE[1] + 1, S2 + 2, S1 - 1, false)
 	# C-F: the long roof building: gallery and its ceilings, the bay.
 	_mass(LONG[0], GALLERY[0] - 1, S3, ROWS - 1)
 	_mass(GALLERY[0], GALLERY[1], S3, ROWS - 1, false)

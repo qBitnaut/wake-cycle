@@ -131,7 +131,10 @@ func _ground() -> void:
 			continue
 		var lip := x + 1 < COLS and _in_pit(x + 1) or x > 0 and _in_pit(x - 1)
 		_cell(x, G, HAZARD if lip else STEEL, BEVEL)
-		_cell(x, G + 1, MAROON, GIRDER_H)
+		# The truss row under the floor is hollow (a one-way slab, open air under it): at a pit it
+		# must be a plate, or a cat that falls short of the far lip can drop into the hollow,
+		# a one-tile tunnel under the whole stretch of floor, with no way out (softlock.gd).
+		_cell(x, G + 1, MAROON, FLAT if lip else GIRDER_H)
 		_cell(x, G + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
 		_cell(x, G + 3, MAROON, RIVET if x % 2 == 0 else FLAT)
 

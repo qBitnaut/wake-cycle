@@ -256,7 +256,10 @@ func _underfloor(w: int) -> void:
 func _ground(x0: int, x1: int) -> void:
 	for x in range(x0, x1 + 1):
 		_cell(x, G, STEEL, BEVEL)
-		_cell(x, G + 1, MAROON, GIRDER_H)
+		# The truss row under the floor is hollow (a one-way slab, open air under it): the end
+		# of a stretch of floor, at a pit, must be a plate, or a cat that falls short of the far
+		# lip can drop into the hollow under the whole stretch with no way out (softlock.gd).
+		_cell(x, G + 1, MAROON, FLAT if x == x0 or x == x1 else GIRDER_H)
 		_cell(x, G + 2, MAROON, FLAT if x % 2 == 0 else RIVET)
 		_cell(x, G + 3, MAROON, RIVET if x % 2 == 0 else FLAT)
 

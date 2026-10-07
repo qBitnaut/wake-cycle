@@ -19,7 +19,13 @@ with sleep.
 ## The game
 
 A 2D platformer in the spirit of Apogee's Secret Agent, at 640x360 (integer-scaled
-to 1280x720 and up) with modern lighting. Five levels, joined by a world map:
+to 1280x720 and up) with modern lighting. Five levels, joined by a world map. The
+four rooms are tall, multi-tier levels (about 3-4 screens high) with secrets,
+optional routes, a key and door, and crate, plate and barrel puzzles. They hold
+seven kinds of enemy (turrets, patrol bots, drones, hoppers, crawlers, cameras and a
+mini-boss), timed hazards, explosive barrels and breakable walls; the cat meets them
+with movement only. Narration voices the cat's inner monologue, and the music and
+sound are generated (see Audio).
 
 1. **The Warehouse.** No powers. Plain movement: run, jump, double jump, crouch,
    stomp bots. The goo pool at the end is the transformation: it grants
@@ -31,6 +37,10 @@ to 1280x720 and up) with modern lighting. Five levels, joined by a world map:
    where the system accepts the cat as "supervisor". Night turns to dawn.
 5. **Home.** A sunny morning. The cat gets in, curls up in a sunbeam, and the
    credits roll.
+
+Each room hides one rare **memory fragment**: a voiced memory of the cat's old life,
+played with the music ducked and a warm glow. Collectibles are fish, yarn, a bell, a toy
+mouse, data chips and the golden fish bone.
 
 Between levels, a **world map** (parallax, with the time of day moving from night
 to morning along the route) shows the way on. Finished levels can be revisited
@@ -72,10 +82,11 @@ jump also releases a short radial burst (breaks weak crates, kicks crates,
 stuns small bots, flips shock switches). Checkpoints save to the browser's
 storage; step on the glowing CONTINUE pad near the start to load it.
 
-## Debug keys (test room only)
+## Debug keys (debug builds only)
 
-F1 toggles the shockwave, F2-F5 grant Surge / Spring / Phase / Impact, F6 clears
-the power. These are not in the input map and are not part of the game.
+In the test room and the kit lab, F1 toggles the shockwave, F2-F5 grant Surge / Spring /
+Phase / Impact, F6 clears the power. These are not in the input map and are not part of the
+game. A release build has no debug keys at all.
 
 ## Jam restriction compliance
 
@@ -85,7 +96,9 @@ movement: walking, jumping, dashing, crouching/sliding, and ground-pounding
 clickable UI: menus are walkable rooms, the world map is navigated by walking,
 levels are entered with Up or Jump, and pads, plates and pools trigger by
 stepping on them. Attacks are movement too: a stomp, the double-jump shockwave,
-a dash and a ground pound. The camera takes no input.
+a dash and a ground pound. The camera takes no input. Release builds (the itch.io
+build) have every debug hook, deep link and test hotkey disabled, so movement is the
+only input; `tools/audit/web_release_smoke.mjs` checks that on the export.
 
 ## AI use
 
@@ -101,17 +114,20 @@ Requirements: Godot 4.7.x (standard build, not .NET), Compatibility renderer.
 2. The project uses the Compatibility renderer (set in project settings).
 3. To export for the web: Project > Export, choose the "Web" preset, and export.
    The preset is single-threaded, so it needs no special cross-origin headers.
-   From the command line: `tools/export_web.sh release <dir>` (the itch.io build) or
-   `tools/export_web.sh debug <dir>` (for the web audits). `tools/*`, `docs/*` and `*.md`
-   are excluded from the export.
+   From the command line: `tools/export_web.sh release <dir>` (the itch.io build, no
+   debug hooks) or `tools/export_web.sh debug <dir>` (for the web audits, with the
+   hooks). `tools/*` (so every audit and builder script), `docs/*` and `*.md` are
+   excluded from the export.
 4. Serve the export folder over HTTP (for example `python -m http.server`) and
    open it in a browser. Opening `index.html` directly from disk will not work.
 
 Regenerating generated content (all optional; the results are committed):
 
 - Art: `tools/art/` (recoloured tiles, harmonised backgrounds and props, the HD
-  cat, the pad plate). The scripts take the downloaded CC0 packs as arguments;
-  see each script's docstring.
+  cat, the pad plate, the repixelled robots, and the actor kit, which is drawn by
+  `kit_art.py` with no third-party source). The scripts take the downloaded CC0
+  packs as arguments; see each script's docstring. The actor kit is described in
+  `docs/KIT.md`.
 - TileSet: `godot --headless --path . --script res://tools/build_tileset_hd.gd`
 - Scene builders (test room, Rooms 1-4, Home) run through a runner scene, so the project's
   autoloads (GameState, AudioDirector, ...) are live; `--script` mode does not register
@@ -132,7 +148,9 @@ Regenerating generated content (all optional; the results are committed):
   camera for tall rooms and camera zones: `docs/LEVELS.md`; its example room is
   `build_tall_demo.gd`.
 
-Audits (see `tools/audit/`): `reach.gd` measures jump reach, `playthrough.gd`
+Audits (see `tools/audit/`; run the headless ones with
+`godot --headless --path . --fixed-fps 60 --script res://tools/audit/<name>.gd`, and
+the `web_*.mjs` ones with `node` against a debug export, as their headers say): `reach.gd` measures jump reach, `playthrough.gd`
 drives the cat through every beat of the test room in headless Godot, and
 `web_playthrough.mjs` does the same in the web export with Playwright.
 `room1_playthrough.gd` and `web_room1.mjs` play Room 1 start to finish with plain

@@ -170,7 +170,10 @@ may then run out) and cannot leave: a pocket under a floor or a ledge, a hollow 
 area only an expired power could leave with no pad inside. Zero soft-locks, zero pockets in
 every room. It simulates the cat's real movement (calibrated against `reach.gd`), and
 `VALIDATE=1` drops the cat into each flagged region in the real scene to confirm. Re-run it
-(and `margins.gd`) after any builder change. Looping sounds go through `LoopSfx`
+(and `margins.gd`) after any builder change. The progression check (`tools/audit/progression.gd`,
+also in `full_game.gd`) asks the next question: when the exit needs objectives the player must go and
+collect (Room 4's three relays), can a missed one always be fetched from every place the cat can
+reach, with the closed gate solid until its objectives are done? Looping sounds go through `LoopSfx`
 (`scripts/systems/loop_sfx.gd`): a child of its source, volume set by hand from the
 distance to the cat (the web export plays audio as samples, where positional audio is not
 reliable), stopped out of range and freed with its source; the audits assert no looping

@@ -515,6 +515,26 @@
 			"file": "continue_tease_0.ogg",
 			"text": "That pad... it remembers where I was.",
 			"seconds": 3.06
+		},
+		"perimeter_missing_r1_0": {
+			"file": "perimeter_missing_r1_0.ogg",
+			"text": "One relay is still dark... up on the tower, where the wind is.",
+			"seconds": 4.4
+		},
+		"perimeter_missing_r2_0": {
+			"file": "perimeter_missing_r2_0.ogg",
+			"text": "One relay is still dark... deep under the bunker, where the water is.",
+			"seconds": 4.8
+		},
+		"perimeter_missing_r3_0": {
+			"file": "perimeter_missing_r3_0.ogg",
+			"text": "One relay is still dark... in the vault, behind the big armoured thing.",
+			"seconds": 4.9
+		},
+		"perimeter_missing_many_0": {
+			"file": "perimeter_missing_many_0.ogg",
+			"text": "Some relays are still dark. The board back on the plaza says which.",
+			"seconds": 4.4
 		}
 	}
 }

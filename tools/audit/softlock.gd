@@ -45,7 +45,9 @@
 ##
 ## NOT MODELLED (treated as open, so they can only hide a soft-lock, never invent one): shutters,
 ## locked doors, gates, laser solids, shield panels and breakable crates (all opened by the
-## player's own actions), pushable crates, enemies. There are no moving platforms in this game.
+## player's own actions), pushable crates, enemies, falling platforms. Vertical lifts (Room 4) are modelled as a
+## one-way surface at each end of the travel and a ride between the two (both ways, unless a one-way girder across
+## the lane stops a cat riding down).
 ##
 ## FOR A LEVEL REDESIGN: run it after every builder change; a clean room prints "0 soft-locks".
 ## A flagged region is fixed by level design: fill the pocket (make the ledge a full column), seal
@@ -396,6 +398,8 @@ class Model extends RefCounted:
 	var exits: Array = []
 	var kills: Array = []
 	var starts: Array = []                 ## Vector2 feet positions the cat can begin at
+	var lifts: Array = []                  ## vertical platforms: {x, y0, y1, w} (top surface at each end, width in tiles)
+	var links := {}                        ## node key -> Array of node keys a lift ride carries the cat to
 	var death_y := 1.0e9
 	var tiles_text := {}
 
@@ -520,6 +524,7 @@ class Model extends RefCounted:
 					v = 3 if pts[0].y > -15.0 else 2
 				grid[(c.y - gy0) * gw + (c.x - gx0)] = v
 		_walk(scene, Vector2.ZERO)
+		_apply_lifts()
 		base_grid = grid.duplicate()
 		find_slits()
 		var start_node := scene.get_node_or_null("PlayerStart")
@@ -529,6 +534,44 @@ class Model extends RefCounted:
 			var r: Rect2 = cp
 			starts.append(Vector2(r.position.x + r.size.x * 0.5, r.end.y))
 		scene.free()
+
+	## A vertical lift rests flush at each end of its travel: a one-way surface there (where the tile is
+	## empty), and a ride between the two (always possible both ways: the lift ping-pongs). Used by
+	## Room 4's lifts A and B, the ways up out of the cistern and the bunker.
+	func _apply_lifts() -> void:
+		var down_blocked: Array = []
+		for l in lifts:
+			var c0 := floori((float(l["x"]) - int(l["w"]) * T * 0.5 + EPS) / T)
+			var c1 := floori((float(l["x"]) + int(l["w"]) * T * 0.5 - EPS) / T)
+			# A one-way girder across the lane (at the top end or between the ends) stops a cat riding DOWN on it:
+			# the girder catches the cat's feet while the lift goes on. Riding up passes through it.
+			var blocked := false
+			for row in range(roundi(float(l["y0"]) / T), roundi(float(l["y1"]) / T)):
+				for cx in range(c0, c1 + 1):
+					if cell(cx, row) >= 2:
+						blocked = true
+			down_blocked.append(blocked)
+			for y in [l["y0"], l["y1"]]:
+				var row := roundi(float(y) / T)
+				for cx in range(c0, c1 + 1):
+					if cell(cx, row) == 0:
+						_set_cell(cx, row, 2)
+		for i in lifts.size():
+			var l: Dictionary = lifts[i]
+			var a := _lift_node(float(l["x"]), float(l["y0"]))
+			var b := _lift_node(float(l["x"]), float(l["y1"]))
+			if a >= 0 and b >= 0:
+				for pair in [[a, b], [b, a]]:
+					if pair[0] == a and down_blocked[i]:
+						continue
+					if not links.has(pair[0]):
+						links[pair[0]] = []
+					links[pair[0]].append(pair[1])
+
+	## The standing position on a lift's end: on the surface, or on a girder strip 4 px below the tile top.
+	func _lift_node(x: float, y: float) -> int:
+		var n := land_node(x, y)
+		return n if n >= 0 else land_node(x, y + 4.0)
 
 	func _shape_rect(body: Node, offset: Vector2) -> Rect2:
 		for k in body.get_children():
@@ -552,6 +595,8 @@ class Model extends RefCounted:
 				checkpoints.append(_shape_rect(c, offset))
 			elif c is Area2D and String(c.name) == "SpotTrigger":
 				exits.append(_shape_rect(c, offset))   ## Home: the sunbeam where the cat falls asleep
+			elif sp == "kit_platform.gd" and int(c.get("mode")) == 1:
+				lifts.append({"x": pos.x, "y0": pos.y, "y1": pos.y + float(c.get("travel")), "w": int(c.get("width_tiles"))})
 			elif sp == "room_exit.gd":
 				var s: Vector2 = c.get("size")
 				exits.append(Rect2(pos + Vector2(-s.x * 0.5, -s.y), s))
@@ -1043,6 +1088,10 @@ class Model extends RefCounted:
 							for dj in [-1, 20]:
 								fly(x, y, vx0, air, true, 0, 99, dj, df, cls)
 								_result_edge(e)
+		if links.has(k):
+			for to in links[k]:
+				_add_edge(e[0], e[1], to, 4.0)
+				_add_edge(e[2], e[3], to, 4.0)
 		_edges[ek] = e
 		return e
 

@@ -29,13 +29,18 @@ var exit_door: Area2D
 var sky: SkyProgress
 var cat: Cat
 
+const HINT_COOLDOWN_MS := 20000
+
 var count := 0
 var scanning := false
 var accepted := false
 var panning := false
 ## Audit hooks.
 var pans := 0
+var hints := 0
 var events: Array[String] = []
+
+var _hint_at := -HINT_COOLDOWN_MS
 
 ## The level's camera driver (made in Level._ready, after this node's).
 var _rig: LevelCamera:
@@ -123,9 +128,28 @@ func _pan_to_gate(hold: float) -> void:
 # ---- the scan ----------------------------------------------------------------
 
 func _on_scanner_entered() -> void:
-	if count < 3 or scanning or accepted or panning:
+	if scanning or accepted or panning:
+		return
+	if count < 3:
+		_hint_missing()
 		return
 	_scan()
+
+
+## The cat reached the scanner with a relay still dark: say which, and where (once per 20 s, so
+## pacing at the scanner does not repeat it). One missing relay is named; several are sent to the board.
+func _hint_missing() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _hint_at < HINT_COOLDOWN_MS:
+		return
+	_hint_at = now
+	var dark: Array[int] = []
+	for r in relays:
+		if not r.lit:
+			dark.append(r.index)
+	hints += 1
+	events.append("hint %s" % "".join(dark.map(func(i): return str(i))))
+	Monologue.play("perimeter_missing_r%d" % dark[0] if dark.size() == 1 else "perimeter_missing_many")
 
 
 func _scan() -> void:

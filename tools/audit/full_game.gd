@@ -12,7 +12,8 @@
 ##   godot --headless --path . --fixed-fps 60 --script res://tools/audit/full_game.gd
 ## FROM=room2|room3|room4|home starts the chain at that room as the previous exit leaves
 ## the cat (for iterating; the full run is the one that counts).
-## It also runs the soft-lock audit (tools/audit/softlock.gd) over every room: zero soft-locks,
+## It also runs the progression check (tools/audit/progression.gd: a missed objective can always be
+## fetched; PROGRESSION=0 skips it) and the soft-lock audit (tools/audit/softlock.gd) over every room: zero soft-locks,
 ## zero pockets. Exit code 1 on any failure. Deletes user://save.json and user://complete.json (use
 ## XDG_DATA_HOME to keep a real profile out of it).
 ##
@@ -311,6 +312,14 @@ func _main() -> void:
 		await sl.audit(note, ["room1", "room2", "room3", "room4", "home", "test_room"])
 		sl.queue_free()
 
+	# ---- The progression check (tools/audit/progression.gd): from every position the cat can enter,
+	# every objective the exit still needs (Room 4's three relays) stays reachable, a shut gate being
+	# solid until its objectives are done. PROGRESSION=0 skips it. ----
+	if OS.get_environment("PROGRESSION") != "0":
+		var pg := routine(base + "progression.gd")
+		await pg.audit(note, ["room1", "room2", "room3", "room4", "home", "test_room"])
+		pg.queue_free()
+
 	# ---- Room 3's lab first: the hop parameters its route uses (its own throwaway room) ----
 	var r3 := routine(base + "room3_playthrough.gd")
 	await r3._run_lab()
@@ -377,7 +386,9 @@ func _main() -> void:
 	if start <= 3:
 		var r4 := routine(base + "room4_playthrough.gd")
 		r4.beat_hook = func(r, b):
-			if b == "gate_locked":
+			# Relay 1 lit, the last checkpoint on the tower roof: the vault's checkpoint comes before relay 3, so a
+			# Continue after the vault would (rightly) lose it. The backtrack beat runs after relay 3.
+			if b == "relay1":
 				await continue_check(r, "C4 Room 4 checkpoint", true)
 			elif b == "scanner":
 				_pre_exit = snap()

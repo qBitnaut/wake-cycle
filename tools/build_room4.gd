@@ -484,7 +484,7 @@ func _build_geometry() -> void:
 			_ledge(229, 233, rows[i])
 		else:
 			_ledge(224, 228, rows[i])
-	_ledge(229, 237, 13)              # the top girder runs on to the plaza (one row below the surface)
+	_ledge(229, 235, 13)              # the top girder stops short of lift B's lane (cols 236-237): a one-way girder across the lane would stop a cat riding the lift DOWN
 	# L4: the flooded cistern (rows 28-34, floor 35): entry hall, flooded hall with stones,
 	# a low laser tunnel, and the relay chamber with the lift lane.
 	_clear(190, 28, 222, 34)
@@ -502,6 +502,14 @@ func _build_geometry() -> void:
 	_ledge(253, 256, 10)
 	_ledge(257, 260, 8)
 	_ledge(249, 264, 2)
+	# The way BACK west (the roof is a one-way drop east): a zig-zag girder ladder up the tower's east wall, 2 rows
+	# a step (like the shaft S1's), from the plaza floor to the roof's east end. Without it a cat past the tower
+	# with Relay 1 or 2 still dark could not return (tools/audit/progression.gd). Walked down, it is also the
+	# stairs off the roof's east end.
+	_ledge(266, 269, 10)
+	_ledge(262, 265, 8)
+	_ledge(266, 269, 6)
+	_ledge(262, 265, 4)
 	# The vault (rows 13-17, floor 18): the hatch H5 (276-278), the antechamber, the mech's hall, relay 3,
 	# and the stair out to the surface.
 	_clear(274, 13, 301, 17)
@@ -511,6 +519,11 @@ func _build_geometry() -> void:
 	_fill(304, 16, 305, 17, STEEL)
 	_fill(306, 15, 307, 17, STEEL)
 	_fill(308, 14, 309, 17, STEEL)
+	# The way BACK up to the west plaza from the stair well (the well is 8 tiles wide and the vault roof ends at its
+	# west lip, col 301): one service girder across the well's west half, at row 13 (a step of 2 rows up from the
+	# third tread and 1 row down from the lip). The cat climbs the stair, hops onto the girder, and hops onto the
+	# lip. (A plain double jump from the second tread also made it: the girder makes it two plain hops.)
+	_ledge(302, 307, 13)
 	# The armoury (rows 13-16, floor 17): under a blast-only floor (318-320), a stair out east.
 	_clear(314, 13, 327, 16)
 	_clear(318, G, 320, G)
@@ -558,11 +571,21 @@ func _signs() -> void:
 	_sign(board, "PlacardShield", 169, F2, PackedStringArray(["SHIELD", "DOUBLE JUMP BURST"]), FXPalette.SHOCKWAVE, 8.0)
 	_sign(board, "SignCistern", 185, F3, PackedStringArray(["RELAY 2: CISTERN", "FLOOR HATCH, POUND"]), aqua, 8.0)
 	_sign(board, "SignShaft", 222, F3, PackedStringArray(["SHAFT TO SURFACE", "LIFT OR CLIMB"]), amber, 8.0)
-	_sign(board, "SignRelays", 244, G, PackedStringArray(["MASTER GATE", "3 RELAYS REQUIRED"]), amber, 22.0)
+	_relay_board("RelayBoardPlaza", 244, G, 22.0)
+	_relay_board("RelayBoardGate", 347, G, 18.0)
 	_sign(board, "SignRelay1", 249, G, PackedStringArray(["RELAY 1: TOWER"]), aqua, 18.0)
 	_sign(board, "SignRelay3", 272, G, PackedStringArray(["RELAY 3: VAULT", "ARMOURED UNIT"]), aqua, 18.0)
 	_sign(board, "SignScanner", 341, G, PackedStringArray(["SUPERVISORS ONLY", "SCAN ON APPROACH"]), amber, 18.0)
 	_sign(board, "SignRoad", 355, G, PackedStringArray(["SUBURBAN DISTRICT", "2 KM"]), aqua, 22.0)
+
+
+## The relay status board: three lamps (lit or dark), each with where its relay is (scripts/actors/relay_board.gd).
+func _relay_board(node_name: String, col: int, row: int, legs: float) -> void:
+	var b: Node2D = load("res://scripts/actors/relay_board.gd").new()
+	b.name = node_name
+	b.set("legs", legs)
+	b.position = _p(col, row)
+	_own(b)
 
 
 func _sign(path: String, node_name: String, col: int, row: int, lines: PackedStringArray, accent: Color, legs: float) -> void:
@@ -840,7 +863,7 @@ func _actors_plaza() -> void:
 	# R1: the tower. A door, a girder, the Spring pad on the second girder, the relay on the roof 6 rows above it.
 	_mono("SpringHintTower", "spring_hint_tower", _p(250, G), Vector2(96, 96))
 	_pad("PadSpring2", 258, 8, 2, 10.0)
-	_put_script("res://scripts/actors/power_relay.gd", "Relay1", 256, 2, {"index": 1})
+	_put_script("res://scripts/actors/power_relay.gd", "Relay1", 261, 2, {"index": 1})
 	_cp("CheckpointL", 263, 2, "cp_l")     # on the relay roof's east end: the way on goes over the tower
 	_item("bell", "BellR1", 254, 10)
 	_item("yarn", "YarnR1a", 255, G)

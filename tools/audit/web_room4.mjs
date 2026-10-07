@@ -549,7 +549,7 @@ if (sec('S1')) {
     if (!r) break;
   }
   note('S1 the ladder of girders: seven plain hops from the bunker to the top girder', good && Math.abs(W.y - 13 * 32) < 6, `y=${W.y.toFixed(0)}`);
-  const top = await hop(238 * 32 - 36, 1, SURF);
+  const top = await hop(236 * 32 - 20, 1, SURF);
   note('S1 off the top girder onto the plaza', top && W.x > 238 * 32, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
   await shot('S1_shaft_top');
 }
@@ -580,7 +580,7 @@ await shot('R1_tower_door_hint');
   await ticks(10);
   note('R1 with Spring one held jump reaches the relay\'s roof (6 rows)', Math.abs(W.y - 64) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
   await shot('R1_on_the_tower_roof');
-  await dir(-1);
+  await dir(Math.sign(cx(261) - W.x) || 1);
   for (let n = 0; n < 300 && !W.relayLit[0]; n++) await frame();
   await stop();
   note('R1 relay 1 lit, the cat held for the camera pan', W.relayLit[0] === true && W.relays === 2, `relays ${W.relays}`);
@@ -591,9 +591,18 @@ await shot('R1_tower_door_hint');
   await shot('R1_pan_to_the_gatehouse_lamp_two');
   await waitFor(() => !W.panning && W.can_move, 8000);
   note('R1 the camera is back and the cat is free', !W.panning && W.can_move);
-  ok = await runTo(cx(266));
+  ok = await runTo(cx(271));
   await waitFall(SURF);
   note('R1 the way on goes over the tower: along the relay roof past checkpoint L, down the far side', ok && W.cp === 'cp_l' && Math.abs(W.y - SURF) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)} cp ${W.cp}`);
+  // The way BACK west (so a missed relay can always be fetched): the tower's east ladder, five plain hops up to the roof.
+  {
+    const up = [await hop(cx(268), 0, 320), await hop(266 * 32 + 36, -1, 256), await hop(266 * 32 - 36, 1, 192), await hop(266 * 32 + 36, -1, 128), await hop(cx(263), 0, 64)];
+    note('R1 the tower\'s east ladder: five plain hops from the plaza floor to the relay roof', up.every(Boolean), `${up} x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+    await shot('R1_east_ladder_roof');
+    ok = await runTo(cx(272));
+    await waitFall(SURF);
+    note('R1 and off the roof east again to the plaza', ok && Math.abs(W.y - SURF) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
+  }
 }
 
 }

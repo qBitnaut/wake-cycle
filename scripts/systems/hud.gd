@@ -16,6 +16,10 @@ const PIP_FULL := Color("e8a25d")
 const PIP_HI := Color("fbd9a0")
 const PIP_EMPTY := Color("2d163a")
 const LETTER_ON := Color("ffd23f")
+const RELAYS_OPEN := Color("e8a25d")
+
+
+var _relays := -1
 
 
 func _ready() -> void:
@@ -27,6 +31,11 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if GameState.power != NanoPalette.Power.NONE:
+		queue_redraw()
+	# Room 4: "RELAYS 2/3" in the strip; a relay lighting changes it.
+	var relays := PowerRelay.lit_count() if get_tree().current_scene is Room4 else -1
+	if relays != _relays:
+		_relays = relays
 		queue_redraw()
 
 
@@ -62,6 +71,9 @@ func _draw() -> void:
 		x += 134.0
 	if GameState.shockwave_unlocked:
 		_text(Vector2(x, base), "SHOCK", NanoPalette.SHOCKWAVE)
+	# Room 4: how many of the Master Gate's three relays are lit.
+	if _relays >= 0:
+		_text(Vector2(372, base), "RELAYS %d/3" % _relays, FXPalette.INDICATOR if _relays >= 3 else RELAYS_OPEN)
 	# Keys.
 	var kx := w - 190.0
 	for k in GameState.KEY_COLORS:

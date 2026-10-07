@@ -18,7 +18,8 @@ const CHARGE_TIME := 0.6
 const STAND_SPEED := 24.0
 ## The tease plays when the cat comes this close (px along x).
 const TEASE_RANGE := 48.0
-const TEASE := "That pad... it remembers where I was."
+## Monologue set (data/monologue.json, voiced) played when the cat comes near.
+const TEASE_SET := "continue_tease"
 
 var charge := 0.0
 var sign_text := ""
@@ -31,6 +32,10 @@ var _save := {}
 func _ready() -> void:
 	collision_layer = 32
 	collision_mask = 2
+	# The sign is HUD-like: unshaded, so the room's dark tint (CanvasModulate) does not dim it.
+	var mat := CanvasItemMaterial.new()
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	material = mat
 	var scene := ""
 	if get_parent() and get_parent().scene_file_path != "":
 		scene = get_parent().scene_file_path
@@ -58,7 +63,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _teased and cat.can_move and absf(cat.global_position.x - global_position.x) < TEASE_RANGE:
 		_teased = true
-		Monologue.say(TEASE)
+		Monologue.play(TEASE_SET)
 	if _standing_on(cat):
 		charge = minf(charge + delta / CHARGE_TIME, 1.0)
 		if charge >= 1.0:
@@ -92,8 +97,13 @@ func _draw() -> void:
 	var c := FXPalette.SODIUM
 	# The sign: an arrow back toward the pad and the saved room.
 	var y := -86.0 - 2.0 * sin(_t * 3.0)
-	draw_string(FONT, Vector2(-80, y - 18), "CONTINUE", HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, c)
-	draw_string(FONT, Vector2(-80, y), sign_text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, Color(c, 0.85))
+	var bright := c.lerp(Color.WHITE, 0.35)
+	var lines := [["CONTINUE", y - 18.0, bright], [sign_text, y, Color(bright, 0.92)]]
+	for l in lines:
+		# A subtle glow: a faint halo of offset copies under the crisp text.
+		for o in [Vector2(-1.5, 0), Vector2(1.5, 0), Vector2(0, -1.5), Vector2(0, 1.5)]:
+			draw_string(FONT, Vector2(-80, l[1]) + o, l[0], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, Color(c, 0.22))
+		draw_string(FONT, Vector2(-80, l[1]), l[0], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, l[2])
 	draw_colored_polygon(PackedVector2Array([Vector2(-6, y + 10), Vector2(6, y + 4), Vector2(6, y + 16)]), c)
 	# The charge ring above the plate.
 	var centre := Vector2(0, -26)

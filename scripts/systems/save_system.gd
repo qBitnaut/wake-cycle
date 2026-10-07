@@ -193,7 +193,7 @@ func continue_game(from: Node = null) -> bool:
 	if d.has("map"):
 		session_snapshot["map"] = d["map"]
 	_respawning = false
-	if from != null and session_scene != WORLD_MAP_SCENE:
+	if from != null:
 		RoomTransition.continue_to(from, session_scene, saved_room_name(d), saved_room_label(d))
 	else:
 		get_tree().change_scene_to_file(session_scene)

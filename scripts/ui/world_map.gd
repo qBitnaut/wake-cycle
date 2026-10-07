@@ -270,7 +270,8 @@ func _ready() -> void:
 		# It was a lit plate until now: the reveal stamps it done.
 		(markers[done] as MapMarker).set_state(MapMarker.State.OPEN)
 	SaveSystem.save_checkpoint("", SCENE)
-	if arriving:
+	if arriving or RoomTransition.pending_title != "":
+		# (a Continue arrives here too, with the title card)
 		RoomTransition.fade_in(self, 0.9)
 	_start_audio()
 	if OS.has_feature("web") and OS.is_debug_build():

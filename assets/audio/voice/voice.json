@@ -510,6 +510,11 @@
 			"file": "warehouse_lab_0.ogg",
 			"text": "Pipes, tanks, a low hum. Something was kept down here.",
 			"seconds": 5.1
+		},
+		"continue_tease_0": {
+			"file": "continue_tease_0.ogg",
+			"text": "That pad... it remembers where I was.",
+			"seconds": 3.06
 		}
 	}
 }

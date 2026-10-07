@@ -31,12 +31,14 @@ const SOFT := preload("res://assets/fx/light_soft.png")
 @export var wind := 2.2
 
 const CLOUDS := [
-	# texture, view x, view y, scroll
-	["cloud_c.png", 300.0, 52.0, 0.05],
-	["cloud_b.png", 40.0, 104.0, 0.07],
-	["cloud_a.png", 690.0, 30.0, 0.04],
-	["cloud_d.png", 520.0, 140.0, 0.08],
-	["cloud_b.png", 960.0, 96.0, 0.06],
+	# texture, view x, view y of the texture's BOTTOM edge, scroll. By the
+	# bottom: the base of a cloud stays put however tall its puffs grow (the
+	# canvas grows up to fit them; home_art.cloud).
+	["cloud_c.png", 300.0, 114.0, 0.05],
+	["cloud_b.png", 40.0, 140.0, 0.07],
+	["cloud_a.png", 690.0, 84.0, 0.04],
+	["cloud_d.png", 520.0, 164.0, 0.08],
+	["cloud_b.png", 960.0, 132.0, 0.06],
 ]
 const CLOUD_SPAN := 1180.0  # clouds wrap round this many view px
 
@@ -139,7 +141,7 @@ func _scroll() -> void:
 		var spr: Sprite2D = cl[0]
 		var x: float = cl[1] - c.x * cl[3] - _t * wind
 		x = fposmod(x + 200.0, CLOUD_SPAN) - 200.0
-		spr.global_position = Vector2(roundf(tl.x + x), roundf(tl.y + cl[2]))
+		spr.global_position = Vector2(roundf(tl.x + x), roundf(tl.y + cl[2] - spr.texture.get_height()))
 	for b in _bands:
 		var holder: Node2D = b[0]
 		var spr: Sprite2D = b[1]

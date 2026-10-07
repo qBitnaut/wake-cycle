@@ -71,7 +71,7 @@ func _ready() -> void:
 		_shelter = 1.0 if cat.global_position.y > SURFACE_Y + 24.0 else 0.0
 		sky.shelter = _shelter
 		sky.snap()
-	if OS.has_feature("web"):
+	if OS.has_feature("web") and OS.is_debug_build():
 		_fences = find_children("*", "LaserFence", true, false)
 		_drones = find_children("*", "GuardDrone", true, false)
 		_hazards = find_children("*", "KitHazard", true, false)
@@ -103,7 +103,7 @@ func _physics_process(delta: float) -> void:
 	_shelter = move_toward(_shelter, 1.0 if under else 0.0, delta * 2.5)
 	if sky:
 		sky.shelter = _shelter
-	if OS.has_feature("web"):
+	if OS.has_feature("web") and OS.is_debug_build():
 		_publish()
 
 

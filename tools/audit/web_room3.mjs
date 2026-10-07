@@ -14,6 +14,8 @@
 // the route end to end in a real browser.
 //
 //   node tools/audit/web_room3.mjs <export_dir> <out_dir> [width height] [--gpu=swiftshader] [--dpr=1.25] [--port=10300]
+// <export_dir> must be a DEBUG export (tools/export_web.sh debug <dir>): the hooks and deep links
+// this audit uses do not exist in a release export.
 //
 // The server binds a port from 10300-10399 (a random free one unless --port is
 // given), so it can run beside other audits.

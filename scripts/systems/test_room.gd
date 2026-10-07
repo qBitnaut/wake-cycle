@@ -12,7 +12,7 @@ var _js_callbacks: Array = []
 
 func _ready() -> void:
 	super()
-	if not OS.has_feature("web"):
+	if not (OS.has_feature("web") and OS.is_debug_build()):
 		return
 	var q := func(key: String) -> String:
 		return str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('%s') || ''" % key))
@@ -41,7 +41,7 @@ func _expose(win: JavaScriptObject, fn_name: String, fn: Callable) -> void:
 ## can drive the run by physics frame (f) instead of wall-clock time.
 func _physics_process(delta: float) -> void:
 	super(delta)
-	if not OS.has_feature("web"):
+	if not (OS.has_feature("web") and OS.is_debug_build()):
 		return
 	var bot := get_node_or_null("Bot")
 	var crate := get_node_or_null("PushCrate")
@@ -73,6 +73,8 @@ func _flag(node_name: String, prop: String) -> Variant:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
 	var k := event as InputEventKey
 	if k == null or not k.pressed or k.echo:
 		return

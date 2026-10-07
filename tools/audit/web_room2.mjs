@@ -9,6 +9,8 @@
 // run is the Surge route end to end.
 //
 //   node tools/audit/web_room2.mjs <export_dir> <out_dir> [width height] [--gpu=swiftshader] [--dpr=1.25]
+// <export_dir> must be a DEBUG export (tools/export_web.sh debug <dir>): the hooks and deep links
+// this audit uses do not exist in a release export.
 //
 // Needs the playwright package (PW_DIR env, default: the mise npm-playwright
 // install) and /usr/bin/chromium. By default it asks Chromium for the real GPU

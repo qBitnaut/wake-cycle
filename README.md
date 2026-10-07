@@ -101,6 +101,9 @@ Requirements: Godot 4.7.x (standard build, not .NET), Compatibility renderer.
 2. The project uses the Compatibility renderer (set in project settings).
 3. To export for the web: Project > Export, choose the "Web" preset, and export.
    The preset is single-threaded, so it needs no special cross-origin headers.
+   From the command line: `tools/export_web.sh release <dir>` (the itch.io build) or
+   `tools/export_web.sh debug <dir>` (for the web audits). `tools/*`, `docs/*` and `*.md`
+   are excluded from the export.
 4. Serve the export folder over HTTP (for example `python -m http.server`) and
    open it in a browser. Opening `index.html` directly from disk will not work.
 
@@ -194,7 +197,15 @@ Phase pad sits between any two fences. The Room 4 rain loop fades with the dawn.
 playthrough routine, with continuity checks at each transition and continue-from-save checks
 from a Room 3 and a Room 4 checkpoint.
 
-Web deep links for audits: `index.html?start=room2` (or `room3`, `room4`, `home`),
+Debug builds only: every debug hook is gated on `OS.is_debug_build()`, so a release export
+has none of them. That covers `window.wakeTeleport` / `wakeFx` / `wakeStrike` / `wakePower` /
+`wakeShock` / `wakeKey`, the per-frame `window.__wake` / `__map` / `__goo` state, every `?start=`
+deep link and the `?x=` / `?shock=` / `?power=` / `?keys=` / `?show=` / `?noloop=` parameters,
+and the F1-F6 hotkeys of the test room and the kit lab. The web audits (`tools/audit/web_*.mjs`)
+therefore need a **debug** export (`tools/export_web.sh debug <dir>`); the itch.io zip is made from a
+**release** export.
+
+Web deep links for audits (debug export): `index.html?start=room2` (or `room3`, `room4`, `home`),
 and `index.html?start=map&completed=<level id>[&letters=3]` for the world map (all
 handled once per page load in `Room1._web_start_override`).
 

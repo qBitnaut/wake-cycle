@@ -6,6 +6,8 @@
 // errors, 0 pageerrors and a game that keeps publishing frames.
 //
 //   node tools/audit/web_particles_stress.mjs <export_dir> [minutes=4] [--room1] [--gpu=swiftshader]
+// <export_dir> must be a DEBUG export (tools/export_web.sh debug <dir>): the hooks and deep links
+// this audit uses do not exist in a release export.
 //
 // --room1 runs the Room 1 variant instead: the static GooPool (BackBufferCopy era, z_index 6) with
 // far camera jumps across it, plus spawned pools (wakeFx 'pool') jumped away from and freed.

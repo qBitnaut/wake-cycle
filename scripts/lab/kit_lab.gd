@@ -199,6 +199,8 @@ func current_arena() -> int:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
 	var k := event as InputEventKey
 	if k == null or not k.pressed or k.echo:
 		return

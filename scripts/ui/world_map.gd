@@ -202,7 +202,7 @@ static func open(completed_id: String) -> void:
 ## opens the map as that level's exit would (a fresh game with the mind awake;
 ## the shockwave too from the Stacks on; `letters` = C-A-T letters held).
 static func web_deep_link() -> void:
-	if _deep_link_used or not OS.has_feature("web"):
+	if _deep_link_used or not (OS.has_feature("web") and OS.is_debug_build()):
 		return
 	_deep_link_used = true
 	var q := "new URLSearchParams(window.location.search).get('%s') || ''"
@@ -273,7 +273,7 @@ func _ready() -> void:
 	if arriving:
 		RoomTransition.fade_in(self, 0.9)
 	_start_audio()
-	if OS.has_feature("web"):
+	if OS.has_feature("web") and OS.is_debug_build():
 		_setup_web()
 	if done != "" and (newly_done or not fresh.is_empty()):
 		_play_reveal(done, fresh, newly_done)
@@ -828,7 +828,7 @@ func _process(delta: float) -> void:
 		var k := 1.0 - smoothstep(0.84, 0.95, p_at(_cone.global_position.x))
 		_cone.modulate = Color(0.30 * k, 0.34 * k, 0.40 * k)
 		_cone.visible = k > 0.01
-	if OS.has_feature("web"):
+	if OS.has_feature("web") and OS.is_debug_build():
 		_publish()
 
 

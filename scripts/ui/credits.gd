@@ -148,7 +148,7 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if OS.has_feature("web"):
+	if OS.has_feature("web") and OS.is_debug_build():
 		var d := {
 			"f": Engine.get_physics_frames(), "scene": scene_file_path, "step": int(step),
 			"title": _title.modulate.a, "white": _white.modulate.a, "end": _end.modulate.a,

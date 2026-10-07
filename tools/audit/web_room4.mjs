@@ -12,6 +12,8 @@
 // teleport only to stage a beat that has just been shown to work.
 //
 //   node tools/audit/web_room4.mjs <export_dir> <out_dir> [width height] [--gpu=swiftshader] [--dpr=1.25]
+// <export_dir> must be a DEBUG export (tools/export_web.sh debug <dir>): the hooks and deep links
+// this audit uses do not exist in a release export.
 //
 // Needs the playwright package (PW_DIR env, default: the mise npm-playwright
 // install) and /usr/bin/chromium. By default it asks Chromium for the real GPU
@@ -379,9 +381,7 @@ for (let n = 0; W.x > 118 * 32 + 10 && n < 200; n++) await frame();
 await hold('jump', true); await ticks(26); await hold('jump', false); await ticks(1); await hold('jump', true);
 for (let n = 0; n < 120 && !(W.floor && Math.abs(W.y - ROOF) < 6 && W.x < 113 * 32 + 20); n++) await frame();
 await hold('jump', false); await stop(); await ticks(10);
-// A teleport is a debug hook, not something a player does. A web build crashes (an engine FATAL, found while
-// bisecting this room) when the camera jumps far while a one-shot particle effect (the double jump's shockwave
-// dust, the bell's sparkle) is still alive: step out of the sentry's range and let the effects die first.
+// Step back out of the sentry's range and let the dust settle before the check.
 await dir(1); for (let n = 0; W.x < 112 * 32 + 8 && n < 60; n++) await frame();
 await stop(); await sleep(2500);
 note('P3b the catwalk (the optional harder route): a plain double jump across the 5-tile gap', Math.abs(W.y - ROOF) < 6 && W.x < 113 * 32 + 20 && W.x > 100 * 32, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);

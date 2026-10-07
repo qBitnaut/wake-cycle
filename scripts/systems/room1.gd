@@ -248,6 +248,11 @@ func _setup_web() -> void:
 				n.queue_free())
 	_js_callbacks.append(fx)
 	win["wakeFx"] = fx
+	# wakeSay(id, index): queue one narrated line (tools/audit/web_audio_levels.mjs).
+	var say := JavaScriptBridge.create_callback(func(a):
+		Monologue.play_line(String(a[0]), int(a[1])))
+	_js_callbacks.append(say)
+	win["wakeSay"] = say
 
 
 ## Web audit deep links: index.html?start=room2 / room3 / room4 / home skips ahead

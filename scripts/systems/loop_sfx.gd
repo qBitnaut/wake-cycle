@@ -20,6 +20,9 @@ const GROUP := "loop_sfx"
 ## AudioDirector's own music and bed players are persistent by parentage (see playing_loops).
 const PERSISTENT := []
 const FADE_RATE := 3.0   ## gain per second, up or down
+## Held under the one-shots: a hazard's loop is a cue to listen for, not a bed (the mix puts
+## SFX at about -20 LUFS and a standing loop would sit on top of everything else).
+const LOOP_TRIM_DB := -4.0
 const SILENT := 0.004    ## below this linear gain the player is stopped
 
 @export var stream: AudioStream
@@ -99,7 +102,7 @@ func _update(delta: float) -> void:
 		if _retiring:
 			queue_free()
 		return
-	_player.volume_db = base_db + linear_to_db(gain)
+	_player.volume_db = base_db + LOOP_TRIM_DB + linear_to_db(gain)
 	if not _player.playing:
 		_player.play()
 

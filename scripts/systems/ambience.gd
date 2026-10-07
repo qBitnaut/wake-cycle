@@ -16,6 +16,9 @@ const SURFACES := ["step_metal", "step_concrete", "step_wet", "step_wood"]
 @export var bed := ""
 @export var rain_stream: AudioStream
 @export var hum_stream: AudioStream
+## An indoor room's faint hum layer: a name in res://assets/audio/amb (e.g. "amb_warehouse_hum"), a separate
+## loop about 13 dB under the rain so it can be balanced or left out per room.
+@export var hum_bed := ""
 @export var rain_db := -6.0
 @export var hum_db := -12.0
 @export var step_db := 0.0
@@ -28,6 +31,7 @@ var steps_played := 0
 var rain_level := 1.0
 
 var _rain_gain := 1.0
+var _trim := 0.0   ## the bed file's level trim (AudioDirector.BED_TRIM_DB)
 
 var _rain: AudioStreamPlayer
 var _hum: AudioStreamPlayer
@@ -45,7 +49,10 @@ func setup(player: Cat) -> void:
 	if rain_stream == null and bed != "":
 		rain_stream = load("res://assets/audio/amb/%s.ogg" % bed)
 	if rain_stream:
-		_rain = _loop(rain_stream, rain_db)
+		_trim = AudioDirector.bed_trim(bed)
+		_rain = _loop(rain_stream, rain_db + _trim)
+	if hum_stream == null and hum_bed != "":
+		hum_stream = load("res://assets/audio/amb/%s.ogg" % hum_bed)
 	if hum_stream:
 		_hum = _loop(hum_stream, hum_db)
 	for d in get_parent().find_children("*", "DripFX", true, false):
@@ -96,7 +103,7 @@ func _ease_rain(delta: float) -> void:
 	else:
 		if _rain.stream_paused:
 			_rain.stream_paused = false
-		_rain.volume_db = rain_db + linear_to_db(_rain_gain)
+		_rain.volume_db = rain_db + _trim + linear_to_db(_rain_gain)
 
 
 ## Current rain loop state: an audit hook.

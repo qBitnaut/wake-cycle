@@ -2,7 +2,11 @@ extends Node
 ## The audio director, the autoload "AudioDirector": buses, music, the scene's sound and
 ## ducking. Everything that is not a one-shot (see Sfx) or a positional loop (LoopSfx).
 ##
-## Buses (made here at start-up): Master <- Music, Ambience, SFX, Voice.
+## Buses: Master <- Music, Ambience, SFX, Voice, laid out STATICALLY in res://default_bus_layout.tres
+## (project setting audio/buses/default_bus_layout). They must exist before any player does: on the
+## web a one-shot is a sample, and samples are only routed to buses present at start-up (a bus
+## added at run time left every SFX one-shot silent). _make_buses only sets the levels (and adds
+## a bus that is missing, as a fallback).
 ##
 ## Music: one track per scene, chosen by the scene's file (PROFILES). When the scene
 ## changes the new track fades in over CROSSFADE seconds while the old one fades out, on a
@@ -100,6 +104,36 @@ func _ready() -> void:
 	_bed.volume_db = SILENT_DB
 	_bed.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	add_child(_bed)
+	if OS.has_feature("web") and OS.is_debug_build():
+		_setup_web_hooks()
+
+
+var _js_callbacks: Array = []
+
+
+## Debug web builds only (tools/audit/web_sfx_levels.mjs), in every scene:
+## wakeSfx(name) plays one sound through the game's own path (Sfx.play, else KitSfx.play),
+## "loop:<name>" attaches a LoopSfx to the cat for 3 s; wakeBus(name, muted) mutes a bus.
+func _setup_web_hooks() -> void:
+	var win := JavaScriptBridge.get_interface("window")
+	var sfx := JavaScriptBridge.create_callback(func(a):
+		var n := String(a[0])
+		var cat := get_tree().get_first_node_in_group("player") as Node2D
+		if n.begins_with("loop:"):
+			var st := KitSfx.library_stream(n.substr(5))
+			if st != null and cat != null:
+				var l := LoopSfx.attach(cat, st, Sfx.level_db(n.substr(5)), 1.0, 420.0)
+				get_tree().create_timer(3.0).timeout.connect(l.retire)
+		elif Sfx.has(n):
+			Sfx.play(self, n)
+		else:
+			KitSfx.play(self, n))
+	_js_callbacks.append(sfx)
+	win["wakeSfx"] = sfx
+	var bus := JavaScriptBridge.create_callback(func(a):
+		AudioServer.set_bus_mute(AudioServer.get_bus_index(String(a[0])), bool(a[1])))
+	_js_callbacks.append(bus)
+	win["wakeBus"] = bus
 
 
 func _make_buses() -> void:

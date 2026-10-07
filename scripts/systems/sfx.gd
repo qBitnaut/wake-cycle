@@ -80,9 +80,10 @@ static func level_db(sound: String) -> float:
 	return float(_manifest.get(sound, {}).get("db", -8.0))
 
 
-## Play `sound` once. `volume_db` and `pitch` adjust the manifest's level and the pitch.
-static func play(ctx: Node, sound: String, volume_db := 0.0, pitch := 1.0) -> AudioStreamPlayer:
-	var s := stream(sound)
+## Play `sound` once. `volume_db` and `pitch` adjust the manifest's level and the pitch;
+## `variant` picks one file of the name (default: at random).
+static func play(ctx: Node, sound: String, volume_db := 0.0, pitch := 1.0, variant := -1) -> AudioStreamPlayer:
+	var s := stream(sound, variant)
 	if s == null or ctx == null or not ctx.is_inside_tree():
 		return null
 	if LoopSfx._loops(s):

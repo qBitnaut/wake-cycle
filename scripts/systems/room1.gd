@@ -248,8 +248,10 @@ func _setup_web() -> void:
 				n.queue_free())
 	_js_callbacks.append(fx)
 	win["wakeFx"] = fx
-	# wakeSay(id, index): queue one narrated line (tools/audit/web_audio_levels.mjs).
+	# wakeSay(id, index): queue one narrated line (tools/audit/web_audio_levels.mjs). The cat has
+	# no inner voice before the goo, so the hook wakes the mind first.
 	var say := JavaScriptBridge.create_callback(func(a):
+		GameState.awaken_mind()
 		Monologue.play_line(String(a[0]), int(a[1])))
 	_js_callbacks.append(say)
 	win["wakeSay"] = say
@@ -368,6 +370,8 @@ func _publish() -> void:
 		"sw": cat.anim_switches, "mono": Monologue.history.size(),
 		"monoLast": Monologue.history.back() if Monologue.history.size() else null,
 		"monoIds": Monologue.history.map(func(l): return l[0]),
+		"meows": Monologue.meow_log.map(func(m): return [m[0], m[1]]), "meowSfx": Monologue.meow_sounds,
+		"pending": GameState.pending_memory, "pose": cat.sprite.animation == "meow",
 		"container": Monologue.has_played("nanofluid_container"), "hint": Monologue.has_played("exit_hint"),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],
 		"cz": CineZoom.current().zoom if CineZoom.current() else 1.0, "cineActive": CineZoom.current() != null,

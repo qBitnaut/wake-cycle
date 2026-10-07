@@ -294,6 +294,14 @@ for (let k = 0; k < 8; k++) { camLog.push([W.cam[1], W.cz]); await shot('pool_en
 note('I the game camera holds steady entering the pool (no drop)', camLog.every(c => Math.abs(c[0] - camLog[0][0]) < 1), camLog.map(c => `${c[0].toFixed(0)}@z${c[1].toFixed(2)}`).join(' '));
 note('I jumping the pool fails: the cat is caught', W.beat === 3 && caughtX < 4032, `caught at x=${caughtX.toFixed(0)} (pool 3712..4032)`);
 note('I input locked in the pool', !W.can_move);
+{ // The mind is still asleep here: the cat has only meowed. No text, no narration.
+  const ids = W.meows.map(m => m[0]);
+  note('I no subtitle and no narration before the mind awakens (nothing shown, nothing spoken, no clip)', !W.mind && W.mono === 0 && W.monoIds.length === 0 && !W.speaking && W.audio.voice[0] === 0, `mind ${W.mind} lines ${W.mono} clips ${W.audio.voice[0]}`);
+  for (const id of ['warehouse_climb', 'warehouse_roof', 'warehouse_shaft', 'warehouse_lab', 'memory_warehouse'])
+    note(`I a meow at ${id}`, ids.includes(id), JSON.stringify(W.meows));
+  note('I the meows played as SFX, in at least three variants', W.meowSfx >= 5 && new Set(W.meows.map(m => m[1])).size >= 3, `sfx plays ${W.meowSfx}`);
+  note('I the Room 1 memory is queued for the mind, not spoken (pending_memory set, score and pickup kept)', W.pending === 'memory_warehouse' && W.got.some(g => g.endsWith('GemMemory')), `pending ${W.pending}`);
+}
 const px0 = W.x;
 await dir(1); await hold('jump', true); await ticks(20); await stop();
 note('I the cat is stuck: feet do not move', Math.abs(W.x - px0) < 3, `dx=${(W.x - px0).toFixed(1)}`);
@@ -386,6 +394,10 @@ note('J exit fades out and loads Room 2', W.scene.endsWith('room2.tscn'), W.scen
 { const a = await audioLoops(page); A.maxSources = Math.max(A.maxSources, a.sources);
   note('J music crossfaded warehouse -> map -> yard', A.keys.has('warehouse') && A.keys.has('map') && A.sawFade, `keys ${[...A.keys]} fade seen ${A.sawFade}`);
   note('J the web audio source count stays bounded (stream playback for loops)', a.audible >= 0 && a.audible <= 8 && a.sources <= 40, `sources ${a.sources}, sounding ${a.audible}`); }
+for (let i = 0; i < 2500 && W.monoIds.filter(id => id === 'memory_warehouse').length < 2; i++) { await sleep(20); await poll(); }
+{ const first = W.monoIds.indexOf('memory_warehouse'), lastHint = Math.max(W.monoIds.lastIndexOf('exit_hint'), W.monoIds.lastIndexOf('nanofluid_container'));
+  note('J the queued Room 1 memory plays after the awakening (both lines), after the crate lines, and the flag clears', W.monoIds.filter(id => id === 'memory_warehouse').length === 2 && first > lastHint && lastHint >= 0, `memory at ${first}, last crate/hint line at ${lastHint}`);
+  note('J no subtitle was ever shown before the mind: the first line of the run is the awakening', W.monoIds[0] === 'awakening', W.monoIds.slice(0, 3).join(',')); }
 note('J Room 2 auto-saved, mind awake, still no shockwave', W.save && W.mind && !W.shock && W.power === 0, `save ${W.save}`);
 await sleep(1500);
 await shot('K_room2_cat_with_augments');

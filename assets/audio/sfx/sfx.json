@@ -321,6 +321,17 @@
 		],
 		"jitter": 0.04
 	},
+	"meow": {
+		"db": -9,
+		"files": [
+			"meow_curious.ogg",
+			"meow_mrrp.ogg",
+			"meow_trill.ogg",
+			"meow_uneasy.ogg",
+			"meow_mew.ogg"
+		],
+		"jitter": 0.05
+	},
 	"pad_impact": {
 		"db": -7,
 		"files": [

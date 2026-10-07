@@ -104,7 +104,14 @@ func _sample_voice_bus() -> void:
 		_voice_peak = maxf(_voice_peak, maxf(AudioServer.get_bus_peak_volume_left_db(i, 0), AudioServer.get_bus_peak_volume_right_db(i, 0)))
 
 
+## Every Monologue line shown while the mind was still asleep: [id, text]. Must stay empty
+## (the cat has no inner voice before the goo; it only meows).
+var _pre_lines: Array = []
+
+
 func _on_line(_id: String, _text: String) -> void:
+	if not gs().intelligence:
+		_pre_lines.append([_id, _text])
 	var log: Array = mono().voice_log
 	if not log.is_empty() and (_voices.is_empty() or _voices.back() != log.back()):
 		_voices.append(log.back())
@@ -545,7 +552,7 @@ func _fresh_room1() -> void:
 	note("END the credits' new game cleared the map", gs().map_completed.is_empty() and gs().map_unlocked.is_empty() and gs().map_node == "", "completed %s node %s" % [str(gs().map_completed), gs().map_node])
 	note("END no checkpoint, no ContinuePad, the game marked complete", not ss().has_save() and ss().session_checkpoint == "" and ss().is_complete() and not s.get_node("ContinuePad").visible)
 	note("END the cat has no augments again, and starts asleep", cat != null and cat.get_node_or_null("Sprite/Augments") == null and not cat.can_move and cat.forced_anim.begins_with("sleep"), "anim %s" % (cat.forced_anim if cat else "?"))
-	note("END the monologue starts over", mono().history.is_empty())
+	note("END the monologue starts over, with no memory waiting for a mind", mono().history.is_empty() and gs().pending_memory == "")
 	# The intro plays again, then control.
 	var n := 0
 	while cat != null and not cat.can_move and n < 2400:
@@ -572,6 +579,9 @@ func _voice_check() -> void:
 			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]):
 				missing.append("%s_%d" % [id, i])
 	note("VOICE all %d monologue lines have a narration clip" % lines, missing.is_empty(), str(missing))
+	var silent := ["warehouse_climb", "warehouse_roof", "warehouse_shaft", "warehouse_lab", "continue_tease"]
+	note("MEOW no Monologue subtitle or narration was shown while the mind was asleep, anywhere in the run", _pre_lines.is_empty(), str(_pre_lines.slice(0, 3)))
+	note("MEOW the pre-awakening Room 1 sets (their clips are kept, never reachable) were never spoken", _voices.all(func(v): return not silent.has(String(v[0]))), str(_voices.filter(func(v): return silent.has(String(v[0])))))
 	note("VOICE narration played for the monologue lines shown (%d clips)" % _voices.size(), _voices.size() >= 20, "%d" % _voices.size())
 	var short := _voices.filter(func(v): return float(v[3]) < float(v[2]) + 0.4 - 0.001)
 	note("VOICE every line's hold is at least its clip length plus the tail", short.is_empty(), str(short.slice(0, 3)))

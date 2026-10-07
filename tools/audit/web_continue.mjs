@@ -42,7 +42,9 @@ else {
   note('brush walk left (no stand) ok', true, 'x=' + W.x);
   await page.keyboard.down('KeyD'); for (let i = 0; i < 200; i++) { await poll(); if (W.x > 135) break; await sleep(10); } await page.keyboard.up('KeyD'); await sleep(500);
   await page.keyboard.down('KeyA'); for (let i = 0; i < 200; i++) { await poll(); if (W.x < 98) break; await sleep(10); } await page.keyboard.up('KeyA');
-  await sleep(120); await shot('charging_ring');
+  await sleep(120); await poll();
+  note('the pad tease is a meow (no mind yet): meow played, no subtitle, nothing narrated', W.mind === false && W.meows.some(m => m[0] === 'continue_tease') && W.meowSfx >= 1 && W.mono === 0 && !W.speaking, JSON.stringify({ meows: W.meows, sfx: W.meowSfx, mono: W.mono, speaking: W.speaking }));
+  await shot('charging_ring');
   for (let i = 0; i < 10; i++) { await sleep(100); await shot('fade_' + i); }
   for (let i = 0; i < 100 && !W.scene.endsWith('room3.tscn'); i++) { await sleep(100); await poll(); }
   note('loaded room 3 at cp', W.scene.endsWith('room3.tscn') && W.cp === 'cp_a', W.scene + ' ' + W.cp + ' x=' + W.x);

@@ -28,6 +28,7 @@ var _beat_start := 0
 var _timeline: Array = []
 var _lines: Array = []
 var _set_done := {}
+var _pre_text: Array = []   # [id, text] of every Monologue line shown while the mind was still asleep (must stay empty)
 var _sub_cine := [0, 0, 0, "", 0.0]   # close-up samples: [seen, plate overlaps cat, plate off window, first miss, widest gap to the window bottom, game px]
 var _sub_play := [0, 0, 0, ""]   # same in normal play (plate vs cat and crate in the game frame)
 var _zoom_state: Array = []  # per subtitle line: [close-up pass live, subtitles overlaid on it]
@@ -247,6 +248,8 @@ func _setup(chained: bool) -> void:
 	var mono := root.get_node("Monologue")
 	mono.line_started.connect(func(id: String, text: String):
 		_lines.append([id, text])
+		if not gs().intelligence:
+			_pre_text.append([id, text])
 		var cz := CineZoom.current()
 		_zoom_state.append([cz != null, cz != null and cz.is_overlaid(mono)]))
 	mono.set_finished.connect(func(id: String): _set_done[id] = true)
@@ -544,6 +547,16 @@ func run_hop_d(d: float, jx: float, dir_frames: int, dj := 0) -> void:
 
 func _beat_pool() -> void:
 	# The pool cannot be jumped over: take a run-up and double jump from the lip.
+	var mono0 := root.get_node("Monologue")
+	var meowed: Array = mono0.meow_log.map(func(m): return m[0])
+	for id in ["warehouse_climb", "warehouse_roof", "warehouse_shaft", "warehouse_lab", "memory_warehouse"]:
+		note("I pre-awakening %s: a meow, no words" % id, meowed.has(id) and not _lines.any(func(l): return l[0] == id), str(meowed))
+	var variants := {}
+	for m in mono0.meow_log:
+		variants[m[1]] = true
+	note("I the meows differ by context (at least three variants so far)", variants.size() >= 3, str(mono0.meow_log))
+	note("I a meow sound started for each (SFX players) and no narration clip played before the mind", mono0.meow_sounds >= 5 and mono0.voice_log.is_empty() and _lines.is_empty(), "voice %d lines %d" % [mono0.voice_log.size(), _lines.size()])
+	note("I the Room 1 memory is queued, not spoken: pending_memory set, picked up without words", gs().pending_memory == "memory_warehouse" and gs().collected.any(func(c): return String(c).ends_with("/GemMemory")), gs().pending_memory)
 	var signalled := [false]
 	room.nanotech_absorbed_started.connect(func(): signalled[0] = true)
 	var gs_signalled := [false]
@@ -587,6 +600,7 @@ func _beat_pool() -> void:
 		if _lines[k][0] == "awakening":
 			ai = k
 			break
+	note("I no subtitle and no narration before the mind awakened (no Monologue text shown while intelligence was false)", _pre_text.is_empty(), str(_pre_text.slice(0, 3)))
 	note("I the first awakening line starts at mind_awakened, during the close-up, drawn on its overlay", ai >= 0 and ai < _zoom_state.size() and _zoom_state[ai][0] and _zoom_state[ai][1], str(_zoom_state[ai]) if ai >= 0 and ai < _zoom_state.size() else "no line")
 	var awake_ids := _lines.filter(func(l): return l[0] == "awakening")
 	note("I the awakening monologue starts with the mind (subtitles)", awake_ids.size() >= 1 and awake_ids[0][1] == "...Wait. Whaa- what?", "%d line(s) so far: %s" % [awake_ids.size(), str(awake_ids[0][1]) if awake_ids.size() else "-"])
@@ -645,9 +659,19 @@ func _beat_exit() -> void:
 	var r2cat: Node2D = r2.get_node("Cat") if r2 != null else null
 	note("J Room 2 (The Yard) starts: the cat at the warehouse door, control, no power, mind awake", r2cat != null and absf(r2cat.global_position.x - 112.0) < 12.0 and r2cat.can_move and gs().power == 0 and not gs().shockwave_unlocked and gs().intelligence, "x=%.0f" % (r2cat.global_position.x if r2cat else -1.0))
 	var wn := 0
-	while not _lines.any(func(l): return l[0] == "yard_arrival") and wn < 1200:  # it queues behind the exit hint
+	while not _lines.any(func(l): return l[0] == "yard_arrival") and wn < 3000:  # it queues behind the exit hint
 		await ticks(1)
 		wn += 1
+	var mem: Array = _lines.filter(func(l): return l[0] == "memory_warehouse").map(func(l): return l[1])
+	var last_hint := -1
+	var first_mem := -1
+	for k in _lines.size():
+		if _lines[k][0] == "exit_hint" or _lines[k][0] == "nanofluid_container":
+			last_hint = k
+		if _lines[k][0] == "memory_warehouse" and first_mem < 0:
+			first_mem = k
+	note("J the queued Room 1 memory plays after the awakening, on the world map, both lines and the pending flag cleared", mem == ["A food bowl with my name on it.", "Someone filled it every morning."] and gs().pending_memory == "", str(mem))
+	note("J the memory does not stack on the nanofluid crate lines (it comes after the exit hint)", first_mem > last_hint and last_hint >= 0, "memory at %d, last crate/hint line at %d" % [first_mem, last_hint])
 	note("J Room 2 greets the cat with its first thought (Rain. Cold. Real.)", _lines.any(func(l): return l[0] == "yard_arrival" and l[1] == "Rain. Cold. Real."), str(_lines.filter(func(l): return l[0] == "yard_arrival")))
 	note("J Room 2 has Surge pads (four on the floor, one on the roofs) and nothing that grants another power", r2 != null and r2.find_children("*", "PowerPad", true, false).size() >= 4 and r2.find_children("*", "PowerPad", true, false).all(func(p): return p.get("power") == 1))
 	mark("J exit")
@@ -657,7 +681,10 @@ func _beat_continue() -> void:
 	# A save from checkpoint A: a fresh Room 1 shows the CONTINUE pad a few tiles
 	# from the wake spot, and stepping on it loads the checkpoint.
 	ss().delete_save()
+	root.get_node("Monologue").reset()  # nothing queued from Room 2 leaks into the asleep-mind check
 	gs().new_game()  # a pre-pool checkpoint: the mind is not awake yet
+	var pre_n := _pre_text.size()
+	var lines_n := _lines.size()
 	ss().save_checkpoint("cp_a", "res://scenes/levels/room1.tscn")
 	ss().session_scene = ""
 	ss().session_checkpoint = ""
@@ -671,12 +698,22 @@ func _beat_continue() -> void:
 	var old_room := room
 	while not cat.can_move:
 		await ticks(1)
+	var km: Node = root.get_node("Monologue")
+	# Standing still: a meow (any trigger's) brings the meow pose, with control untouched.
+	await ticks(20)
+	km.meow("warehouse_lab")
+	var posed := false
+	for i in 40:
+		await ticks(1)
+		posed = posed or cat.sprite.animation == "meow"
+	note("K the cat answers a meow with its meow pose while standing, and keeps control (input never locked)", posed and cat.can_move, "pose %s" % str(posed))
 	# Walking right (a new game) never touches it.
 	await go_to(600.0, 6.0)
 	await go_to(144.0, 6.0)
 	note("K walking right and back does not continue", current_scene == old_room and pad.charge == 0.0)
 	# Deliberately standing on it does.
 	await go_to(pad.global_position.x, 4.0)
+	note("K the pad's tease is a meow, not words (no mind yet): a continue_tease meow, no subtitle", km.meow_log.any(func(m): return m[0] == "continue_tease") and _lines.size() == lines_n and _pre_text.size() == pre_n, str(km.meow_log))
 	var n := 0
 	while is_instance_valid(old_room) and old_room == current_scene and n < 600:
 		await ticks(1)

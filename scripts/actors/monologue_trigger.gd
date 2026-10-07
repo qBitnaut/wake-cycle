@@ -4,6 +4,9 @@ extends Area2D
 ## walks in. Movement only: stepping into it is the whole interface.
 ## `require_mind` keeps it dormant until the mind has awakened (GameState
 ## .intelligence); a cat already standing inside when the mind awakens fires it.
+## Before the mind awakens the cat has no inner voice: a trigger without `require_mind` that
+## is walked into then makes the cat meow (Monologue.meow, a variant by line_id) and shows no
+## text; it is spent, and does not tell its line later.
 ## Origin = bottom-centre (the floor line), like the other actors.
 
 signal triggered(id: String)
@@ -36,7 +39,10 @@ func _physics_process(_delta: float) -> void:
 	for b in get_overlapping_bodies():
 		if b is Cat and not (b as Cat).dead:
 			_done = true
-			if Monologue.play_once(line_id):
+			if not GameState.intelligence:
+				Monologue.meow(line_id)
+				triggered.emit(line_id)
+			elif Monologue.play_once(line_id):
 				triggered.emit(line_id)
 			set_physics_process(false)
 			return

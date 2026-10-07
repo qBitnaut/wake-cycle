@@ -1148,6 +1148,8 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 		if LevelRegistry.is_main(id) and r.size() >= 2:
 			main = id
 	_cam_focus = Vector2.INF
+	# The Room 1 memory, found before the mind woke, is recalled now (queued behind the map line).
+	Monologue.play_pending_memory()
 	if main != "":
 		_cam_hold_x = LevelRegistry.position_of(main).x
 		var r: Array = routes[main]

@@ -24,6 +24,16 @@ add("phase_dash", "a phasing ghostly dash, a short glassy whoosh with a purple e
 add("impact_pound", "a heavy ground pound slam, a deep boom with debris rattling and a low sub thump", 1.2)
 add("shockwave_burst", "a radial shockwave burst, an expanding pressure boom with an energy ripple", 1.5)
 add("hurt", "a small startled cat yelp, short and sharp, not cartoonish", 0.7)
+# The cat before its mind wakes: only vocalisations (Monologue plays one instead of a line).
+CAT = " Natural house cat, close and warm, realistic, not cartoonish, no music."
+for n, t, sec in [
+    ("meow_curious", "a single short curious meow of a small house cat, soft and slightly rising", 1.0),
+    ("meow_mrrp", "a questioning 'mrrp?' of a house cat, a short rising chirpy murmur", 0.8),
+    ("meow_trill", "a soft trill and chirp of a house cat, a gentle rolling purr-chirp", 1.0),
+    ("meow_uneasy", "an uneasy low meow of a house cat, a slow worried falling 'meow', subdued", 1.3),
+    ("meow_mew", "a small determined 'mew' of a house cat, short, firm and clear", 0.7),
+]:
+    SFX.append(dict(name=n, prompt=t + "." + CAT, sec=sec, loop=False, infl=0.6))
 add("pickup_small", "a small collectible pickup, a soft bright glassy chime", 0.8)
 add("pickup_big", "a bigger collectible pickup, a warm layered chime rising", 1.0)
 add("pickup_rare", "a rare precious pickup, a magical shimmering chime with a tail", 1.5)

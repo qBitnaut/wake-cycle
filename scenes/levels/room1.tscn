@@ -548,7 +548,8 @@ script = ExtResource("13_3nu1a")
 position = Vector2(144, 768)
 
 [node name="ContinuePad" type="Area2D" parent="." unique_id=1858905391 instance=ExtResource("14_uaynl")]
-position = Vector2(304, 768)
+z_index = 2
+position = Vector2(80, 768)
 script = ExtResource("15_wtalr")
 
 [node name="GemA" type="Area2D" parent="." unique_id=1418024298 instance=ExtResource("16_3kop4")]

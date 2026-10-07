@@ -14,7 +14,7 @@
 ##   B 33  the flooded basement                       (y 1056)
 ##
 ## The route, up and then down:
-##   1 G west  (cols 0-57)   the nook (start, continue pad), a bot patrolling under a deck, a
+##   1 G west  (cols 0-57)   the nook (start; the continue pad behind it), a bot patrolling under a deck, a
 ##                           conveyor and a spike trap, then pallet racking up (rack steps);
 ##                           the floor east is blocked by a collapsed rack
 ##   2 M       (cols 12-57)  the mezzanine, walked WEST: a camera + shutter (detour: the service
@@ -646,7 +646,7 @@ func _hangers_office(xs: Array, row: int) -> void:
 func _place_actors() -> void:
 	var shut: Array[NodePath] = [NodePath("../ShutterMezz")]
 	# ==== G west ====
-	_put("res://scenes/actors/continue_pad.tscn", "ContinuePad", 9, G)
+	_put("res://scenes/actors/continue_pad.tscn", "ContinuePad", 2, G)  # behind the cat (left of the wake spot): walking right is never Continue
 	_gem("GemA", "yarn", 7, G)
 	_put("res://scenes/actors/letter.tscn", "LetterA", 3, G, {"letter_index": 1, "_dx": -2.0})
 	_gem("GemCrate", "yarn", 15, G - 2)

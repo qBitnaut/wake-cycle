@@ -745,11 +745,15 @@ func _beat_under() -> void:
 
 	# --- S2, the supply closet: stand on the hatch under the drone, let it arm, run ---
 	gs().set_health(3)
-	freeze_enemies(["DroneSpur"])
+	freeze_enemies()   # the drone too: where its cycle stands must not depend on how long the walk in took
 	teleport(4470.0, U_Y)
 	await ticks(20)
 	await go_to(4656.0, 8.0)
 	var drone := node("DroneSpur")
+	drone.mode = 0   # a fresh cycle (patrol) from the moment the cat stands on the hatch, so the run has the whole telegraph
+	drone._m_t = 0.0
+	drone.process_mode = Node.PROCESS_MODE_INHERIT
+	_frozen.erase(drone)
 	var hatch2 := node("SupplyHatch")
 	note("U2 the supply closet: a blast-only hatch in the floor under a hover drone", drone != null and hatch2 != null and hatch2.kind == 2, "")
 	var armed := false

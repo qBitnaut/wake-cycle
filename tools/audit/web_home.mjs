@@ -159,6 +159,7 @@ await until(w => w.beat === 2 && w.facade <= 0, 6000);
 await sleep(400);
 await shot('inside_sunbeam');
 note('C the facade dissolves and control returns inside', W.beat === 2 && W.facade <= 0 && W.can_move);
+note('C the facade\'s drips and glints went with it (none inside the room)', W.facadeWet === 0, `${W.facadeWet} still drawn`);
 
 // ---- the spot ---------------------------------------------------------------
 await hold('right');
@@ -177,11 +178,11 @@ await sleep(800);
 await shot('asleep_curled');
 await hold('right', false);
 note('D input locked through the settle (right held)', !W.can_move && Math.abs(W.x - 3520) <= 5, `x ${W.x.toFixed(0)}`);
-note('D the settle anims run to sleep1', W.anim === 'sleep1', W.anim);
+note('D the settle anims run to the sleeping breath', W.anim === 'sleep_breath', W.anim);
 await hold('jump'); await sleep(100); await hold('jump', false);
 await hold('left'); await sleep(400); await hold('left', false);
 await poll();
-note('D movement keys change nothing once asleep', Math.abs(W.x - 3520) <= 5 && W.anim === 'sleep1');
+note('D movement keys change nothing once asleep', Math.abs(W.x - 3520) <= 5 && W.anim === 'sleep_breath');
 
 // ---- the last lines ------------------------------------------------------------
 const want = [

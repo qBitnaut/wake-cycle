@@ -454,11 +454,12 @@ func _build_clouds(lut: Texture2D) -> void:
 	add_child(holder)
 	var mat := _layer_mat(lut)
 	var defs := [
-		# texture, layer x, y, gone by p (camera)
-		["cloud_c", 30.0, 36.0, 0.62], ["cloud_a", 250.0, 18.0, 0.58], ["cloud_b", 470.0, 54.0, 0.66],
-		["cloud_c", 600.0, 24.0, 0.55], ["cloud_a", 820.0, 46.0, 0.6], ["cloud_d", 160.0, 80.0, 0.7],
-		["cloud_b", 380.0, 92.0, 0.64], ["cloud_d", 700.0, 100.0, 0.68], ["cloud_c", 960.0, 70.0, 0.6],
-		["cloud_b", 120.0, 60.0, 2.0], ["cloud_d", 560.0, 120.0, 2.0], ["cloud_a", 900.0, 30.0, 2.0],
+		# texture, layer x, y of the texture's bottom edge (the cloud's base
+		# stays put however tall its puffs are), gone by p (camera)
+		["cloud_c", 30.0, 98.0, 0.62], ["cloud_a", 250.0, 72.0, 0.58], ["cloud_b", 470.0, 90.0, 0.66],
+		["cloud_c", 600.0, 86.0, 0.55], ["cloud_a", 820.0, 100.0, 0.6], ["cloud_d", 160.0, 104.0, 0.7],
+		["cloud_b", 380.0, 128.0, 0.64], ["cloud_d", 700.0, 124.0, 0.68], ["cloud_c", 960.0, 132.0, 0.6],
+		["cloud_b", 120.0, 96.0, 2.0], ["cloud_d", 560.0, 144.0, 2.0], ["cloud_a", 900.0, 84.0, 2.0],
 	]
 	for d in defs:
 		var s := Sprite2D.new()
@@ -466,7 +467,7 @@ func _build_clouds(lut: Texture2D) -> void:
 		s.centered = false
 		s.material = mat
 		holder.add_child(s)
-		_clouds.append([s, d[1], d[2], d[3]])
+		_clouds.append([s, d[1], d[2] - s.texture.get_height(), d[3]])
 
 
 ## A horizontal band of art in its own holder, moved at `scroll` of the camera.

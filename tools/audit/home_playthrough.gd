@@ -170,9 +170,16 @@ func _flap() -> void:
 	hold("move_right", false)
 	await wait_until(func(): return lines_of("home_flap").size() >= 1, 600)
 	note("C home_flap plays at the steps", lines_of("home_flap") == ["Still unlocked. They left it open for me."], str(lines_of("home_flap")))
-	await wait_until(func(): return int(room.get("beat")) == 2, 600)
+	# The facade's eave drips and window glints go with it, falling drops too.
+	var wet_max := 0
+	var n := 0
+	while int(room.get("beat")) != 2 and n < 600:
+		wet_max = maxi(wet_max, int(room.call("facade_wet")))
+		await ticks(1)
+		n += 1
 	await wait_until(func(): return float(room.get("facade_amount")) <= 0.0, 120)
 	note("C the facade has dissolved", float(room.get("facade_amount")) <= 0.0 and not room.get_node("Facade").visible)
+	note("C ... and its drips and glints faded with it (none left inside)", wet_max > 0 and int(room.call("facade_wet")) == 0, "%d at the dissolve, %d now" % [wet_max, int(room.call("facade_wet"))])
 	note("C the cat is inside, past the door, visible", x() > 3270.0 and cat.get("sprite").modulate.a > 0.99, "x=%.0f" % x())
 	note("C control is back inside", cat.can_move)
 	measure("through the flap", "%.1f s" % ((_frames - t0) / 60.0))
@@ -206,7 +213,7 @@ func _settle() -> void:
 	await ticks(3)
 	hold("jump", false)
 	asleep_at = _frames
-	note("D the cat settles: walk, sit, lie down, sleep", _has_order(_anims, ["walk", "sit", "lie_down", "sleep1"]), str(_anims))
+	note("D the cat settles: walk, sit, lie down, sleep", _has_order(_anims, ["walk", "sit", "lie_down", "sleep_breath"]), str(_anims))
 	note("D input stays locked: the cat keeps to its spot", max_x - min_x <= 9.0 and absf(x() - spot) <= 5.0, "x %.0f..%.0f spot %.0f" % [min_x, max_x, spot])
 	note("D it sleeps on the cushion (sprite raised onto it)", cat.get("sprite").position.y < CatFrames.SPRITE_Y - 0.5, str(cat.get("sprite").position.y))
 	measure("settle (spot to asleep)", "%.1f s" % ((_frames - t0) / 60.0))
@@ -215,11 +222,29 @@ func _settle() -> void:
 	var e1: float = aug.call("emitter_energy")
 	var lo := 9.0
 	var hi := 0.0
+	# No flicker: the sprite holds a whole-pixel transform (no scale) and only
+	# the breath's frames change, each held for its whole duration.
+	var steady := true
+	var changes := 0
+	var last := spr.frame
+	var held := 0
+	var shortest := 99999
 	for k in 300:
 		await ticks(1)
 		var e: float = aug.call("emitter_energy")
 		lo = minf(lo, e)
 		hi = maxf(hi, e)
+		steady = steady and spr.scale == Vector2.ONE and spr.position == spr.position.round() and spr.animation == "sleep_breath"
+		held += 1
+		if spr.frame != last:
+			changes += 1
+			if changes > 1:
+				shortest = mini(shortest, held)
+			held = 0
+			last = spr.frame
+	note("D asleep it holds still: whole pixels, no scaling", steady, "scale %s pos %s" % [spr.scale, spr.position])
+	note("D ... and breathes slowly (each frame held 0.3 s or more)", changes >= 3 and shortest >= 17, "%d frame changes in 5 s, shortest hold %d ticks" % [changes, shortest])
+	note("D the house stays dry inside", int(room.call("facade_wet")) == 0)
 	note("D the augments stay on and settle to a dim glow", aug.get("shown") and aug.call("is_sleeping") and hi <= 0.35 and e1 <= 0.35, "%.2f..%.2f" % [lo, hi])
 	note("D ... that breathes slowly", hi - lo > 0.06, "%.2f..%.2f" % [lo, hi])
 	var cz: Node = room.get("cine")
@@ -235,7 +260,7 @@ func _settle() -> void:
 	await wait_until(func(): return lines_of("home_final").size() >= 5 and not mono().is_speaking(), 3600)
 	note("D home_final, every line in order", lines_of("home_final") == want, str(lines_of("home_final")))
 	measure("asleep to the last line's end", "%.1f s" % ((_frames - asleep_at) / 60.0))
-	note("D still asleep, still on the spot", cat.get("sprite").animation == "sleep1" and absf(x() - spot) <= 5.0)
+	note("D still asleep, still on the spot", cat.get("sprite").animation == "sleep_breath" and absf(x() - spot) <= 5.0)
 	var t1 := _frames
 	await wait_until(func(): return current_scene != room, 900)
 	measure("last line to the credits", "%.1f s" % ((_frames - t1) / 60.0))
@@ -269,8 +294,11 @@ func _credits() -> void:
 	var roll: Control = ui.get_node("Roll")
 	var texts: Array = roll.get_children().map(func(l): return l.text)
 	note("E the credits name the jam, the theme and the restriction", texts.has("A Jamference game jam entry") and texts.has("Theme: Cat and Robot") and texts.has("Restriction: Movement input only"))
-	note("E ... the maker and the crew", texts.has("Chris (qBitnaut)") and texts.has("with an AI crew: Claude Code agents"))
-	note("E ... the asset authors", texts.has("The cat: Pet Cats Pack - luizmelo") and texts.has("monogram - datagoblin") and texts.has("- Luis Zuno (ansimuz)"))
+	note("E ... the maker and the crew", texts.has("Chris (qBitnaut)") and texts.has("with the AI crew in Claude Code:") and texts.has("Janeway, orchestrating;"))
+	note("E ... the asset authors", texts.has("The cat: Pet Cats Pack - luizmelo") and texts.has("monogram - datagoblin") and texts.has("- Luis Zuno (ansimuz), harmonised") and texts.has("- bart and rubberduck, recoloured"))
+	note("E ... the sound as generated with ElevenLabs, the narrator's voice named", texts.has("generated with ElevenLabs") and texts.has("Narrator: Will - Relaxed Optimist"))
+	var gone := ["Junkala", "SubspaceAudio", "Kenney", "qubodup", "SFX Loops", "Chiptunes"]
+	note("E ... and none of the retired audio packs", texts.all(func(t): return gone.all(func(g): return not String(t).contains(g))))
 	note("E ... and ends with thanks", texts.back() == "Thanks for playing.", str(texts.back()))
 	var y0 := roll.position.y
 	await secs(2.0)

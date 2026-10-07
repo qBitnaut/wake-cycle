@@ -11,7 +11,14 @@ const SCALE := 1.5
 ## centred, so this puts the outline under the paws (row 48) on the floor line.
 const SPRITE_Y := -12.0
 
-# name: [sheet, fps, loop, frame indices (empty = all)]
+## The sleeping breath (sleep_breath): rest, half in, full in, half out, in
+## seconds. One breath is 4.4 s, CatAugments.sleep_period, so the emitters'
+## glow can breathe with it (CatAugments.sync_breath(BREATH_PEAK)).
+const BREATH := [2.4, 0.3, 1.4, 0.3]
+## Seconds from the breath's start to the middle of the full in-breath.
+const BREATH_PEAK := 3.4
+
+# name: [sheet, fps, loop, frame indices (empty = all), frame durations (optional)]
 const ANIMS := {
 	"idle": ["idle", 8.0, true, []],
 	"walk": ["walk", 12.0, true, []],
@@ -28,6 +35,10 @@ const ANIMS := {
 	"sit": ["sitting", 1.0, true, []],
 	"sleep1": ["sleeping1", 1.0, true, []],
 	"sleep2": ["sleeping2", 1.0, true, []],
+	# The ending's sleep: sleeping1 with its flank rising one pixel and
+	# falling again (tools/art/cat_poses.py). Whole pixels only: a scaled
+	# sprite re-samples its rows and flickers.
+	"sleep_breath": ["sleep_breath", 1.0, true, [0, 1, 2, 1], BREATH],
 	# Seated, licking a raised front paw. The leg-up groom (licking_2) read
 	# as the cat licking its crotch and is left out.
 	"lick1": ["licking_1", 6.0, false, []],
@@ -52,9 +63,10 @@ static func build() -> SpriteFrames:
 		if idx.is_empty():
 			for i in int(tex.get_width() / FRAME):
 				idx.append(i)
-		for i in idx:
+		var durations: Array = def[4] if def.size() > 4 else []
+		for k in idx.size():
 			var at := AtlasTexture.new()
 			at.atlas = tex
-			at.region = Rect2(i * FRAME, 0, FRAME, FRAME)
-			sf.add_frame(anim, at)
+			at.region = Rect2(idx[k] * FRAME, 0, FRAME, FRAME)
+			sf.add_frame(anim, at, durations[k] if k < durations.size() else 1.0)
 	return sf

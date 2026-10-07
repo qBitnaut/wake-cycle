@@ -11,6 +11,7 @@ extends Node2D
 ##     aug.clear_power()                          # neutral soft blue-green
 ##     aug.flare()                                # burst (shockwave, dash)
 ##     aug.set_sleeping(true)                     # dim, slow breathing glow
+##     aug.sync_breath(CatFrames.BREATH_PEAK)     # ... in time with sleep_breath
 ##
 ## The art is one overlay sheet per cat sheet (assets/sprites/cat/augments,
 ## drawn by tools/art/cat_augments.py from per-frame anchors), so every
@@ -166,6 +167,13 @@ func set_sleeping(on: bool, settle := 3.0) -> void:
 		clear_power()
 	_sleep_target = 1.0 if on else 0.0
 	_sleep_ease = maxf(settle, 0.01)
+
+
+## Time the sleeping glow's breath: its brightest moment comes `peak_in`
+## seconds from now (and every sleep_period after), e.g. with the sprite's
+## in-breath (CatFrames.BREATH_PEAK).
+func sync_breath(peak_in: float) -> void:
+	_sleep_t = sleep_period * 0.25 - peak_in
 
 
 func is_sleeping() -> bool:

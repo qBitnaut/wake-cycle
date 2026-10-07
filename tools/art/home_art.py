@@ -266,6 +266,12 @@ def sun_disc(d=23):
 
 
 def cloud(w, h, seed, flat=0.62):
+    """A cumulus of lit puffs on a flat base, h * flat from the top of a w x h
+    layout. The tallest puffs rise above that layout, so the canvas grows
+    upward until they fit under a row of air: the cloud is never cut flat at
+    the top. The base keeps its distance from the canvas bottom (DayBackdrop
+    places clouds by their bottom edge), and the dither and noise keep their
+    phase, so the old rows are unchanged."""
     rng = np.random.default_rng(seed)
     balls = []
     n = max(int(w / 14), 4)
@@ -279,13 +285,19 @@ def cloud(w, h, seed, flat=0.62):
         x = rng.uniform(w * 0.3, w * 0.7)
         r = h * rng.uniform(0.28, 0.40)
         balls.append((x, base - r * 0.75, r))
-    mask, lam, rim = blob_light(w, h, balls)
-    yy, xx = np.mgrid[0:h, 0:w]
+    pad = max(0, 1 - int(np.floor(min(cy - r for _x, cy, r in balls))))
+    H = h + pad
+    mask, lam, rim = blob_light(w, H, [(x, cy + pad, r) for x, cy, r in balls])
+    yy, xx = np.mgrid[0:H, 0:w]
+    yy = yy - pad
     mask &= yy < base + 2
     under = np.clip((yy - (base - h * 0.18)) / (h * 0.25), 0, 1)
-    v = lam * 0.85 + rim * 0.35 - under * 0.45 + value_noise(w, h, 8, seed + 7, 2) * 0.12
-    c = Canvas(w, h)
-    c.a = quantize(np.clip(v, 0, 1), CLOUD, mask, dither=0.5)
+    noise = value_noise(w, h, 8, seed + 7, 2)
+    noise = np.vstack([noise[1:pad + 1][::-1], noise])  # mirrored up into the new rows
+    v = lam * 0.85 + rim * 0.35 - under * 0.45 + noise * 0.12
+    c = Canvas(w, H)
+    c.a = quantize(np.clip(v, 0, 1), CLOUD, mask, dither=0.5, oy=-pad % 4)
+    assert not c.a[0, :, 3].any(), "a cloud reaches the top of its canvas"
     return c
 
 

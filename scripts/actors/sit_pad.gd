@@ -28,6 +28,8 @@ const TEASE_RANGE := 48.0
 
 var charge := 0.0
 var sign_text := ""
+## The sign's text is shifted this far sideways (px); the arrow stays over the pad.
+var sign_dx := 0.0
 var _t := 0.0
 var _used := false
 var _teased := false
@@ -136,8 +138,8 @@ func _draw() -> void:
 		var col := bright if i == 0 else Color(bright, 0.92)
 		# A subtle glow: a faint halo of offset copies under the crisp text.
 		for o in [Vector2(-1.5, 0), Vector2(1.5, 0), Vector2(0, -1.5), Vector2(0, 1.5)]:
-			draw_string(FONT, Vector2(-80, ly) + o, lines[i], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, Color(c, 0.22))
-		draw_string(FONT, Vector2(-80, ly), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, col)
+			draw_string(FONT, Vector2(-80 + sign_dx, ly) + o, lines[i], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, Color(c, 0.22))
+		draw_string(FONT, Vector2(-80 + sign_dx, ly), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, col)
 	draw_colored_polygon(PackedVector2Array([Vector2(-6, y + 10), Vector2(6, y + 4), Vector2(6, y + 16)]), c)
 	# The charge ring above the plate.
 	var centre := Vector2(0, -26)

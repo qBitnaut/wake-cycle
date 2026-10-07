@@ -413,6 +413,7 @@ func _main() -> void:
 	done("home", rh)
 	await _fresh_room1()
 	await shot("back_in_room1")
+	await _next_boot()
 	_report()
 
 
@@ -569,7 +570,7 @@ func _fresh_room1() -> void:
 	note("END back in Room 1 after the credits", s != null and s.scene_file_path == ROOM1, str(s.scene_file_path if s else "?"))
 	note("END a fresh game: no mind, no shockwave, no power, full health, no score", not gs().intelligence and not gs().shockwave_unlocked and gs().power == 0 and gs().health == 3 and gs().score == 0 and gs().keys.is_empty() and gs().letter_mask == 0 and gs().collected.is_empty(), str(snap()))
 	note("END the credits' new game cleared the map", gs().map_completed.is_empty() and gs().map_unlocked.is_empty() and gs().map_node == "", "completed %s node %s" % [str(gs().map_completed), gs().map_node])
-	note("END no checkpoint, no ContinuePad, the game marked complete", not ss().has_save() and ss().session_checkpoint == "" and ss().is_complete() and not s.get_node("ContinuePad").visible)
+	note("END no checkpoint, no ContinuePad, the game marked complete", not ss().has_save() and ss().session_checkpoint == "" and ss().is_complete() and not s.get_node("ContinuePad").visible and not s.get_node("StartOverPad").visible)
 	note("END the cat has no augments again, and starts asleep", cat != null and cat.get_node_or_null("Sprite/Augments") == null and not cat.can_move and cat.forced_anim.begins_with("sleep"), "anim %s" % (cat.forced_anim if cat else "?"))
 	note("END the monologue starts over, with no memory waiting for a mind", mono().history.is_empty() and gs().pending_memory == "")
 	# The intro plays again, then control.
@@ -581,6 +582,22 @@ func _fresh_room1() -> void:
 	note("END no power UI, the shockwave locked again", gs().power == 0 and not gs().shockwave_unlocked)
 	# A second Room 1 start through the deep-link path is a fresh one too: nothing is left in GameState.
 	cat.set_can_move(false)
+
+
+## After the credits, the NEXT launch: a new process holds nothing in memory, so Room 1 is
+## booted from what is on disk alone. No save, so no Continue pad and no Start Over pad (the
+## completed flag is all that remains), whether the credits were left or the browser closed.
+func _next_boot() -> void:
+	gs().new_game()
+	mono().reset()
+	ss().session_scene = ""
+	ss().session_checkpoint = ""
+	ss().session_snapshot = {}
+	change_scene_to_file(ROOM1)
+	await ticks(30)
+	var s := current_scene
+	note("BOOT the next launch after completion: no save on disk, only the completed flag", not ss().has_save() and not FileAccess.file_exists("user://save.json") and ss().is_complete())
+	note("BOOT ... no Continue pad and no Start Over pad", s.scene_file_path == ROOM1 and not s.get_node("ContinuePad").visible and not s.get_node("StartOverPad").visible and not s.get_node("ContinuePad").monitoring and not s.get_node("StartOverPad").monitoring)
 
 
 ## Narration: every line has a clip, each clip played with its subtitle held at least as long,

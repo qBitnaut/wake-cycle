@@ -350,6 +350,12 @@ func _watch() -> Dictionary:
 	return out
 
 
+## [visible, charge, x, y] of a SitPad (the web audits read the Continue / Start Over pads), or null.
+func _pad_state(node_name: String) -> Variant:
+	var p := get_node_or_null(node_name) as SitPad
+	return [p.visible, p.charge, p.global_position.x, p.global_position.y] if p else null
+
+
 func _publish() -> void:
 	var ripples := 0
 	for z in _zones:
@@ -386,6 +392,7 @@ func _publish() -> void:
 		"glintT": fposmod(_flag("LetterT", "_t") if get_node_or_null("LetterT") else -1.0, 2.6),
 		"door": get_node_or_null("DoorOffice") != null, "n": _watch(), "lmask": GameState.letter_mask,
 		"got": GameState.collected.map(func(c): return String(c).get_file()),
+		"padC": _pad_state("ContinuePad"), "padS": _pad_state("StartOverPad"), "complete": SaveSystem.is_complete(),
 	}
 	d["loops"] = LoopSfx.census_cached(get_tree())
 	d["audio"] = AudioDirector.web_state()

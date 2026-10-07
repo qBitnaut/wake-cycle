@@ -188,6 +188,9 @@ func _flap() -> void:
 	await wait_until(func(): return int(room.get("beat")) >= 3, 900)
 	measure("door to the sunbeam", "%.1f s" % ((_frames - t1) / 60.0))
 	note("C walking into the sunbeam starts the settle", int(room.get("beat")) == 3)
+	# The story counts as complete the moment the final sleep begins: the Home auto-save is gone then,
+	# not at the end of the credits (a browser closed mid-credits must leave no Continue to the house).
+	note("C the final sleep has begun: the run's save is cleared and the game is marked complete", ss().call("is_complete") and not ss().has_save() and ss().session_scene == "" and ss().session_snapshot.is_empty(), "save %s" % str(ss().has_save()))
 
 
 func _settle() -> void:
@@ -329,6 +332,7 @@ func _credits() -> void:
 	note("E ... from the very start (asleep, the intro)", r1 != null and int(r1.get("beat")) == 0)
 	note("E ... as a fresh game (no mind, no shockwave, no monologue)", not gs().intelligence and not gs().shockwave_unlocked and mono().history.is_empty())
 	note("E the game is marked complete and the checkpoint cleared", ss().call("is_complete") and not ss().has_save())
+	note("E ... and Room 1's pads are gone: no Continue pad, no Start Over pad", not r1.get_node("ContinuePad").visible and not r1.get_node("StartOverPad").visible)
 	note("E the ending music is gone", root.get_node("AudioDirector").music_key != "home", "key %s" % root.get_node("AudioDirector").music_key)
 
 

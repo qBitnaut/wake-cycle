@@ -15,6 +15,7 @@ const TEASE_SET := "continue_tease"
 
 func _ready() -> void:
 	super()
+	sign_dx = 50.0  # clear of the Start Over pad's ring above-left
 	if visible:
 		sign_text = SaveSystem.saved_room_name(_save, true)
 

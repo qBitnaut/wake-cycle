@@ -88,6 +88,8 @@ const SOUNDS = [
   ['pickup fish', 'pickup_fish'], ['laser zap', 'laser_zap'], ['laser fence hum (loop)', 'loop:laser_hum'],
   ['turret fire', 'turret_fire'], ['robot explosion', 'robot_explode'], ['crusher slam', 'crusher_slam'],
   ['hurt', 'hurt'], ['door open', 'door_open'], ['checkpoint', 'checkpoint'],
+  ['meow: curious', 'meow:0'], ['meow: questioning mrrp', 'meow:1'], ['meow: trill', 'meow:2'],
+  ['meow: uneasy', 'meow:3'], ['meow: small mew', 'meow:4'],
 ];
 const rows = [];
 for (const [label, name] of SOUNDS) {

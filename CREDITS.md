@@ -40,7 +40,7 @@ the two bird chirps listed at the bottom.
 | What | Generated with | Location |
 |---|---|---|
 | Narration of the cat's inner monologue: every line of `data/monologue.json`, voiced by the premade voice "Will - Relaxed Optimist", model `eleven_v4_turbo`; settings in `voice.json` | ElevenLabs Text to Speech | `assets/audio/voice/` |
-| Sound effects: footsteps, movement, powers, pickups, doors, lasers, robots, the goo transformation, thunder, UI-less map sounds. `sfx.json` maps the logical names to files | ElevenLabs Sound Effects API (`/v1/sound-generation`) | `assets/audio/sfx/` |
+| Sound effects: footsteps, movement, powers, pickups, doors, lasers, robots, the goo transformation, thunder, the cat's meows (before its mind wakes), UI-less map sounds. `sfx.json` maps the logical names to files | ElevenLabs Sound Effects API (`/v1/sound-generation`) | `assets/audio/sfx/` |
 | Ambience loops per scene (warehouse, yard, stacks, perimeter, home, map) and a smooth rain loop | ElevenLabs Sound Effects API (loop mode) | `assets/audio/amb/` |
 | Music: warehouse, yard, stacks, perimeter, home (also the credits) and map, each cut into a seamless loop with an ffmpeg crossfade | ElevenLabs Music API (`/v1/music`, instrumental) | `assets/audio/music/wc_*.ogg` |
 

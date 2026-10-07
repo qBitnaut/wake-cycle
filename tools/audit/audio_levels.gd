@@ -74,6 +74,7 @@ func _sample() -> void:
 			if _t > _bed_secs:
 				_dump_players()
 				mono.reset()
+				root.get_node("GameState").awaken_mind()   # the cat has no voice before the goo: wake it, then it speaks
 				mono.play_line(_line[0], _line[1])
 				_phase = "voice"
 				_t = 0.0

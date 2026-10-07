@@ -18,6 +18,12 @@ extends CanvasLayer
 ##   Monologue.play_memory("memory_yard")  a memory fragment: the set, with the music and
 ##                                      ambience ducked deep and a faint warm glow pulse
 ##
+## No inner voice before the goo: while GameState.intelligence is false every entry point
+## (play, play_once, play_line, say, play_memory) shows nothing and speaks nothing; the cat just
+## meows (meow(), a variant by context, and the cat's meow pose when it is standing). A memory
+## fragment found then is kept in GameState.pending_memory and played by play_pending_memory()
+## (the world map calls it) once the mind is awake.
+##
 ## Over a CineZoom close-up the layer is handed to CineZoom's unmagnified overlay
 ## (CineZoom.attach_overlay), which covers the whole window, so lines show over
 ## the letterbox too.
@@ -85,7 +91,13 @@ var voice_active := false
 ## deeper and the glow holds.
 var memory_active := false
 
+## Every meow made in place of a line, in order: [set id ("" for say), variant]. For audits.
+var meow_log: Array = []
+## How many of those meows actually started a sound (an SFX player was created). For audits.
+var meow_sounds := 0
+
 var _sets := {}
+var _last_meow := -1
 var _played := {}
 var _queue: Array = []  # [id, text, hold, last_of_set, after]
 var _busy := false
@@ -162,8 +174,47 @@ func _load() -> void:
 		push_warning("Monologue: %s is not a JSON object" % DATA)
 
 
+## Which meow (index into the "meow" sfx variants: 0 curious, 1 questioning mrrp, 2 trill,
+## 3 uneasy low, 4 small determined mew) goes with which set. Anything else: random, never
+## the same twice running.
+const MEOW_FOR := {
+	"warehouse_climb": 1, "warehouse_roof": 0, "warehouse_shaft": 4, "warehouse_lab": 3,
+	"continue_tease": 0, "memory_warehouse": 2,
+}
+const MEOW_VARIANTS := 5
+
+
+## The cat has no inner voice until the goo wakes its mind: true (and a meow instead) while
+## GameState.intelligence is false.
+func mute_for_mind(id := "") -> bool:
+	if GameState.intelligence:
+		return false
+	meow(id)
+	return true
+
+
+## The cat's own vocalisation, in place of a line: a meow on the SFX bus at full level (it is
+## the cat's own sound) and the meow pose when the cat is idle or standing. `id` picks the
+## variant by context (MEOW_FOR).
+func meow(id := "") -> void:
+	var v: int = MEOW_FOR.get(id, -1)
+	if v < 0:
+		v = randi() % MEOW_VARIANTS
+		if v == _last_meow:
+			v = (v + 1 + randi() % (MEOW_VARIANTS - 1)) % MEOW_VARIANTS
+	_last_meow = v
+	meow_log.append([id, v])
+	var cat := get_tree().get_first_node_in_group("player") as Cat
+	if Sfx.play(cat if cat else self, "meow", 0.0, 1.0, v) != null:
+		meow_sounds += 1
+	if cat:
+		cat.meow_pose()
+
+
 ## Queue every line of the set `id` behind whatever is on screen.
 func play(id: String) -> void:
+	if mute_for_mind(id):
+		return
 	var lines: Array = _sets.get(id, [])
 	if lines.is_empty():
 		push_warning("Monologue: no lines for '%s'" % id)
@@ -184,10 +235,39 @@ func play_memory(id: String) -> void:
 	if not has_set(id):
 		push_warning("Monologue: no lines for '%s'" % id)
 		return
+	if not GameState.intelligence:
+		# No words yet: a soft meow and the warm glow, and the memory waits for the mind.
+		GameState.pending_memory = id
+		meow(id)
+		_glow_pulse()
+		return
 	_memory_id = id
 	memory_active = true
 	_glow_to(GLOW_PEAK, 1.2)
 	play(id)
+
+
+## The memory kept by play_memory() before the mind woke, played now. False when none waits
+## (or the mind is still asleep).
+func play_pending_memory() -> bool:
+	var id := GameState.pending_memory
+	if id == "" or not GameState.intelligence:
+		return false
+	GameState.pending_memory = ""
+	play_memory(id)
+	return true
+
+
+## The memory glow and the deeper duck, with no words: swells, holds a moment, eases out.
+func _glow_pulse() -> void:
+	memory_active = true
+	_glow_to(GLOW_PEAK, 1.0)
+	get_tree().create_timer(1.6).timeout.connect(func():
+		if _memory_id == "":
+			_glow_to(0.0, 2.0)
+			get_tree().create_timer(2.4).timeout.connect(func():
+				if _memory_id == "":
+					memory_active = false))
 
 
 func _on_set_finished(id: String) -> void:
@@ -211,6 +291,8 @@ func _glow_to(v: float, secs: float) -> void:
 ## Queue one line of the set `id` (0-based), e.g. the count-th line of a
 ## counting set. Out of range plays the last line.
 func play_line(id: String, index: int) -> void:
+	if mute_for_mind(id):
+		return
 	var lines: Array = _sets.get(id, [])
 	if lines.is_empty():
 		push_warning("Monologue: no lines for '%s'" % id)
@@ -229,6 +311,8 @@ func play_line(id: String, index: int) -> void:
 func play_once(id: String) -> bool:
 	if _played.has(id):
 		return false
+	if mute_for_mind(id):
+		return false  # not marked as played: it can still be told once the mind is awake
 	_played[id] = true
 	play(id)
 	return true
@@ -236,6 +320,8 @@ func play_once(id: String) -> bool:
 
 ## One ad-hoc line. hold < 0 times it by its length.
 func say(text: String, hold := -1.0) -> void:
+	if mute_for_mind():
+		return
 	_queue.append(["", text, hold, false, 0.0, -1])
 	if not _busy:
 		_next()
@@ -259,6 +345,8 @@ func reset() -> void:
 	history.clear()
 	_queue.clear()
 	voice_log.clear()
+	meow_log.clear()
+	meow_sounds = 0
 	_stop_voice()
 	_busy = false
 	_memory_id = ""

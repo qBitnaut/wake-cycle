@@ -473,6 +473,23 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 		_idle_loop()
 
 
+## The meow pose, for the cat's vocalisations (Monologue.meow): only when the cat is idle or
+## standing on the floor, never over a move, a cutscene or a crouch, and it takes no input
+## (any movement ends it). Returns whether the pose played.
+func meow_pose() -> bool:
+	if dead or not can_move or forced_anim != "" or crouched or dash_left > 0.0 \
+			or not is_on_floor() or absf(velocity.x) > 14.0 or not _has("meow"):
+		return false
+	var secs := float(sprite.sprite_frames.get_frame_count("meow")) / sprite.sprite_frames.get_animation_speed("meow")
+	_oneshot = secs + 0.2
+	_idle_t = 0.0
+	_slept = false
+	anim_switches += 1
+	sprite.speed_scale = 1.0
+	sprite.play("meow")
+	return true
+
+
 func _idle_wake() -> void:
 	if _slept:
 		_slept = false

@@ -187,6 +187,10 @@ unlock (nothing starts before the first key, click or touch). `Sfx.play(self, "j
 a manifest name (`assets/audio/sfx/sfx.json`). `Monologue` speaks each line when a clip
 `assets/audio/voice/<id>_<n>.ogg` exists and holds the subtitle for at least the clip plus a
 short tail; a line without a clip is text only. Loops are always streams, never web samples.
+The cat has no inner voice until the goo wakes its mind (`GameState.intelligence`): before that every
+`Monologue` call shows nothing and the cat meows instead (`Monologue.meow`, the `meow` sfx group, a
+variant by context, plus the cat's meow pose when it stands). A memory fragment found then waits in
+`GameState.pending_memory` (saved with the run) and plays when the world map first opens after Room 1.
 The web audits publish `window.__wake.audio` (`AudioDirector.web_state()`).
 
 ## Room 1 and the powers

@@ -136,6 +136,7 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 		"scene": scene_path,
 		"checkpoint": id,
 		"abilities": {"shockwave": GameState.shockwave_unlocked, "mind": GameState.intelligence},
+		"pending_memory": GameState.pending_memory,
 		"keys": GameState.keys.duplicate(),
 		"letters": GameState.letters,
 		"letter_mask": GameState.letter_mask,
@@ -187,6 +188,7 @@ func continue_game(from: Node = null) -> bool:
 		"keys": d.get("keys", []),
 		"letter_mask": int(d.get("letter_mask", (1 << int(d.get("letters", 0))) - 1)),
 		"mind": bool(d.get("abilities", {}).get("mind", false)),
+		"pending_memory": String(d.get("pending_memory", "")),
 		"collected": d.get("collectibles", []),
 		"shockwave": bool(d.get("abilities", {}).get("shockwave", false)),
 	}

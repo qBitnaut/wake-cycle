@@ -114,7 +114,7 @@ var _js_callbacks: Array = []
 
 ## Debug web builds only (tools/audit/web_sfx_levels.mjs), in every scene:
 ## wakeSfx(name) plays one sound through the game's own path (Sfx.play, else KitSfx.play),
-## "loop:<name>" attaches a LoopSfx to the cat for 3 s; wakeBus(name, muted) mutes a bus.
+## "meow:<n>" one variant of the meow, "loop:<name>" attaches a LoopSfx to the cat for 3 s; wakeBus(name, muted) mutes a bus.
 func _setup_web_hooks() -> void:
 	var win := JavaScriptBridge.get_interface("window")
 	var sfx := JavaScriptBridge.create_callback(func(a):
@@ -125,6 +125,8 @@ func _setup_web_hooks() -> void:
 			if st != null and cat != null:
 				var l := LoopSfx.attach(cat, st, Sfx.level_db(n.substr(5)), 1.0, 420.0)
 				get_tree().create_timer(3.0).timeout.connect(l.retire)
+		elif n.begins_with("meow:"):
+			Sfx.play(self, "meow", 0.0, 1.0, int(n.substr(5)))  # one variant of the cat's meow
 		elif Sfx.has(n):
 			Sfx.play(self, n)
 		else:

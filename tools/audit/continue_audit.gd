@@ -89,6 +89,8 @@ func _main() -> void:
 	await fresh_room1()
 	var p := pad()
 	note("3 valid v2 save: pad shown, left of the wake spot, sign 'Room 3: The Stacks'", p.visible and p.global_position.x < cat.global_position.x - 32.0 and p.sign_text == "Room 3: The Stacks", "%s x=%.0f" % [p.sign_text, p.global_position.x])
+	var mono := root.get_node("Monologue")
+	var lines_before: int = mono.history.size()
 	await walk_to(p.global_position.x + 90.0)
 	var charge_max := 0.0
 	for i in 40:  # a brush-past, walking straight through at full speed
@@ -102,6 +104,7 @@ func _main() -> void:
 	note("3b brush-past does not trigger", current_scene == room and charge_max < 1.0, "max charge %.2f" % charge_max)
 	await walk_to(p.global_position.x)
 	await ticks(20)
+	note("3b2 the pad's tease is a meow, not words: no mind yet, so no subtitle and no narration", mono.meow_log.any(func(m): return m[0] == "continue_tease") and mono.history.size() == lines_before and mono.voice_log.is_empty() and not mono.is_speaking(), str(mono.meow_log))
 	note("3c standing charges the ring but not yet (0.33 s)", current_scene == room and p.charge > 0.2 and p.charge < 1.0, "%.2f" % p.charge)
 	await ticks(60)
 	await ticks(60)
@@ -133,6 +136,23 @@ func _main() -> void:
 	var start_x := cat.global_position.x
 	await walk_to(start_x + 200.0)
 	note("5 walking right from the wake spot never triggers Continue", current_scene == room and pad().charge == 0.0 and cat.global_position.x > start_x + 150.0, "x=%.0f" % cat.global_position.x)
+
+	# A memory waiting for the mind (found in Room 1 before the goo) survives a checkpoint save and a Continue.
+	gs().new_game()
+	gs().pending_memory = "memory_warehouse"
+	ss().save_checkpoint("cp_a", R1)
+	note("6 the pending memory is written with the checkpoint", String(ss().read_save().get("pending_memory", "")) == "memory_warehouse")
+	gs().new_game()
+	note("6b a new game forgets it", gs().pending_memory == "")
+	ss().session_scene = ""
+	ss().session_checkpoint = ""
+	ss().continue_game()
+	await ticks(20)
+	note("6c Continue restores it", gs().pending_memory == "memory_warehouse" and not gs().intelligence, gs().pending_memory)
+	gs().restore(gs().snapshot())
+	note("6d snapshot / restore keep it (a respawn)", gs().pending_memory == "memory_warehouse")
+	gs().awaken_mind()
+	note("6e once the mind is awake it plays (both lines, subtitles) and the flag clears", mono.play_pending_memory() and gs().pending_memory == "" and mono.is_speaking() and not mono.play_pending_memory())
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))
 	print("%s" % ("CONTINUE AUDIT PASS" if fails == 0 else "CONTINUE AUDIT FAIL (%d)" % fails))

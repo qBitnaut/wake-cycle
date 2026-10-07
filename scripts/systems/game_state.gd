@@ -33,6 +33,9 @@ var letters: int:  # how many are found (0..3)
 		return (letter_mask & 1) + ((letter_mask >> 1) & 1) + ((letter_mask >> 2) & 1)
 ## True once the pool in Room 1 has awakened the cat's mind (saved).
 var intelligence := false
+## A memory fragment found before the mind woke (Monologue set id): it has no words yet, so it
+## waits here and plays once the mind is awake (Monologue.play_pending_memory). Saved with the run.
+var pending_memory := ""
 var collected: Array[String] = []  # ids of one-off pickups and opened doors
 var shockwave_unlocked := false:
 	set(v):
@@ -62,6 +65,7 @@ func new_game() -> void:
 	keys.clear()
 	letter_mask = 0
 	intelligence = false
+	pending_memory = ""
 	collected.clear()
 	shockwave_unlocked = false
 	map_completed.clear()
@@ -152,6 +156,7 @@ func snapshot() -> Dictionary:
 		"keys": keys.duplicate(),
 		"letter_mask": letter_mask,
 		"mind": intelligence,
+		"pending_memory": pending_memory,
 		"collected": collected.duplicate(),
 		"shockwave": shockwave_unlocked,
 		"map": map_snapshot(),
@@ -182,6 +187,7 @@ func restore(data: Dictionary) -> void:
 		keys.append(String(k))
 	letter_mask = int(data.get("letter_mask", 0))
 	intelligence = bool(data.get("mind", false))
+	pending_memory = String(data.get("pending_memory", ""))
 	collected.clear()
 	for c in data.get("collected", []):
 		collected.append(String(c))

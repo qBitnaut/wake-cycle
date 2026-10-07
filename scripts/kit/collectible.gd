@@ -40,6 +40,8 @@ var picked := false
 
 var _t := randf() * 6.0
 var _id := ""
+## A robot's chip carries a stable id (KitEnemy.chip_id), so it is paid at most once.
+var _drop_id := ""
 var _drop_vel := Vector2.ZERO
 var _dropping := false
 var _grace := 0.0
@@ -48,10 +50,11 @@ var _rect := Rect2(-12, -12, 24, 24)
 
 
 ## A robot's loot: pops up out of `pos` and falls to the floor.
-static func drop(parent: Node, pos: Vector2, kind_: Kind) -> Collectible:
+static func drop(parent: Node, pos: Vector2, kind_: Kind, stable_id := "") -> Collectible:
 	var c := Collectible.new()
 	c.kind = kind_
-	c.persist = false
+	c.persist = stable_id != ""
+	c._drop_id = stable_id
 	c._dropping = true
 	c._drop_vel = Vector2(randf_range(-70.0, 70.0), -230.0)
 	c._grace = 0.35
@@ -78,7 +81,7 @@ func _ready() -> void:
 	add_child(cs)
 	body_entered.connect(_on_body)
 	if persist:
-		_id = str(get_path())
+		_id = _drop_id if _drop_id != "" else str(get_path())
 		if GameState.is_collected(_id):
 			queue_free()
 	z_index = 4
@@ -120,7 +123,7 @@ func pick(_c: Cat) -> void:
 		else:
 			Monologue.say(line)
 	if persist:
-		GameState.mark_collected(_id)
+		SaveSystem.persist_collected(_id)
 	collected.emit(kind)
 	queue_free()
 

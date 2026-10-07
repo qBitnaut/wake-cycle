@@ -114,6 +114,7 @@ func _ready() -> void:
 	add_child(hitbox)
 	hp = armour_hits
 	_setup()
+	_check_defeated_before()
 
 
 ## Subclass hook, after the art and boxes exist.
@@ -375,9 +376,56 @@ func _explode() -> void:
 	KitSfx.play(self, "robot_explode", 0.0, 1.0 / maxf(explosion_size, 0.5) * 0.8 + 0.4)
 	KitSfx.play(self, "debris", -2.0)
 	GameState.add_score(points)
-	if randf() < chip_chance:
-		Collectible.drop(parent, pos, Collectible.Kind.CHIP)
+	var id := kill_id()
+	if id != "":
+		SaveSystem.persist_collected(id)  # defeated for good, its points banked with it
+	if drops_chip():
+		Collectible.drop(parent, pos, Collectible.Kind.CHIP, chip_id())
 	defeated.emit(self)
+	queue_free()
+
+
+# ---- defeated for good ------------------------------------------------------------------
+# Farm-proof rule: a robot placed in a room that has been defeated stays defeated across a
+# death, a Continue, a room revisit and a reload, and its points are banked the moment it goes
+# (SaveSystem.persist_collected). Its data chip is decided once per robot (not by a dice roll
+# per defeat) and has a stable id, so a chip is paid at most once and is never lost: if the
+# robot was defeated but its chip was not taken, the chip waits where the robot stood.
+
+
+## Stable id of a robot placed in the room's scene; "" for one spawned at runtime.
+func kill_id() -> String:
+	return "kill:" + str(get_path()) if owner != null and is_inside_tree() else ""
+
+
+func chip_id() -> String:
+	return "chip:" + str(get_path()) if owner != null and is_inside_tree() else ""
+
+
+## Does this robot carry a chip? chip_chance is the share of robots that do; which ones is
+## fixed by the robot's path, so every playthrough agrees.
+func drops_chip() -> bool:
+	if chip_chance >= 1.0:
+		return true
+	if chip_chance <= 0.0:
+		return false
+	if kill_id() == "":
+		return randf() < chip_chance
+	return float(hash(kill_id()) % 1000) / 1000.0 < chip_chance
+
+
+func _check_defeated_before() -> void:
+	var id := kill_id()
+	if id == "" or not GameState.is_collected(id):
+		return
+	if drops_chip() and not GameState.is_collected(chip_id()):
+		Collectible.drop(get_parent(), centre(), Collectible.Kind.CHIP, chip_id())
+	collision_layer = 0
+	remove_from_group("enemy")
+	remove_from_group("kit_enemy")
+	remove_from_group("shock_receiver")
+	hide()
+	set_physics_process(false)
 	queue_free()
 
 

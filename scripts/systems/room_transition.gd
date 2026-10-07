@@ -11,6 +11,10 @@ static var _busy := false
 ## Set by continue_to: the next Level's fade_in shows this room-name title card.
 static var pending_title := ""
 static var pending_label := ""
+## Set by restart: the reloaded Level fades up (from the flash's warm white), no title card.
+static var fade_up := false
+static var _tint := Color.BLACK
+const FLASH := Color(1.0, 0.93, 0.82)
 
 const FONT := preload("res://assets/fonts/monogram.ttf")
 const TITLE_HOLD := 1.0
@@ -50,10 +54,31 @@ static func continue_to(from: Node, scene_path: String, title: String, label := 
 	tree.change_scene_to_file(scene_path)
 
 
+## Start Over: a brief warm flash over the room, then the same scene reloads (a new game,
+## NOT `arriving`: nothing is saved until the first checkpoint) and fades up from the flash.
+static func restart(from: Node) -> void:
+	if _busy:
+		return
+	_busy = true
+	var tree := from.get_tree()
+	var layer := _black_layer(from, FLASH)
+	var rect: ColorRect = layer.get_child(0)
+	var tw := layer.create_tween()
+	tw.tween_property(rect, "modulate:a", 1.0, 0.3)
+	tw.tween_interval(0.25)
+	await tw.finished
+	fade_up = true
+	_tint = FLASH
+	_busy = false
+	tree.reload_current_scene()
+
+
 ## Fade up from black over `level` (call on arrival). After a Continue the black holds
 ## for a beat with the room's name on it.
 static func fade_in(level: Node, fade := FADE) -> void:
-	var layer := _black_layer(level)
+	var layer := _black_layer(level, _tint)
+	_tint = Color.BLACK
+	fade_up = false
 	var rect: ColorRect = layer.get_child(0)
 	rect.modulate.a = 1.0
 	var tw := layer.create_tween()
@@ -90,12 +115,12 @@ static func _title_card(layer: CanvasLayer, title: String, label: String) -> Con
 	return box
 
 
-static func _black_layer(host: Node) -> CanvasLayer:
+static func _black_layer(host: Node, color := Color.BLACK) -> CanvasLayer:
 	var layer := CanvasLayer.new()
 	layer.name = "RoomFade"
 	layer.layer = 110
 	var rect := ColorRect.new()
-	rect.color = Color.BLACK
+	rect.color = color
 	rect.modulate.a = 0.0
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)

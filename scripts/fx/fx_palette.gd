@@ -39,7 +39,8 @@ const SPRING := Color(0.2, 1.0, 0.5)          ## Green: high jump.
 const PHASE := Color(0.18, 0.92, 1.0)         ## Cyan: dash.
 const IMPACT := Color(0.62, 0.34, 1.0)        ## Violet: ground pound.
 const SHOCKWAVE := Color(1.0, 0.79, 0.29)     ## Gold: the double-jump burst (warm: it is the cat's).
-const CHECKPOINT := Color(0.55, 1.0, 0.86)    ## Pale teal: safe, not a power.
+const CHECKPOINT := Color(0.55, 1.0, 0.86)    ## Pale teal: safe, not a power. Also the Continue pad.
+const START_OVER := Color(1.0, 0.33, 0.20)    ## Warm red-orange: the Start Over pad (never a power hue).
 
 
 static func pad_color(kind: Pad) -> Color:

@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/start_over_pad.gd" id="1_so"]
+
+[sub_resource type="RectangleShape2D" id="s"]
+size = Vector2(44, 10)
+
+[node name="StartOverPad" type="Area2D"]
+script = ExtResource("1_so")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, -5)
+shape = SubResource("s")

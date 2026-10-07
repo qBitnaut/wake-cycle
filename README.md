@@ -80,7 +80,13 @@ Pads give a timed charge (10 s) and recharge after a few seconds. The
 double jump is always available; once the shockwave is unlocked, the second
 jump also releases a short radial burst (breaks weak crates, kicks crates,
 stuns small bots, flips shock switches). Checkpoints save to the browser's
-storage; step on the glowing CONTINUE pad near the start to load it.
+storage. With a save, Room 1's opening has two pads: the teal CONTINUE pad (left of the wake
+spot) loads it, and the red-orange START OVER pad (on the ledge above it, one plain jump up)
+wipes it and begins a new game. Both need the cat to sit and wait for one second (it sits by
+itself and a ring fills); walking right is always a new game. Picking something up (a
+collectible, a letter, a memory, a robot's chip) or defeating a robot is saved with its score
+at once, so nothing can be farmed by dying or reloading. When the final sleep begins in the
+Home ending the run's save is cleared for good: the next launch has no pad and starts anew.
 
 ## Debug keys (debug builds only)
 

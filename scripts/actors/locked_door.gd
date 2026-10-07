@@ -34,7 +34,7 @@ func _on_body(body: Node) -> void:
 		return
 	if GameState.use_key(key_color):
 		_open = true
-		GameState.mark_collected(_id)
+		SaveSystem.persist_collected(_id)  # the key is spent for good: the door stays open
 		Sfx.play(self, "door_open")
 		$Shape.set_deferred("disabled", true)
 		var tw := create_tween()

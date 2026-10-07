@@ -179,7 +179,7 @@ func _load() -> void:
 ## the same twice running.
 const MEOW_FOR := {
 	"warehouse_climb": 1, "warehouse_roof": 0, "warehouse_shaft": 4, "warehouse_lab": 3,
-	"continue_tease": 0, "memory_warehouse": 2,
+	"continue_tease": 0, "memory_warehouse": 2, "startover_tease": 4, "startover": 3,
 }
 const MEOW_VARIANTS := 5
 

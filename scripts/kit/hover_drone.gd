@@ -46,7 +46,7 @@ func _init() -> void:
 func _setup() -> void:
 	collision_mask = 1
 	sprite.play("fly")
-	_hum = KitSfx.loop(self, "drone_hover", 360.0)
+	_hum = KitSfx.loop(self, "drone_hover", 260.0)
 
 
 func _physics_process(delta: float) -> void:

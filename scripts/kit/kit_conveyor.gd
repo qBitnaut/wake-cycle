@@ -25,7 +25,7 @@ func _ready() -> void:
 	constant_linear_velocity = Vector2(speed, 0.0)
 	for i in 4:
 		_tex.append(KitArt.frame_texture("conveyor", "belt", "run", i))
-	KitSfx.loop(self, "conveyor_hum", 240.0)
+	KitSfx.loop(self, "conveyor_hum", 170.0)
 
 
 func set_speed(v: float) -> void:

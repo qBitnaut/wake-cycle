@@ -22,7 +22,7 @@ const PERSISTENT := []
 const FADE_RATE := 3.0   ## gain per second, up or down
 ## Held under the one-shots: a hazard's loop is a cue to listen for, not a bed (the mix puts
 ## SFX at about -20 LUFS and a standing loop would sit on top of everything else).
-const LOOP_TRIM_DB := -4.0
+const LOOP_TRIM_DB := -7.0
 const SILENT := 0.004    ## below this linear gain the player is stopped
 
 @export var stream: AudioStream

@@ -119,7 +119,7 @@ func _raise_alarm() -> void:
 	_m_t = 0.0
 	alarms += 1
 	KitSfx.play(self, "camera_alarm")
-	_hum = KitSfx.loop(self, "camera_alarm", 520.0)
+	_hum = KitSfx.loop(self, "camera_alarm", 320.0)
 	for t in get_tree().get_nodes_in_group("kit_turret"):
 		if t.has_method("alert") and t.global_position.distance_to(global_position) <= alarm_radius:
 			t.alert(alarm_time)

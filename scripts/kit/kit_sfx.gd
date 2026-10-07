@@ -58,6 +58,9 @@ const STAND_INS := {
 ## name has a dedicated sound; STAND_INS stays as the fallback if a library file goes missing.
 const NO_DEDICATED_SOUND := []
 
+## Held under the player's own sounds: a hazard's cycle (warn, slam, hiss, arc) is the
+## factory's presence, not the cat's feedback. Pickups and memory fragments are exempt.
+const HAZARD_TRIM_DB := -3.0
 static var _lib := {}
 static var _lib_loaded := false
 static var _cache := {}
@@ -125,6 +128,12 @@ static func play(ctx: Node, name: String, volume_db := 0.0, pitch := 1.0) -> voi
 	var r := _resolve(name)
 	if r.is_empty():
 		return
+	var near := Sfx.proximity(ctx)
+	if near < Sfx.FLOOR_GAIN:
+		return
+	volume_db += linear_to_db(near)
+	if not (name.begins_with("pickup") or name == "memory_fragment"):
+		volume_db += HAZARD_TRIM_DB
 	var st: AudioStream = r[0]
 	if LoopSfx._loops(st):
 		st = st.duplicate()

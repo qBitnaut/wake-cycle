@@ -379,7 +379,9 @@ func _main() -> void:
 	if start <= 3:
 		var r4 := routine(base + "room4_playthrough.gd")
 		r4.beat_hook = func(r, b):
-			if b == "gate_locked":
+			# Relay 1 lit, the last checkpoint on the tower roof: the vault's checkpoint comes before relay 3, so a
+			# Continue after the vault would (rightly) lose it. The backtrack beat runs after relay 3.
+			if b == "relay1":
 				await continue_check(r, "C4 Room 4 checkpoint", true)
 			elif b == "scanner":
 				_pre_exit = snap()

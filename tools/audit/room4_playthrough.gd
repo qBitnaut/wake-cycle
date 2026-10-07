@@ -1668,6 +1668,7 @@ func _beat_relay3() -> void:
 		w += 1
 	stop()
 	note("R3 the console behind the mech lights relay 3 (two lit: relay 2, the cistern, was skipped)", r3.lit and fin.count == 2, "relays %d" % fin.count)
+	note("R3 lighting a relay persists at once: relay 3 is in the session snapshot and the save, so a death or a Continue before the mech keeps it", ss().session_snapshot.get("collected", []).has("r4_relay3") and ss().read_save().get("collectibles", []).has("r4_relay3"), "session %s" % str(ss().session_snapshot.get("collected", [])))
 	var n := 0
 	while fin.panning and n < 900:
 		await ticks(1)

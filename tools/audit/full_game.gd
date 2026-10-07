@@ -386,10 +386,18 @@ func _main() -> void:
 	if start <= 3:
 		var r4 := routine(base + "room4_playthrough.gd")
 		r4.beat_hook = func(r, b):
-			# Relay 1 lit, the last checkpoint on the tower roof: the vault's checkpoint comes before relay 3, so a
-			# Continue after the vault would (rightly) lose it. The backtrack beat runs after relay 3.
-			if b == "relay1":
+			# Lighting a relay persists at once (SaveSystem.persist_collected), so a Continue after the vault,
+			# with the checkpoint still before the mech, keeps relays 1 and 3.
+			if b == "relay3":
+				var lit_ids := ["r4_relay1", "r4_relay3"]
+				var in_session := true
+				var on_disk := true
+				for id in lit_ids:
+					in_session = in_session and ss().session_snapshot.get("collected", []).has(id)
+					on_disk = on_disk and ss().read_save().get("collectibles", []).has(id)
+				note("C4 lit relays are in the session snapshot (a death keeps them) and the save (a Continue does)", in_session and on_disk, "session %s, disk %s" % [str(ss().session_snapshot.get("collected", [])), str(ss().read_save().get("collectibles", []))])
 				await continue_check(r, "C4 Room 4 checkpoint", true)
+				note("C4 relays 1 and 3 are still lit after the Continue", gs().is_collected("r4_relay1") and gs().is_collected("r4_relay3"), "collected %s" % str(gs().collected))
 			elif b == "scanner":
 				_pre_exit = snap()
 		r4.exit_settle = 2

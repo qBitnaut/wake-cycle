@@ -1021,6 +1021,8 @@ func t_collectibles() -> void:
 	for row in table:
 		await new_world()
 		gs().set_health(1)
+		if row[1] == 6:
+			gs().awaken_mind()   # before the goo there is no inner voice: the fragment is queued, not played
 		var c := spawn(row[0], Vector2(300, FLOOR_Y - 8.0), {"persist": false})
 		place_cat(Vector2(100, FLOOR_Y))
 		await frames(2)

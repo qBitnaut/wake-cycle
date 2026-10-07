@@ -153,6 +153,32 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 	f.close()
 
 
+## A one-off progress id (a lit relay) outlives a death or a Continue the moment it happens, not only at the
+## next checkpoint: it joins the session snapshot and, when the save on disk is for this room, the save.
+func persist_collected(id: String) -> void:
+	GameState.mark_collected(id)
+	if session_snapshot.is_empty():
+		return
+	var cols: Array = session_snapshot.get("collected", []).duplicate()
+	if not cols.has(id):
+		cols.append(id)
+	session_snapshot["collected"] = cols
+	var d := read_save()
+	if d.is_empty() or String(d.get("scene", "")) != session_scene:
+		return
+	var saved: Array = d.get("collectibles", [])
+	if saved.has(id):
+		return
+	saved.append(id)
+	d["collectibles"] = saved
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		push_warning("SaveSystem: cannot write %s" % SAVE_PATH)
+		return
+	f.store_string(JSON.stringify(d))
+	f.close()
+
+
 ## Called by a level on _ready. Returns the checkpoint id to spawn at ("" = level start).
 func begin_level(scene_path: String) -> String:
 	if session_scene != scene_path:

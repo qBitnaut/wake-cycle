@@ -33,6 +33,8 @@ const WALK_SPEED := 104.0
 const WARM_WHITE := Color(1.0, 0.96, 0.86)
 ## The interior's light-mask bit: the sun does not reach in; the window does.
 const MASK_INTERIOR := 8
+## The facade's drips and glints fade out this fast as it dissolves (1.6 s).
+const HOUSE_DRIPS_FADE := 1.2
 
 ## The middle of the cushion (world x) and how far up its top sits.
 @export var spot_x := 3500.0
@@ -55,8 +57,6 @@ var _base: Sprite2D
 var _flap: Sprite2D
 var _flap_x := 0.0
 var _aug: CatAugments
-var _breathe := 0.0
-var _sleeping := false
 var _sprite_home := Vector2.ZERO
 var _fade: CanvasLayer
 var _fade_rect: ColorRect
@@ -121,15 +121,6 @@ func _ready() -> void:
 		_setup_web()
 
 
-func _process(delta: float) -> void:
-	if _sleeping:
-		# Breathing: a slow 1 px rise and fall of the back, feet planted.
-		_breathe += delta
-		var s := 1.0 + 0.035 * (0.5 + 0.5 * sin(TAU * _breathe / 4.4))
-		cat.sprite.scale = Vector2(1.0, s)
-		cat.sprite.position.y = _sprite_home.y * s - spot_rise
-
-
 func _physics_process(delta: float) -> void:
 	super(delta)
 	if OS.has_feature("web") and OS.is_debug_build():
@@ -191,6 +182,22 @@ func _open_house() -> void:
 	if _facade_mat:
 		var tw := create_tween()
 		tw.tween_method(_set_facade, 1.0, 0.0, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# The eaves' drips and the windows' glints belong to the outside wall: they
+	# go with it (falling drops too), or they would rain inside the room.
+	var front := get_node_or_null("Facade/Front") as Sprite2D
+	if front:
+		var wall := Rect2(front.global_position, front.texture.get_size())
+		for g in find_children("*", "WetGlints", true, false):
+			(g as WetGlints).retire(wall, HOUSE_DRIPS_FADE)
+
+
+## Wet glints and drips still showing on the facade (an audit hook: 0 once
+## the house has opened and they have faded).
+func facade_wet() -> int:
+	var n := 0
+	for g in find_children("*", "WetGlints", true, false):
+		n += (g as WetGlints).retired_live()
+	return n
 
 
 func _set_facade(v: float) -> void:
@@ -251,8 +258,11 @@ func _settle() -> void:
 	cat.set_forced_anim("lie_down")
 	await get_tree().create_timer(1.6).timeout
 	settle_step = "sleep"
-	cat.set_forced_anim("sleep1")
-	_sleeping = true
+	# Asleep, breathing: the flank rises a whole pixel and falls (frames, not
+	# a scaled sprite, which re-samples the rows and flickers), with the
+	# emitters' glow peaking on each in-breath.
+	cat.set_forced_anim("sleep_breath")
+	_aug.sync_breath(CatFrames.BREATH_PEAK)
 	beat = Beat.ASLEEP
 	settled.emit()
 	await get_tree().create_timer(1.6).timeout
@@ -350,6 +360,7 @@ func _publish() -> void:
 		"speaking": Monologue.is_speaking(),
 		"cz": cine.zoom if cine else 1.0, "fade": _fade_rect.modulate.a if _fade_rect else 0.0,
 		"glints": glints.glints_spawned if glints else 0, "drops": glints.drops_landed if glints else 0,
+		"facadeWet": facade_wet(),
 		"birdsFlown": birds.flown if birds else 0,
 		"music": AudioDirector.music_db(),
 		"cam": [cat.camera.get_screen_center_position().x, cat.camera.get_screen_center_position().y],

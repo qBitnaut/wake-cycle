@@ -49,7 +49,6 @@ var _end: Label
 var _black: ColorRect
 var _cat: Node2D
 var _aug: CatAugments
-var _t := 0.0
 var _end_t := 0.0
 
 
@@ -119,11 +118,12 @@ func _build_room() -> void:
 	spr.name = "Sprite"
 	spr.sprite_frames = CatFrames.build()
 	spr.position = Vector2(0, CatFrames.SPRITE_Y)
-	spr.play("sleep1")
+	spr.play("sleep_breath")  # breathing in whole pixels, as in the house
 	_cat.add_child(spr)
 	_aug = CatAugments.attach(_cat, true)
 	_aug.follow_game_state = false
 	_aug.set_sleeping(true, 0.05)
+	_aug.sync_breath(CatFrames.BREATH_PEAK)
 	var front := Sprite2D.new()
 	front.name = "CushionFront"
 	front.texture = load(ART + "cushion_front.png")
@@ -132,12 +132,6 @@ func _build_room() -> void:
 
 
 func _process(delta: float) -> void:
-	_t += delta
-	# The sleeping cat breathes (the back rises a pixel, feet planted).
-	var spr := _cat.get_node("Sprite") as AnimatedSprite2D
-	var s := 1.0 + 0.035 * (0.5 + 0.5 * sin(TAU * _t / 4.4))
-	spr.scale = Vector2(1.0, s)
-	spr.position.y = CatFrames.SPRITE_Y * s
 	match step:
 		Step.ROLL:
 			_roll_step(delta)

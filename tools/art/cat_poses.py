@@ -8,6 +8,10 @@
                flicking, a slow blink
   push         leaning into a crate: shoulders and head low, the brow at
                the crate's face, hind legs driving back, short steps
+  sleep_breath the Home ending's sleeping loaf (sleeping1) breathing: the
+               flank rises one HD pixel, first behind the shoulder, then
+               along the whole ribcage (rest, half, full; CatFrames plays
+               them 0 1 2 1 on a slow 4.4 s breath)
 
 The poses are built at 1x out of the walk's parts (head, torso, legs, tail),
 read from its 1x master (tools/art/cat_src/cat_walk.png, see cat_hd.py),
@@ -21,6 +25,12 @@ collision edge (11 px ahead of its origin, where a crate's face is),
 instead of the walk's head reaching into the crate: the brow's fur ends
 on column 48 of the HD frame, x 11 in front of the origin (facing right),
 with its ink one pixel further, as the 100 px frames had it.
+
+The breath is made at HD, not 1x: one HD pixel is the smallest rise there
+is, and a 1x pixel would lift the back 1 or 2 px depending on the row. It
+replaces the old breathing by a fractional y scale of the whole sprite, which
+moved the back half a pixel and, through pixel snapping, re-sampled the rows
+every few frames: the sleeping cat flickered.
 
 Run cat_anchors.py and then cat_augments.py afterwards: they pick up every
 cat_*.png, so the nano maps, veins and augments cover these sheets too.
@@ -48,6 +58,15 @@ SHADE = (62, 36, 20, 255)    # stripes and the darkest fur
 # Walk anatomy at 1x (the cat faces +x).
 SHOULDER = 31                # the neck: the stretch and the shear pivot here
 REAR = 20                    # the rump's column
+
+
+# The sleeping breath, in HD frame columns (the cat faces +x; the neck's
+# outline starts at column 43): the half breath lifts the back behind the
+# shoulder, the full one the whole ribcage. BREATH_LIFT fur rows rise with
+# the outline; the row under them doubles, so the stripes stretch, not break.
+BREATH_HALF = (39, 42)
+BREATH_FULL = (35, 42)
+BREATH_LIFT = 2
 
 
 # ---- the walk at 1x -------------------------------------------------------
@@ -289,6 +308,38 @@ def push_sheet(frames):
     return np.concatenate(out, axis=1)
 
 
+def breathe(h, cols):
+    """An HD frame with the back over columns `cols` (inclusive) lifted one
+    pixel: in each column the outline and BREATH_LIFT fur rows under it move
+    up a row and the next row is doubled."""
+    out = h.copy()
+    for x in range(cols[0], cols[1] + 1):
+        top = int(np.nonzero(h[:, x, 3] > 0)[0].min())
+        for y in range(top, top + BREATH_LIFT + 1):
+            out[y - 1, x] = h[y, x]
+    return out
+
+
+def check_inked(frames, name):
+    """No fur pixel touches the air orthogonally: the outline still wraps
+    the lifted back."""
+    for i, h in enumerate(frames):
+        a = h[..., 3] > 0
+        fur = a & ~np.all(h == cat_hd.INK, axis=2)
+        bare = 0
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            bare += int((fur & ~np.roll(np.roll(a, dy, 0), dx, 1)).sum())
+        assert bare == 0, f"{name} frame {i}: {bare} fur px against the air"
+
+
+def breath_sheet():
+    """sleeping1 at rest, half and full breath (HD)."""
+    rest = cat_hd.hd(cat_hd.frames_1x(cat_hd.SRC / "cat_sleeping1.png")[0])
+    frames = [rest, breathe(rest, BREATH_HALF), breathe(rest, BREATH_FULL)]
+    check_inked(frames, "sleep_breath")
+    return np.concatenate(frames, axis=1)
+
+
 def build():
     walk = walk_1x()
     n = len(walk)
@@ -299,7 +350,8 @@ def build():
     print(f"walk: {n} frames at 1x")
     for name, frames in (("crawl", crawl), ("crouch_idle", crouch), ("push", push)):
         check_whole(frames, name)
-    return {"crawl": cat_hd.sheet(crawl), "crouch_idle": cat_hd.sheet(crouch), "push": push_sheet(push)}
+    return {"crawl": cat_hd.sheet(crawl), "crouch_idle": cat_hd.sheet(crouch), "push": push_sheet(push),
+            "sleep_breath": breath_sheet()}
 
 
 def check_whole(frames, name):

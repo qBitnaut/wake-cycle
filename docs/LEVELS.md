@@ -80,6 +80,10 @@ active and the rect is exact (the 25 px shift above does not apply in that room)
 2. `ROOMS=<id> godot --headless --path . --script res://tools/audit/softlock.gd`: zero soft-locks,
    zero pockets. It reads any scene in `scenes/levels/` and has no height limit. Give the room a
    checkpoint or exit.
+   If the exit needs things the player must collect (Room 4's three relays), add them to `CONFIG`
+   in `tools/audit/progression.gd` and run it: from every position the cat can enter, every
+   objective still needed must stay reachable (a one-way drop east of a missed relay is a
+   soft-lock the first audit cannot see).
 3. Margins: add the room's required climbs and long jumps to `tools/audit/spots.gd` and run
    `margins.gd` (at least 90% for the intended move, 0% for the skips).
 4. The power order: no required path may need a power the player does not have yet (see the power

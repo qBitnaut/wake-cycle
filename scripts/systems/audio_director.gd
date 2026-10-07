@@ -45,7 +45,8 @@ const DUCK_OUT := 1.2
 ## Bus levels, dB. The mix, as heard (integrated loudness): voice about -18 LUFS and always on
 ## top, SFX about -20, music about -27, every scene bed about -32 (atmosphere, not a wall).
 ## The voice clips are -16 LUFS files, so the Voice bus is a little under 0 and the Master
-## never clips; the bed files differ in loudness, so BED_TRIM_DB levels each to the same -32.
+## never clips (Master is -3 dB in default_bus_layout.tres: headroom by gain, because bus effects
+## such as a limiter do not apply to web sample playback); the bed files differ in loudness, so BED_TRIM_DB levels each to the same -32.
 const BUS_DB := {"Music": 0.0, "Ambience": -3.0, "SFX": -4.0, "Voice": -2.0}
 ## Per-bed trim, dB (what each file needs to land at the same level as heard, with the room's
 ## rain_db of -6 and the Ambience bus above). amb_warehouse and the rest were measured with

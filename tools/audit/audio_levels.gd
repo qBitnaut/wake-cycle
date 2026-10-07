@@ -13,6 +13,7 @@ extends SceneTree
 const VOICE_MIN_PEAK_DB := -30.0
 const BUSES := ["Master", "Music", "Ambience", "SFX", "Voice"]
 const VOICE_OVER_BEDS_DB := 6.0
+const VOICE_SILENCE_DB := -50.0
 
 var _acc := {}   ## phase -> bus -> [sum_power, n, peak_db]
 var _phase := ""
@@ -55,6 +56,8 @@ func _sample() -> void:
 			if i < 0:
 				continue
 			var pk := maxf(AudioServer.get_bus_peak_volume_left_db(i, 0), AudioServer.get_bus_peak_volume_right_db(i, 0))
+			if _phase == "voice" and b == "Voice" and pk < VOICE_SILENCE_DB:
+				continue   # the Voice RMS is the line while it is spoken: lead-in and tail silence (which varies with machine load) is not part of it
 			var e: Array = a.get(b, [0.0, 0, -200.0])
 			e[0] += db_to_linear(pk) * db_to_linear(pk)
 			e[1] += 1

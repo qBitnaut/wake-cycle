@@ -1401,7 +1401,7 @@ lines = PackedStringArray("RELAY 3: VAULT", "ARMOURED UNIT")
 accent = Color(0.255, 0.71, 0.753, 1)
 
 [node name="SignScanner" type="Node2D" parent="." unique_id=1348631223]
-position = Vector2(10928, 384)
+position = Vector2(10736, 384)
 script = ExtResource("28_etijj")
 lines = PackedStringArray("SUPERVISORS ONLY", "SCAN ON APPROACH")
 

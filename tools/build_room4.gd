@@ -575,7 +575,7 @@ func _signs() -> void:
 	_relay_board("RelayBoardGate", 347, G, 18.0)
 	_sign(board, "SignRelay1", 249, G, PackedStringArray(["RELAY 1: TOWER"]), aqua, 18.0)
 	_sign(board, "SignRelay3", 272, G, PackedStringArray(["RELAY 3: VAULT", "ARMOURED UNIT"]), aqua, 18.0)
-	_sign(board, "SignScanner", 341, G, PackedStringArray(["SUPERVISORS ONLY", "SCAN ON APPROACH"]), amber, 18.0)
+	_sign(board, "SignScanner", 335, G, PackedStringArray(["SUPERVISORS ONLY", "SCAN ON APPROACH"]), amber, 18.0)
 	_sign(board, "SignRoad", 355, G, PackedStringArray(["SUBURBAN DISTRICT", "2 KM"]), aqua, 22.0)
 
 

@@ -90,8 +90,9 @@ func _ready() -> void:
 		RoomTransition.arriving = false
 		SaveSystem.save_checkpoint("", scene_file_path)
 		RoomTransition.fade_in(self)
-	elif RoomTransition.pending_title != "":
-		# Came in through the Continue pad: fade up with the room's title card.
+	elif RoomTransition.pending_title != "" or RoomTransition.fade_up:
+		# Came in through the Continue pad (fade up with the room's title card) or the
+		# Start Over pad (fade up from its flash).
 		RoomTransition.fade_in(self)
 
 

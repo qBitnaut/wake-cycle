@@ -79,6 +79,8 @@ var _ghost_t := 0.0
 var _was_on_floor := false
 var _idle_t := 0.0
 var _oneshot := 0.0
+## Pads (SitPad) that want the cat sitting while it stands still: {pad instance id: true}.
+var _sit_holds := {}
 var _slept := false
 var _fall_speed := 0.0
 var _push_t := 0.0
@@ -470,6 +472,9 @@ func _animate(dir: float, on_floor: bool, delta: float) -> void:
 		_idle_wake()
 	else:
 		_idle_t += delta
+		if not _sit_holds.is_empty() and _oneshot <= 0.0:
+			_play("sit")  # a pad is waiting for the cat to sit: straight away, not after SIT_AFTER
+			return
 		_idle_loop()
 
 
@@ -488,6 +493,14 @@ func meow_pose() -> bool:
 	sprite.speed_scale = 1.0
 	sprite.play("meow")
 	return true
+
+
+## A SitPad asks the cat to sit (on) or lets it go (off) while it stands still on the plate.
+func hold_sit(who: Object, on: bool) -> void:
+	if on:
+		_sit_holds[who.get_instance_id()] = true
+	else:
+		_sit_holds.erase(who.get_instance_id())
 
 
 func _idle_wake() -> void:

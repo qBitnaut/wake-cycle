@@ -47,7 +47,7 @@ func _on_body(body: Node) -> void:
 			GameState.add_score(100)
 			Sfx.play(self, "pickup_small")
 	if persist:
-		GameState.mark_collected(_id)
+		SaveSystem.persist_collected(_id)
 	Debris.burst(get_parent(), global_position, _color(), 6)
 	queue_free()
 

@@ -77,6 +77,10 @@ func _ready() -> void:
 	_apply_scale()
 	if shielded:
 		sprite.self_modulate = Color(1.0, 0.92, 0.72)
+	# A bot befriended before stays a friend (and its 500 is never paid twice).
+	if is_inside_tree() and GameState.is_collected(_friend_id()):
+		state = State.FRIENDLY
+		sprite.play("happy")
 
 
 func _apply_scale() -> void:
@@ -214,8 +218,14 @@ func stun(t: float) -> void:
 func befriend() -> void:
 	state = State.FRIENDLY
 	sprite.play("happy")
-	GameState.add_score(500)
+	if not GameState.is_collected(_friend_id()):
+		GameState.add_score(500)
+		SaveSystem.persist_collected(_friend_id())
 	Sfx.play(self, "robot_chirp")
+
+
+func _friend_id() -> String:
+	return "friend:" + str(get_path())
 
 
 func on_shockwave(origin: Vector2, _radius: float, source: String) -> void:

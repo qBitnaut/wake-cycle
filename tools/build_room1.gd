@@ -14,7 +14,7 @@
 ##   B 33  the flooded basement                       (y 1056)
 ##
 ## The route, up and then down:
-##   1 G west  (cols 0-57)   the nook (start; the continue pad behind it), a bot patrolling under a deck, a
+##   1 G west  (cols 0-57)   the nook (start; the Continue pad behind it, the Start Over pad on a ledge above it), a bot patrolling under a deck, a
 ##                           conveyor and a spike trap, then pallet racking up (rack steps);
 ##                           the floor east is blocked by a collapsed rack
 ##   2 M       (cols 12-57)  the mezzanine, walked WEST: a camera + shutter (detour: the service
@@ -548,6 +548,7 @@ func _build_geometry(skylights: Array[Rect2]) -> void:
 	# --- G west: crates, the deck over the bot's lane, the rack steps, the collapsed rack ---
 	_crates(13, 13, G, 1)
 	_crates(15, 16, G, 2)
+	_deck(1, 3, G - 2)                 # the Start Over ledge above the nook (2 tiles: a plain jump from the wake spot)
 	_deck(17, 27, G - 3, G)
 	_deck(44, 46, G - 2, G)
 	_deck(48, 50, G - 4, G)
@@ -650,6 +651,7 @@ func _place_actors() -> void:
 	var shut: Array[NodePath] = [NodePath("../ShutterMezz")]
 	# ==== G west ====
 	_put("res://scenes/actors/continue_pad.tscn", "ContinuePad", 2, G, {"z_index": 2})  # behind the cat (left of the wake spot): walking right is never Continue
+	_put("res://scenes/actors/start_over_pad.tscn", "StartOverPad", 1, G - 2, {"z_index": 2, "_dx": 8.0})  # on the ledge above it
 	_gem("GemA", "yarn", 7, G)
 	_put("res://scenes/actors/letter.tscn", "LetterA", 3, G, {"letter_index": 1, "_dx": -2.0})
 	_gem("GemCrate", "yarn", 15, G - 2)

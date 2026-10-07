@@ -225,6 +225,9 @@ func _light_inside(spr: CanvasItem) -> void:
 
 func _settle() -> void:
 	beat = Beat.SETTLE
+	# The final sleep has begun: the story is told. The run's save goes now (not after the
+	# credits), so closing the browser from here on can never leave a Continue to the house.
+	SaveSystem.mark_complete()
 	cat.set_can_move(false)
 	cat.velocity.x = 0.0
 	_start_music()

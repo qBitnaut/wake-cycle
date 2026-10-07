@@ -153,8 +153,12 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 	f.close()
 
 
-## A one-off progress id (a lit relay) outlives a death or a Continue the moment it happens, not only at the
-## next checkpoint: it joins the session snapshot and, when the save on disk is for this room, the save.
+## One-off progress (a pickup, a letter, a memory, a defeated robot, a lit relay, an opened door)
+## outlives a death, a Continue and a reload the moment it happens, not only at the next checkpoint.
+## The id and everything that moved with it (score, letters, keys, the waiting memory) join the
+## session snapshot together, and the save on disk when it is for this room, so the score and the
+## "collected" list can never disagree: a pickup is either gone with its points banked, or here with
+## its points not yet counted. Call it AFTER the score / key / letter has been applied.
 func persist_collected(id: String) -> void:
 	GameState.mark_collected(id)
 	if session_snapshot.is_empty():
@@ -163,14 +167,22 @@ func persist_collected(id: String) -> void:
 	if not cols.has(id):
 		cols.append(id)
 	session_snapshot["collected"] = cols
+	session_snapshot["score"] = GameState.score
+	session_snapshot["letter_mask"] = GameState.letter_mask
+	session_snapshot["keys"] = GameState.keys.duplicate()
+	session_snapshot["pending_memory"] = GameState.pending_memory
 	var d := read_save()
 	if d.is_empty() or String(d.get("scene", "")) != session_scene:
 		return
 	var saved: Array = d.get("collectibles", [])
-	if saved.has(id):
-		return
-	saved.append(id)
+	if not saved.has(id):
+		saved.append(id)
 	d["collectibles"] = saved
+	d["score"] = GameState.score
+	d["letter_mask"] = GameState.letter_mask
+	d["letters"] = GameState.letters
+	d["keys"] = GameState.keys.duplicate()
+	d["pending_memory"] = GameState.pending_memory
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		push_warning("SaveSystem: cannot write %s" % SAVE_PATH)
@@ -228,17 +240,34 @@ func continue_game(from: Node = null) -> bool:
 	return true
 
 
-## The game is finished: remember that (with the score and letters), and
-## clear the checkpoint, so the next run starts from the beginning.
+## The game is finished: remember that (with the score and letters) and clear the run's
+## save for good, so the next launch is a new game with no Continue pad. Called when the
+## final sleep begins in Home (see Home._settle), not at the end of the credits: a browser
+## closed mid-credits must not leave the Home auto-save behind. The credits call it again
+## on leaving (harmless: there is nothing left to clear).
 func mark_complete() -> void:
 	var f := FileAccess.open(COMPLETE_PATH, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"complete": true, "score": GameState.score, "letters": GameState.letters}))
 		f.close()
+	clear_run()
+
+
+## Forget the run: the save on disk and the session (checkpoint, snapshot). The completed
+## flag is not part of the run and stays.
+func clear_run() -> void:
 	delete_save()
 	session_scene = ""
 	session_checkpoint = ""
 	session_snapshot = {}
+	_respawning = false
+
+
+## Start Over: the save is wiped completely and the game state is a new game's.
+func start_over() -> void:
+	clear_run()
+	GameState.new_game()
+	Monologue.reset()
 
 
 func is_complete() -> bool:

@@ -294,8 +294,11 @@ func _credits() -> void:
 	var roll: Control = ui.get_node("Roll")
 	var texts: Array = roll.get_children().map(func(l): return l.text)
 	note("E the credits name the jam, the theme and the restriction", texts.has("A Jamference game jam entry") and texts.has("Theme: Cat and Robot") and texts.has("Restriction: Movement input only"))
-	note("E ... the maker and the crew", texts.has("Chris (qBitnaut)") and texts.has("with an AI crew: Claude Code agents"))
-	note("E ... the asset authors", texts.has("The cat: Pet Cats Pack - luizmelo") and texts.has("monogram - datagoblin") and texts.has("- Luis Zuno (ansimuz)"))
+	note("E ... the maker and the crew", texts.has("Chris (qBitnaut)") and texts.has("with the AI crew in Claude Code:") and texts.has("Janeway, orchestrating;"))
+	note("E ... the asset authors", texts.has("The cat: Pet Cats Pack - luizmelo") and texts.has("monogram - datagoblin") and texts.has("- Luis Zuno (ansimuz), harmonised") and texts.has("- bart and rubberduck, recoloured"))
+	note("E ... the sound as generated with ElevenLabs, the narrator's voice named", texts.has("generated with ElevenLabs") and texts.has("Narrator: Will - Relaxed Optimist"))
+	var gone := ["Junkala", "SubspaceAudio", "Kenney", "qubodup", "SFX Loops", "Chiptunes"]
+	note("E ... and none of the retired audio packs", texts.all(func(t): return gone.all(func(g): return not String(t).contains(g))))
 	note("E ... and ends with thanks", texts.back() == "Thanks for playing.", str(texts.back()))
 	var y0 := roll.position.y
 	await secs(2.0)

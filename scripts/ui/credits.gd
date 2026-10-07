@@ -30,6 +30,11 @@ const COLUMN_W := 300.0
 const BODY_SIZE := 16
 const HEAD_SIZE := 32
 const GAP := 14.0
+## The shade behind the roll: the sunlit wall is too light for small cream
+## text (about 2.5:1); this brings it past 4.5:1 and reads as the room's
+## shadow side, away from the window.
+const SCRIM_ALPHA := 0.4
+const SCRIM_W := 420.0
 
 @export var scroll_speed := 18.0
 @export var fast_mult := 5.0
@@ -44,6 +49,7 @@ var _ui: CanvasLayer
 var _white: ColorRect
 var _title: Label
 var _roll: Control
+var _scrim: TextureRect
 var _roll_h := 0.0
 var _end: Label
 var _black: ColorRect
@@ -192,6 +198,8 @@ func _build_ui() -> void:
 	_ui.name = "Ui"
 	_ui.layer = 100  # over the vignette (90): the white and the title stay clean
 	add_child(_ui)
+	_scrim = _shade_column()
+	_ui.add_child(_scrim)
 	_roll = Control.new()
 	_roll.name = "Roll"
 	_roll.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -237,6 +245,30 @@ func _build_ui() -> void:
 	_ui.add_child(_black)
 
 
+## A soft vertical band of the shadow colour behind the column, fading out
+## to both sides.
+func _shade_column() -> TextureRect:
+	var g := Gradient.new()
+	var dark := Color(SHADOW.r, SHADOW.g, SHADOW.b, SCRIM_ALPHA)
+	var clear := Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.0)
+	g.offsets = PackedFloat32Array([0.0, 0.24, 0.84, 1.0])
+	g.colors = PackedColorArray([clear, dark, dark, clear])
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.width = 128
+	tex.height = 4
+	var r := TextureRect.new()
+	r.name = "Shade"
+	r.texture = tex
+	r.stretch_mode = TextureRect.STRETCH_SCALE
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.position = Vector2(COLUMN_X - SCRIM_W * 0.5, 0.0)
+	r.size = Vector2(SCRIM_W, 360.0)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.modulate.a = 0.0
+	return r
+
+
 func _lines() -> Array:
 	var f := FileAccess.open(DATA, FileAccess.READ)
 	if f == null:
@@ -261,6 +293,7 @@ func _play_title() -> void:
 	tw.tween_interval(0.4)
 	tw.tween_callback(func(): step = Step.REVEAL)
 	tw.tween_property(_white, "modulate:a", 0.0, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(_scrim, "modulate:a", 1.0, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func():
 		_roll.visible = true
 		step = Step.ROLL)

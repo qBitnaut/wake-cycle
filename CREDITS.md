@@ -1,15 +1,30 @@
 # Credits
 
+The same facts as the in-game credits (`data/credits.json`, rolled by
+`scenes/ui/credits.tscn` after the ending), with sources and file locations.
+
+## Wake Cycle
+
+A Jamference game jam entry. Theme: Cat and Robot. Restriction: Movement input only.
+
+## Made by
+
+Chris (qBitnaut), with the AI crew in Claude Code: Janeway orchestrating; Data, DaVinci,
+Belanna, Jadzia, Doctor and Miranda (see `AI_USE.md` for who did what).
+
+## Third-party assets
+
 Wake Cycle uses the following third-party assets. Every pack below is released
 under CC0 (public domain), so attribution is not required, but credit is given
-as a courtesy. The rest of the art and all of the audio are AI-generated (art: by
-AI-written scripts, no image model; audio: ElevenLabs), as marked.
+as a courtesy. The rest of the art and all of the audio but two bird chirps are
+AI-generated (art: drawn by AI-written scripts, no generative image model; audio:
+ElevenLabs), as marked.
 
-## Sprites, tiles and backgrounds
+### Sprites, tiles and backgrounds
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
-| Pet Cats Pack (Cat-6: recoloured to a brown tabby by `tools/recolor_cat.py`, scaled 1.5x with Scale3x and outlined by `tools/art/cat_hd.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
+| Pet Cats Pack (Cat-6: recoloured to a brown tabby by `tools/recolor_cat.py`, re-pixelled to 1.5x with Scale3x and outlined by `tools/art/cat_hd.py`; the crawl, push and sleeping-breath poses derived by `tools/art/cat_poses.py`; Meow VFX) | luizmelo | https://luizmelo.itch.io/pet-cat-pack | CC0 1.0 | `assets/sprites/cat/` |
 | Sci-fi platformer tiles 32x32 (recoloured to the Wake Cycle palette by `tools/art/recolor_tiles.py`) | bart | https://opengameart.org/content/sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
 | Extension for Sci-fi platformer tiles 32x32 (the 16-colour variant sheet the recolour reads) | rubberduck | https://opengameart.org/content/extension-for-sci-fi-platformer-tiles-32x32 | CC0 1.0 | `assets/art_hd/tiles_wake_hd.png` |
 | Legacy Collection (Warped sci-fi interior wall, Scifi lab support column, cyberpunk detective props, bipedal and mech units), harmonised by `tools/art/harmonize_bg.py`; the room robots' mech re-pixelled to 2/3 by `tools/art/repixel.py` | Luis Zuno (ansimuz) | https://ansimuz.itch.io/ ("Legacy Collection" free download) | CC0 1.0 | `assets/art_hd/bg/`, `assets/art_hd/props/`, `assets/art_hd/robots/` |
@@ -25,13 +40,13 @@ room (`assets/art_hd/home/`) are AI-generated, drawn by `tools/art/home_art.py`,
 third-party source. The world map art (`assets/art_hd/map/`) is likewise drawn by
 `tools/art/map_art.py`.
 
-## Font
+### Font
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
 | monogram | datagoblin | https://datagoblin.itch.io/monogram | CC0 1.0 | `assets/fonts/monogram.ttf` |
 
-## Audio
+### Audio
 
 All of the game's sound is AI-generated with ElevenLabs (Creator plan, which includes a
 commercial-use licence for the output). Nothing in it is from a third-party pack except
@@ -48,7 +63,7 @@ The prompts and scripts that made them are in `tools/audio/` (`sfx_spec.py`, `ge
 `gen_voice.py`, `gen_music.py`, `make_manifest.py`). The API key is read from a file outside
 the repository and is never stored in it.
 
-### CC0 audio that remains
+#### CC0 audio that remains
 
 | Pack | Author | Source | License | Location |
 |---|---|---|---|---|
@@ -59,3 +74,9 @@ The earlier CC0 audio (8-bit sound effects, Kenney impact sounds, rubberduck's S
 the qubodup drip loop, the Juhani Junkala tracks) was replaced and removed from the project.
 
 License text: https://creativecommons.org/publicdomain/zero/1.0/
+
+## Engine
+
+Made with Godot 4.7.
+
+Thanks for playing.

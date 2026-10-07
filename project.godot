@@ -13,6 +13,13 @@ config_version=5
 config/name="Wake Cycle"
 run/main_scene="res://scenes/levels/room1.tscn"
 config/features=PackedStringArray("4.7", "Compatibility")
+boot_splash/bg_color=Color(0.050980393, 0.05490196, 0.11764706, 1)
+boot_splash/stretch_mode=0
+boot_splash/use_filter=false
+boot_splash/image="res://assets/art_hd/logo/splash.png"
+boot_splash/minimum_display_time=1500
+boot_splash/minimum_display_time.web=0
+config/icon="res://assets/art_hd/logo/icon_x4.png"
 
 [autoload]
 

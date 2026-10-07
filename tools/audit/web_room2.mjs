@@ -309,8 +309,10 @@ for (let n = 0; !W.floor && n < 90; n++) await frame();
 const roofHint = await waitFor(() => lines('yard_roof') >= 1, 12000);
 note('R the rooftop hint plays while the cat runs', roofHint && lines('yard_roof') === 1, `${lines('yard_roof')} lines`);
 note('R ran the rooftops on Surge', ok && !W.dead && Math.abs(W.y - 512) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
-await waitFor(() => W.power === 0, 14000);   // plain hops: let the Surge run out
+// Plain hops: let the Surge run out, but at the crane foot, not on the third roof where the bomber
+// drone (x 3936) bombs a cat that stands still for the ~5 s the Surge has left.
 await goTo(4034, 6);
+await waitFor(() => W.power === 0, 14000);
 const okc2 = await climb([[1, 4040, 4072, 4152, 448], [-1, 4094, 3976, 4056, 384], [1, 4040, 4072, 4152, 320], [1, 4136, 4168, 4300, 256]], 4034, 512);
 note('R climbed the crane stair to the cab', okc2 && Math.abs(W.y - 256) < 4, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await ticks(20);

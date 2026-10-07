@@ -145,6 +145,7 @@ func _ready() -> void:
 	_voice = AudioStreamPlayer.new()
 	_voice.name = "Voice"
 	_voice.bus = &"Voice"
+	_voice.playback_type = AudioServer.PLAYBACK_TYPE_STREAM  # web: samples drop the Voice bus; stream like the beds
 	add_child(_voice)
 	_voice.finished.connect(func(): voice_active = false)
 

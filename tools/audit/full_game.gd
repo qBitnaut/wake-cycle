@@ -78,6 +78,7 @@ func mono() -> Node:
 
 func _initialize() -> void:
 	mono().line_started.connect(_on_line)
+	process_frame.connect(_sample_voice_bus)
 	_main.call_deferred()
 
 
@@ -90,6 +91,17 @@ const MUSIC_OF := {"room1.tscn": "warehouse", "room2.tscn": "yard", "room3.tscn"
 
 func ad() -> Node:
 	return root.get_node("AudioDirector")
+
+
+## Audibility, not just "playing": the loudest the Voice bus got while a clip was playing (the
+## dummy audio driver mixes too, so the bus meter works headless; see tools/audit/audio_levels.gd).
+var _voice_peak := -200.0
+
+
+func _sample_voice_bus() -> void:
+	if mono().voice_active:
+		var i := AudioServer.get_bus_index(&"Voice")
+		_voice_peak = maxf(_voice_peak, maxf(AudioServer.get_bus_peak_volume_left_db(i, 0), AudioServer.get_bus_peak_volume_right_db(i, 0)))
 
 
 func _on_line(_id: String, _text: String) -> void:
@@ -563,6 +575,7 @@ func _voice_check() -> void:
 	note("VOICE narration played for the monologue lines shown (%d clips)" % _voices.size(), _voices.size() >= 20, "%d" % _voices.size())
 	var short := _voices.filter(func(v): return float(v[3]) < float(v[2]) + 0.4 - 0.001)
 	note("VOICE every line's hold is at least its clip length plus the tail", short.is_empty(), str(short.slice(0, 3)))
+	note("VOICE the Voice bus is audible while a clip plays (peak > -30 dBFS)", _voice_peak > -30.0, "peak %.1f dB" % _voice_peak)
 	note("VOICE music and ambience duck under the voice", _max_duck > 0.9, "deepest %.2f" % _max_duck)
 	note("VOICE no orphan loops at the end, and the web-bounded loop count (director music pair + bed + room loops)", LoopSfx.orphans(self).is_empty() and LoopSfx.playing_loops(self).size() <= 8, str(LoopSfx.playing_loops(self)))
 

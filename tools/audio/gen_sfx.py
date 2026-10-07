@@ -13,7 +13,18 @@ def peak_norm_db(src):
     return float(m.group(1)) if m else 0.0
 
 
-def to_ogg(src, dst, kbps, target=-2.0, trim=True):
+def lufs_of(src, af):
+    r = subprocess.run(["ffmpeg", "-nostats", "-i", src, "-af", af + ",ebur128" if af else "ebur128", "-f", "null", "-"], capture_output=True, text=True)
+    return float(re.search(r"Integrated loudness:\s+I:\s+(-?[\d.]+) LUFS", r.stderr.replace("\n", " ")).group(1))
+
+
+def to_ogg(src, dst, kbps, target=-2.0, trim=True, af_pre="", lufs=None):
+    if lufs is not None:   # a bed: filter, then level by integrated loudness (peaks kept under 0.7)
+        gain = lufs - lufs_of(src, af_pre)
+        af = (af_pre + "," if af_pre else "") + "volume=%fdB,alimiter=limit=0.7" % gain
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", src, "-af", af, "-ac", "1", "-ar", "44100",
+                        "-c:a", "libvorbis", "-b:a", "%dk" % kbps, dst], check=True)
+        return
     gain = target - peak_norm_db(src)
     af = "volume=%fdB" % gain
     if trim:
@@ -35,7 +46,7 @@ def make(item, category, outdir, kbps, loop_default=False):
         print("made", item["name"], flush=True)
     os.makedirs(outdir, exist_ok=True)
     dst = os.path.join(outdir, item["name"] + ".ogg")
-    to_ogg(raw, dst, kbps, trim=not (item.get("loop") or loop_default))
+    to_ogg(raw, dst, kbps, trim=not (item.get("loop") or loop_default), af_pre=item.get("af", ""), lufs=item.get("lufs"))
     return dst
 
 

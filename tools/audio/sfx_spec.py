@@ -114,7 +114,11 @@ add("pickup_heal", "a nanotech healing pickup, a warm soft restorative shimmer w
 add("memory_fragment", "a soft magical crystalline chime, delicate glass-like bell tones with a faint digital nanotech shimmer and a gentle tail", 2.0)
 
 AMBIENCE = [
-    dict(name="amb_warehouse", sec=25, prompt="rain falling on a metal roof far above, occasional slow drips echoing in a huge empty warehouse, a distant low machine hum, lonely, seamless loop"),
+    # v3 (soft rain on a high roof; the first take had "a distant machine hum" and read as clanky). Chosen of three
+    # candidates by spectral analysis; the raw is high-passed 40 Hz / low-passed 6.5 kHz and levelled to -24 LUFS.
+    dict(name="amb_warehouse", sec=28, infl=0.5, af="highpass=f=40,lowpass=f=6500", lufs=-24, prompt="very gentle distant rain on a high tin roof inside a huge empty hall, soft airy patter, quiet and calm, a few faint water drips, no bangs, no clanging, no machine sounds, seamless loop"),
+    # The indoor hum layer, a separate loop (Ambience.hum_bed) played about 13 dB under the rain; low-passed at 320 Hz.
+    dict(name="amb_warehouse_hum", sec=20, af="highpass=f=35,lowpass=f=320", lufs=-24, prompt="a very faint, low, steady, smooth electrical hum, distant ventilation and transformer drone, constant, no rhythm, no clanks, no impacts, seamless loop"),
     dict(name="amb_yard", sec=25, prompt="steady heavy rain on an open concrete yard at night with gusting wind, seamless loop"),
     dict(name="amb_stacks", sec=25, prompt="lighter rain at height on rooftops, a wind blowing across tall buildings, a faint distant city hum, seamless loop"),
     dict(name="amb_perimeter", sec=25, prompt="rain easing off, a steady electric fence hum, a faint distant siren, damp night, seamless loop"),

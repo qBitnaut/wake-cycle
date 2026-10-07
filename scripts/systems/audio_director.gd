@@ -38,8 +38,18 @@ const MEMORY_AMB := -14.0
 const MEMORY_IN := 0.8
 const MEMORY_OUT := 2.0
 const DUCK_OUT := 1.2
-## Bus levels, dB: the voice sits on top.
-const BUS_DB := {"Music": -2.0, "Ambience": -3.0, "SFX": -1.0, "Voice": 2.0}
+## Bus levels, dB. The mix, as heard (integrated loudness): voice about -18 LUFS and always on
+## top, SFX about -20, music about -27, every scene bed about -32 (atmosphere, not a wall).
+## The voice clips are -16 LUFS files, so the Voice bus is a little under 0 and the Master
+## never clips; the bed files differ in loudness, so BED_TRIM_DB levels each to the same -32.
+const BUS_DB := {"Music": 0.0, "Ambience": -3.0, "SFX": -4.0, "Voice": -2.0}
+## Per-bed trim, dB (what each file needs to land at the same level as heard, with the room's
+## rain_db of -6 and the Ambience bus above). amb_warehouse and the rest were measured with
+## ffmpeg ebur128 (-23.0, -14.3, -19.4, -22.8, -23.4, -15.7 LUFS).
+const BED_TRIM_DB := {
+	"amb_warehouse": 0.0, "amb_yard": -8.7, "amb_stacks": -5.6, "amb_perimeter": -0.2,
+	"amb_home": 0.0, "amb_map": -3.3,
+}
 ## Scene file -> music key ("" = none, "keep" = leave whatever plays).
 const PROFILES := {
 	"room1.tscn": "warehouse",
@@ -234,7 +244,12 @@ func _set_bed(key: String) -> void:
 	_bed.stream = s
 	_bed.volume_db = SILENT_DB
 	_bed.play()
-	create_tween().tween_property(_bed, "volume_db", -10.0, 2.0)
+	create_tween().tween_property(_bed, "volume_db", -10.0 + bed_trim(key), 2.0)
+
+
+## The level trim of the bed file `key` (e.g. "amb_yard"), dB.
+static func bed_trim(key: String) -> float:
+	return float(BED_TRIM_DB.get(key, 0.0))
 
 
 ## A looping player for a scene's sound bed (rain, a hum): a stream, on `bus`, started once

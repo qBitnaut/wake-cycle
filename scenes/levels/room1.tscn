@@ -1594,6 +1594,8 @@ occluder = SubResource("OccluderPolygon2D_yfwr2")
 [node name="Ambience" type="Node" parent="." unique_id=1615733871]
 script = ExtResource("47_6c51t")
 bed = "amb_warehouse"
+hum_bed = "amb_warehouse_hum"
+hum_db = -16.0
 surface = "step_metal"
 
 [node name="Hud" type="CanvasLayer" parent="." unique_id=476412495 instance=ExtResource("48_e7ht3")]

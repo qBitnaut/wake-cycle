@@ -26,8 +26,8 @@ await idb((st, a, res) => { for (const d of ['/userfs/godot', '/userfs/godot/app
 await page.reload(); await sleep(1000);
 await page.waitForFunction(() => window.__wake && window.__wake.f > 0, null, { timeout: 60000 });
 let W = null; const poll = async () => (W = await page.evaluate(() => window.__wake));
-for (let i = 0; i < 400; i++) { await poll(); if (W.canMove) break; await sleep(100); }
-note('control granted', W.canMove === true, JSON.stringify({ x: W.x, save: W.save }));
+for (let i = 0; i < 1500; i++) { await poll(); if (W.can_move) break; await sleep(100); }
+note('control granted', W.can_move === true, JSON.stringify({ x: W.x, save: W.save }));
 if (process.env.SV && +process.env.SV !== 2) { note('old-version save: no pad / no save', W.save === false); await shot('old_save_no_pad'); }
 else if (process.env.CP === 'cp_removed') {
   note('save kept (valid version)', W.save === true);

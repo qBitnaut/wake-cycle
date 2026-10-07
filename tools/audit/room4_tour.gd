@@ -10,7 +10,7 @@ const DEFAULT_STOPS := [
 	"4:a_arrival:12", "14:a_tower:10", "40:p1_corridor:12", "76:p2_corridor:12", "113:p3_pad:12", "126:p3_roof:6",
 	"96:catwalk:6", "60:catwalk_w:6", "143:i1_pad:10", "148:i1_hatch:12", "152:l1_cp:17", "162:l1_bot:17",
 	"177:l2_shield:22", "195:l2_gauntlet:22", "204:l2_crusher:22", "212:archive:22", "191:l3_cp:27", "202:l3_camera:27",
-	"217:l3_press:27", "230:s1_shaft:27", "230:s1_mid:19", "240:plaza:12", "256:r1_tower:10", "270:vault_pad:12",
+	"217:l3_press:27", "230:s1_shaft:27", "230:s1_mid:19", "240:plaza:12", "256:r1_tower:10", "244:board_plaza:12", "264:east_ladder:12", "347:board_gate:12", "270:vault_pad:12",
 	"280:vault_in:18", "292:vault_mech:18", "320:armoury:12", "322:armoury_in:17", "194:l4_hall:35", "212:l4_pools:34",
 	"228:l4_lasers:35", "233:l4_relay:35", "340:scanner:12", "362:road:12",
 ]

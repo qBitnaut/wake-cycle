@@ -9,9 +9,10 @@
 ##
 ## Route: arrival and a tower interior, Phase 1-3 (and the optional catwalk), Impact 1-3 down through
 ## the floors (and the undercroft secret), the archive secret with the memory fragment, the bunker's
-## camera corridor and press, the cistern (relay 2, acid, a lift), the shaft's ladder and lift, the
-## plaza tower (relay 1, Spring), the vault (the HeavyMech and relay 3), the armoury secret, the scanner,
-## the gate, the exit. BEATS=a,b runs only those beats (each stages itself with a teleport).
+## camera corridor and press, the shaft's ladder and lift (the cistern is SKIPPED here), the plaza
+## tower (relay 1, Spring), the vault (the HeavyMech and relay 3), the shut gate (two relays), then the
+## BACKTRACK: out of the vault, over the tower by its east ladder, down lift B, the cistern (relay 2,
+## acid, lift A) and back up, the armoury secret, the scanner, the gate, the exit. BEATS=a,b runs only those beats (each stages itself with a teleport).
 ## Phase: lasers hurt without it (a plain cat is pushed back), a dash goes through
 ## fences and drones, the window to press Shift is measured. Impact: the cracked
 ## floors do not break to anything but the pound, the pound drops the cat to the
@@ -394,8 +395,8 @@ func _beats(chained: bool) -> void:
 		["phase3", "_beat_phase3"], ["catwalk", "_beat_catwalk"], ["fences_solid", "_beat_fences_solid"],
 		["impact1", "_beat_impact1"], ["undercroft", "_beat_undercroft"], ["impact2", "_beat_impact2"],
 		["impact3", "_beat_impact3"], ["archive", "_beat_archive"], ["bunker", "_beat_bunker"],
-		["cistern", "_beat_cistern"], ["shaft", "_beat_shaft"], ["relay1", "_beat_relay1"],
-		["gate_locked", "_beat_gate_locked"], ["relay3", "_beat_relay3"], ["armoury", "_beat_armoury"],
+		["shaft", "_beat_shaft"], ["relay1", "_beat_relay1"], ["relay3", "_beat_relay3"],
+		["gate_locked", "_beat_gate_locked"], ["backtrack", "_beat_backtrack"], ["armoury", "_beat_armoury"],
 		["scanner", "_beat_scanner"], ["exit", "_beat_exit"],
 	]
 	for o in order:
@@ -1275,7 +1276,7 @@ func _beat_shaft() -> void:
 			print("   ladder step %d failed: x=%.0f y=%.0f" % [i, x(), y()])
 			break
 	note("S1 the ladder of girders: seven plain hops from the bunker floor to the top girder", ok and absf(y() - 13.0 * T) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
-	var top := await hop(238.0 * T - 36.0, 1.0, SURFACE)
+	var top := await hop(236.0 * T - 20.0, 1.0, SURFACE)
 	note("S1 off the top girder onto the plaza (a one-row step)", top and x() > 238.0 * T, "x=%.0f y=%.0f" % [x(), y()])
 	await shot("S1_shaft_top")
 	# The lift: from the bunker floor to the plaza in one ride.
@@ -1293,6 +1294,105 @@ func _beat_shaft() -> void:
 	var fin := node("Finale")
 	note("F the gate is shut and the exit is closed", not node("MasterGate").is_open and node("RoomExit").get("enabled") == false, "relays lit %d" % fin.count)
 	mark("S1 shaft")
+
+
+## Bit i-1 set when relay i is lit (the HUD's and the boards' count, PowerRelay.lit_mask; read from the nodes here
+## because a script that names PowerRelay cannot compile before the autoloads exist).
+func relay_mask() -> int:
+	var m := 0
+	for i in 3:
+		if node("Relay%d" % (i + 1)).lit and gs().is_collected("r4_relay%d" % (i + 1)):
+			m |= 1 << i
+	return m
+
+
+## Hold left to `target`, hopping a wall or a hole in the floor ahead (the hatches, the armoury pit).
+func run_west_hop(target: float, limit := 2400) -> bool:
+	var n := 0
+	while x() > target and n < limit and not cat.dead and current_scene == room:
+		dir(-1.0)
+		if cat.is_on_floor():
+			var wall := ray(cat.global_position + Vector2(0, -8), cat.global_position + Vector2(-34, -8))
+			var hole := not ray(cat.global_position + Vector2(-14, -4), cat.global_position + Vector2(-14, 30))
+			if OS.get_environment("TRACE") != "" and (wall or hole):
+				print("   (west hop at x=%.0f y=%.0f wall %s hole %s)" % [x(), y(), str(wall), str(hole)])
+			if wall or hole:
+				# A hole (a 3-tile hatch) takes a double jump from the lip; a wall, one held jump.
+				hold("jump", true)
+				for i in (40 if hole else 22):
+					await ticks(1)
+					n += 1
+					if hole and i == 14:
+						hold("jump", false)
+						await ticks(1)
+						hold("jump", true)
+				hold("jump", false)
+				var k := 0
+				while not cat.is_on_floor() and k < 90:
+					await ticks(1)
+					k += 1
+					n += 1
+				continue
+		await ticks(1)
+		n += 1
+	stop()
+	return x() <= target
+
+
+# ---- BACKTRACK: relays 1 and 3 lit, relay 2 skipped: out of the vault and back to the cistern ----
+
+func _beat_backtrack() -> void:
+	await recover()
+	gs().clear_power()
+	var fin := node("Finale")
+	note("BT two relays are lit (1 and 3), relay 2 (the cistern) is dark", fin.count == 2 and not node("Relay2").lit and node("Relay1").lit and node("Relay3").lit, "relays %d" % fin.count)
+	# Out of the vault by the stair (R3 walked it), onto the plaza east of the hatch.
+	await stage(311.0)
+	# The stair well is 8 tiles wide: down its steps to the third tread, up onto the service girder across its west half,
+	# and onto the vault roof's east lip (plain hops, no power).
+	await go_to(cx(307.0), 6.0)
+	await until(func(): return cat.is_on_floor(), 120)
+	await ticks(10)
+	var well := absf(y() - 15.0 * T) < 6.0
+	if OS.get_environment("TRACE") != "":
+		print("   (well: tread at x=%.0f y=%.0f)" % [x(), y()])
+	well = well and await hop(cx(306.0), -1.0, 13.0 * T)
+	if OS.get_environment("TRACE") != "":
+		print("   (well: girder at x=%.0f y=%.0f)" % [x(), y()])
+	well = well and await hop(cx(303.0), -1.0, 12.0 * T)
+	note("BT the stair well: down the steps, up onto the girder, onto the vault roof (two plain hops, no power)", well and gs().power == 0, "x=%.0f y=%.0f" % [x(), y()])
+	# West along the vault roof, over the broken hatch H5 (a double jump), to the east foot of the tower.
+	var west := await run_west_hop(cx(270.0))
+	note("BT back west along the plaza, over the broken hatch H5, to the tower's east side", west and absf(y() - SURFACE) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
+	# The tower's east ladder: a zig-zag of four girders, two rows a step, from the plaza floor to the roof.
+	gs().clear_power()   # (the Impact pad at col 272 gave a charge on the way: the ladder is plain hops)
+	var ok := await hop(cx(268.0), 0.0, 10.0 * T)
+	ok = ok and await hop(266.0 * T + 36.0, -1.0, 8.0 * T)
+	ok = ok and await hop(266.0 * T - 36.0, 1.0, 6.0 * T)
+	ok = ok and await hop(266.0 * T + 36.0, -1.0, 4.0 * T)
+	ok = ok and await hop(cx(263.0), 0.0, 2.0 * T)
+	note("BT the tower's east ladder: five plain hops from the plaza floor to the relay roof (no power)", ok and absf(y() - 2.0 * T) < 6.0 and gs().power == 0, "x=%.0f y=%.0f" % [x(), y()])
+	await shot("BT_tower_east_ladder")
+	# Across the roof (relay 1 is lit: it stands on the way) and off the west end.
+	var roof := await run_west_hop(cx(247.0))
+	await until(func(): return cat.is_on_floor(), 200)
+	await ticks(10)
+	note("BT west over the relay roof and down the tower's west side to the plaza", roof and absf(y() - SURFACE) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
+	# The shaft: lift B down to the bunker.
+	await go_to(cx(238.0), 6.0)
+	var liftB := node("LiftB")
+	# A patient player waits at the lip for the lift to come back up, then steps on.
+	await until(func(): return liftB.global_position.y > SURFACE + 100.0, 3000)
+	await until(func(): return liftB.global_position.y < SURFACE + 1.0, 3000)
+	var down := await ride(liftB, 237.0 * T, SURFACE, L3, 233.0 * T, L3)
+	note("BT lift B carries the cat from the plaza down to the bunker (the lift works both ways)", down, "x=%.0f y=%.0f" % [x(), y()])
+	# The bunker's press was crossed in `bunker`; here the cat is put at the hatch and drops into the cistern.
+	await _beat_cistern()
+	# Back up: lift A to the bunker (the end of the cistern beat), lift B to the plaza.
+	var liftB2 := node("LiftB")
+	var home := await ride(liftB2, 237.0 * T, L3, SURFACE, 241.0 * T, SURFACE)
+	note("BT lift B again, up to the plaza with all three relays lit", home and fin.count == 3 and relay_mask() == 7, "x=%.0f y=%.0f relays %d" % [x(), y(), fin.count])
+	mark("BT backtrack")
 
 
 # ---- R2: the flooded cistern ------------------------------------------------------------------
@@ -1367,9 +1467,11 @@ func _beat_cistern() -> void:
 	dir(1.0)
 	await until(func(): return node("Relay2").lit, 300)
 	stop()
-	note("R2 the console at the end lights relay 2", node("Relay2").lit and fin.count >= 1, "relays %d" % fin.count)
+	note("R2 the console at the end lights relay 2: the last one", node("Relay2").lit and fin.count == 3, "relays %d" % fin.count)
 	await until(func(): return not fin.panning, 900)
 	await ticks(20)
+	await wait_lines("relay_done", 3)
+	note("R2 'That's all of them!' and the scanner's three lamps are lit", lines_of("relay_done") == ["One down.", "Two.", "That's all of them!"] and node("Scanner").relays_lit == 3 and node("Scanner").mode == 1, str(lines_of("relay_done")))
 	# The lift home: LiftA from the chamber to the bunker.
 	var liftA := node("LiftA")
 	var rode := await ride(liftA, 235.0 * T, L4, L3, 233.0 * T, L3)
@@ -1421,7 +1523,8 @@ func _beat_relay1() -> void:
 	await ticks(10)
 	note("R1 with Spring one held jump reaches the roof where the relay is", absf(y() - 64.0) < 6.0, "x=%.0f y=%.0f" % [x(), y()])
 	await shot("R1_tower_roof")
-	dir(signf(cx(256.0) - x()))
+	note("R1 the console stands at the roof's east end, on the way over the tower (a cat that lands from the Spring jump and walks on cannot miss it)", node("Relay1").global_position.x > cx(259.0) and node("Relay1").global_position.x < cx(263.0), "x=%.0f" % node("Relay1").global_position.x)
+	dir(signf(cx(261.0) - x()))
 	await until(func(): return node("Relay1").lit, 300)
 	stop()
 	note("R1 stepping up to the console lights a relay", node("Relay1").lit and fin.count >= 1, "relays %d" % fin.count)
@@ -1436,10 +1539,10 @@ func _beat_relay1() -> void:
 			seen_far = true
 	await ticks(10)
 	note("R1 the pan went to the gate and came back; the cat is free again", seen_far and not fin.panning and cat.can_move, "pan took %.1f s" % (n / 60.0))
-	await wait_lines("relay_done", 2)
-	note("R1 the relay lines: 'One down.' then 'Two.' (relay 2 was lit in the cistern)", lines_of("relay_done").size() >= 2 and lines_of("relay_done")[0] == "One down.", str(lines_of("relay_done")))
+	await wait_lines("relay_done", 1)
+	note("R1 the relay line: 'One down.' (the cistern was skipped: relay 1 is the first)", lines_of("relay_done").size() >= 1 and lines_of("relay_done")[0] == "One down.", str(lines_of("relay_done")))
 	# The way on east goes over the tower: along the relay roof to checkpoint L, then off its end.
-	var over := await run_to(cx(266.0))
+	var over := await run_to(cx(271.0))
 	await until(func(): return cat.is_on_floor(), 200)
 	await ticks(10)
 	note("R1 the way on goes over the tower: along the relay roof past checkpoint L and down the far side", over and ss().session_checkpoint == "cp_l" and absf(y() - SURFACE) < 6.0, "x=%.0f y=%.0f cp %s" % [x(), y(), str(ss().session_checkpoint)])
@@ -1460,6 +1563,9 @@ func _beat_gate_locked() -> void:
 	await ticks(20)
 	note("G with two relays lit the scanner denies access (POWER 2/3) and does not scan", scanner.mode == 0 and scanner.screen_lines.size() == 2 and scanner.screen_lines[0] == "ACCESS DENIED" and scanner.screen_lines[1] == "POWER 2/3" and not fin.scanning, str(scanner.screen_lines))
 	note("G the gate stays shut and the cat keeps control", not gate.is_open and not gate.opening and cat.can_move)
+	await wait_lines("perimeter_missing_r2", 1)
+	note("G at the scanner with relay 2 dark the cat says which: 'One relay is still dark... deep under the bunker, where the water is.'", lines_of("perimeter_missing_r2") == ["One relay is still dark... deep under the bunker, where the water is."] and fin.hints == 1, str(lines_of("perimeter_missing_r2")))
+	note("G the status boards read 2/3 (the HUD counts the same)", relay_mask() == 5 and node("RelayBoardGate") != null and node("RelayBoardPlaza") != null, "mask %d" % relay_mask())
 	await shot("G_access_denied")
 	dir(1.0)
 	await ticks(200)
@@ -1558,14 +1664,14 @@ func _beat_relay3() -> void:
 		await ticks(1)
 		w += 1
 	stop()
-	note("R3 the console behind the mech lights relay 3", r3.lit and fin.count == 3, "relays %d" % fin.count)
+	note("R3 the console behind the mech lights relay 3 (two lit: relay 2, the cistern, was skipped)", r3.lit and fin.count == 2, "relays %d" % fin.count)
 	var n := 0
 	while fin.panning and n < 900:
 		await ticks(1)
 		n += 1
 	await ticks(10)
-	await wait_lines("relay_done", 3)
-	note("R3 'That's all of them!' and the scanner's three lamps are lit", lines_of("relay_done") == ["One down.", "Two.", "That's all of them!"] and node("Scanner").relays_lit == 3 and node("Scanner").mode == 1, str(lines_of("relay_done")))
+	await wait_lines("relay_done", 2)
+	note("R3 'Two.' and the scanner shows two lamps, still offline", lines_of("relay_done") == ["One down.", "Two."] and node("Scanner").relays_lit == 2 and node("Scanner").mode == 0, str(lines_of("relay_done")))
 	var t1 := _frames
 	var up := await run_to(cx(311.0))
 	await ticks(20)

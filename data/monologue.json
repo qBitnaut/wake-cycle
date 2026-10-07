@@ -132,6 +132,18 @@
 	"scanner": [
 		"It's scanning me. Please, please..."
 	],
+	"perimeter_missing_r1": [
+		"One relay is still dark... up on the tower, where the wind is."
+	],
+	"perimeter_missing_r2": [
+		"One relay is still dark... deep under the bunker, where the water is."
+	],
+	"perimeter_missing_r3": [
+		"One relay is still dark... in the vault, behind the big armoured thing."
+	],
+	"perimeter_missing_many": [
+		"Some relays are still dark. The board back on the plaza says which."
+	],
 	"credential": [
 		"'Supervisor credential accepted.'",
 		"They really think I'm one of them.",

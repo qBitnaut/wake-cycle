@@ -248,12 +248,30 @@ static func room4() -> Array:
 		var to_row: int = rows[i]
 		if right:
 			out.append({"name": "R4 ladder %d (row %d -> %d)" % [i, from_row, to_row], "sx": 227.0 * T + 16.0, "sy": from_row * T, "d": 1.0,
-				"edge": 229.0 * T, "kind": "wall", "tx0": 229.0 * T + 8.0, "tx1": (238.0 if to_row == 13 else 234.0) * T - 8.0, "ty": to_row * T, "offsets": tread, "moves": PLAIN_HOP})
+				"edge": 229.0 * T, "kind": "wall", "tx0": 229.0 * T + 8.0, "tx1": (236.0 if to_row == 13 else 234.0) * T - 8.0, "ty": to_row * T, "offsets": tread, "moves": PLAIN_HOP})
 		else:
 			out.append({"name": "R4 ladder %d (row %d -> %d)" % [i, from_row, to_row], "sx": 231.0 * T + 16.0, "sy": from_row * T, "d": -1.0,
 				"edge": 229.0 * T, "kind": "wall", "tx0": 224.0 * T + 8.0, "tx1": 229.0 * T - 8.0, "ty": to_row * T, "offsets": tread, "moves": PLAIN_HOP})
-	out.append({"name": "R4 ladder top (row 13 -> the plaza)", "sx": 235.0 * T, "sy": 13.0 * T, "d": 1.0, "edge": 238.0 * T, "kind": "wall",
-		"tx0": 238.0 * T + 8.0, "tx1": 244.0 * T, "ty": g, "offsets": tread, "moves": PLAIN_HOP})
+	out.append({"name": "R4 ladder top (row 13 -> the plaza, over lift B's lane)", "sx": 232.0 * T, "sy": 13.0 * T, "d": 1.0, "edge": 236.0 * T, "kind": "gap",
+		"tx0": 238.0 * T - 10.0, "tx1": 244.0 * T, "ty": g, "moves": PLAIN_HOP})
+	# The tower's east ladder (the way back west over the relay roof): the plaza floor -> girders at rows 10 (cols 266-269),
+	# 8 (262-265), 6 (266-269), 4 (262-265) -> the roof (row 2, cols 249-264).
+	var east := [
+		["floor -> row 10", g, 273.0 * T, -1.0, 270.0 * T, 266.0 * T + 8.0, 270.0 * T - 8.0, 10.0 * T],
+		["row 10 -> row 8", 10.0 * T, 269.0 * T, -1.0, 266.0 * T, 262.0 * T + 8.0, 266.0 * T - 8.0, 8.0 * T],
+		["row 8 -> row 6", 8.0 * T, 262.0 * T + 16.0, 1.0, 266.0 * T, 266.0 * T + 8.0, 270.0 * T - 8.0, 6.0 * T],
+		["row 6 -> row 4", 6.0 * T, 269.0 * T, -1.0, 266.0 * T, 262.0 * T + 8.0, 266.0 * T - 8.0, 4.0 * T],
+		["row 4 -> the roof", 4.0 * T, 265.0 * T, -1.0, 262.0 * T, 249.0 * T + 8.0, 265.0 * T - 8.0, 2.0 * T],
+	]
+	for e in east:
+		out.append({"name": "R4 tower east ladder (%s)" % e[0], "sx": e[2], "sy": e[1], "d": e[3], "edge": e[4], "kind": "wall",
+			"tx0": e[5], "tx1": e[6], "ty": e[7], "offsets": tread, "moves": PLAIN_HOP})
+	# The stair well's way back up to the vault roof's east lip (col 301): the third tread (cols 306-307, row 15) -> a girder
+	# at row 13 (cols 302-307) -> the lip (row 12).
+	out.append({"name": "R4 stair well girder (tread row 15 -> row 13)", "sx": 307.0 * T + 16.0, "sy": 15.0 * T, "d": -1.0, "edge": 306.0 * T, "kind": "wall",
+		"tx0": 302.0 * T + 8.0, "tx1": 308.0 * T - 8.0, "ty": 13.0 * T, "offsets": tread, "moves": PLAIN_HOP})
+	out.append({"name": "R4 stair well girder (row 13 -> the vault roof lip)", "sx": 307.0 * T, "sy": 13.0 * T, "d": -1.0, "edge": 302.0 * T, "kind": "wall",
+		"tx0": 290.0 * T, "tx1": 302.0 * T - 8.0, "ty": 12.0 * T, "offsets": tread, "moves": PLAIN_HOP})
 	# The vault's stair (floor row 18, treads at rows 17, 16, 15, 14, the surface) and the armoury's (floor 17, treads 16, 15, 14).
 	var stair := [["vault", 300.0, 18, 302, [17, 16, 15, 14]], ["armoury", 326.0, 17, 328, [16, 15, 14]]]
 	for st in stair:

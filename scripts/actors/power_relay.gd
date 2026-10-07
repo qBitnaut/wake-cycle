@@ -23,6 +23,28 @@ var _flash := 0.0
 var _light: PointLight2D
 
 
+## The saved state of relay `i` (1..3), without the node: the HUD and the status boards read this.
+static func is_lit(i: int) -> bool:
+	return GameState.is_collected("r4_relay%d" % i)
+
+
+## Bit i-1 set for each lit relay.
+static func lit_mask() -> int:
+	var m := 0
+	for i in 3:
+		if is_lit(i + 1):
+			m |= 1 << i
+	return m
+
+
+static func lit_count() -> int:
+	var n := 0
+	for i in 3:
+		if is_lit(i + 1):
+			n += 1
+	return n
+
+
 func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 2

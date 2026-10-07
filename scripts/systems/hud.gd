@@ -33,7 +33,7 @@ func _process(_delta: float) -> void:
 	if GameState.power != NanoPalette.Power.NONE:
 		queue_redraw()
 	# Room 4: "RELAYS 2/3" in the strip; a relay lighting changes it.
-	var relays := PowerRelay.lit_count() if get_parent() is Room4 else -1
+	var relays := PowerRelay.lit_count() if get_tree().current_scene is Room4 else -1
 	if relays != _relays:
 		_relays = relays
 		queue_redraw()

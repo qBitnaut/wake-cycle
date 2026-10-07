@@ -49,6 +49,29 @@ const launchArgs = gpu === 'swiftshader'
   : ['--use-angle=vulkan', '--enable-features=Vulkan', '--enable-unsafe-webgpu'];
 const browser = await chromium.launch({ executablePath: '/usr/bin/chromium', headless: true, args: [...launchArgs, '--ignore-gpu-blocklist', '--no-sandbox'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+await page.addInitScript(() => {
+  // The WebAudio destination tap (as in web_audio_levels.mjs): what the browser OUTPUTS.
+  const taps = new WeakMap(), conn = AudioNode.prototype.connect;
+  window.__lv = [];
+  AudioNode.prototype.connect = function (dest, ...r) {
+    if (dest instanceof AudioDestinationNode) {
+      if (!taps.has(this.context)) {
+        const g = this.context.createGain(), an = this.context.createAnalyser();
+        an.fftSize = 2048; conn.call(g, an); conn.call(an, this.context.destination);
+        taps.set(this.context, g); window.__tap = an;
+      }
+      return conn.call(this, taps.get(this.context), ...r);
+    }
+    return conn.call(this, dest, ...r);
+  };
+  const buf = new Float32Array(2048);
+  setInterval(() => {
+    if (!window.__tap) return;
+    window.__tap.getFloatTimeDomainData(buf);
+    let pk = 0; for (const v of buf) pk = Math.max(pk, Math.abs(v));
+    window.__lv.push([performance.now(), 20 * Math.log10(pk + 1e-9)]);
+  }, 50);
+});
 await installAudioProbe(page);
 const errors = [];
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
@@ -85,13 +108,20 @@ for (const k of ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'BracketRight']) { await pa
 await sleep(500);
 const b = await page.screenshot();
 await page.keyboard.down('KeyD'); await sleep(2500); await page.keyboard.up('KeyD');
+const tJump = await frame.evaluate(() => performance.now());
 await page.keyboard.down('Space'); await sleep(300); await page.keyboard.up('Space');
 await sleep(1500);
 await shot('04_after_input');
 const c = await page.screenshot();
 note('the intro / the game is running (the picture animates)', !a.equals(b) || !b.equals(c));
 const probe = await frame.evaluate(() => ({ p: window.__audioProbe ? window.__audioProbe() : null, ctx: (window.GodotAudio && GodotAudio.ctx && GodotAudio.ctx.state) || null }));
-note('audio is playing after input', !!probe.p && (probe.p.audible > 0 || probe.ctx === 'running'), JSON.stringify(probe));
+const lv = await frame.evaluate(() => window.__lv);
+const outPk = lv.length ? Math.max(...lv.map(r => r[1])) : -120;
+const around = (a, b) => { const v = lv.filter(r => r[0] >= a && r[0] < b).map(r => r[1]); return v.length ? Math.max(...v) : -120; };
+console.log(`[output peaks, dBFS] whole run ${outPk.toFixed(1)}; 2 s of walking before the jump ${around(tJump - 2000, tJump).toFixed(1)}; the 0.6 s from the jump ${around(tJump, tJump + 600).toFixed(1)}`);
+// Audible at the browser output (the tap), not merely "a sample source exists": the one-shots
+// are only played near the cat now, so a source count is a coin toss.
+note('audio is playing after input (output peak > -40 dBFS)', outPk > -40, JSON.stringify({ outPk, probe }));
 const hooks2 = await frame.evaluate(() => ['wakeTeleport', 'wakeFx', 'wakeStrike', 'wakePower', 'wakeShock', 'wakeKey', '__wake', '__map', '__goo'].filter(k => k in window));
 note('still no debug hook after play (F1-F6 pressed, deep-link query ignored)', hooks2.length === 0, hooks2.join(','));
 console.log('[missing urls]', missing.join(' ') || 'none');

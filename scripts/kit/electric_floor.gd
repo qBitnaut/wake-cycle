@@ -43,7 +43,7 @@ func _build() -> void:
 	_light.position = Vector2(0, -10)
 	_light.range_item_cull_mask = LightingRig.MASK_WORLD | LightingRig.MASK_MOTES
 	add_child(_light)
-	_hum = KitSfx.loop(self, "electric_arc", 300.0)
+	_hum = KitSfx.loop(self, "electric_arc", 200.0)
 	if _hum:
 		_hum.active = false
 	z_index = 2

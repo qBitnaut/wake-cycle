@@ -187,7 +187,8 @@ func _build_room1() -> void:
 	amb.name = "Ambience"
 	amb.bed = "amb_warehouse"
 	amb.hum_bed = "amb_warehouse_hum"
-	amb.hum_db = -16.0
+	amb.rain_db = -9.0   # the factory was a little loud: bed 3 dB down, the hum about 21 dB under it
+	amb.hum_db = -30.0
 	amb.surface = "step_metal"
 	_own(amb)
 

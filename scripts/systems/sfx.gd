@@ -12,6 +12,12 @@ const DIR := "res://assets/audio/sfx/"
 const MANIFEST := DIR + "sfx.json"
 static var _manifest := {}
 static var _loaded := false
+## A sound made by a thing in the world (a hazard, a bot, a pad) is heard by distance from the
+## cat: full inside NEAR px, a smooth fade to nothing at FAR px (a screen is 640 px wide).
+## Sounds of the cat itself, and of nodes with no position, are not attenuated.
+const NEAR := 160.0
+const FAR := 560.0
+const FLOOR_GAIN := 0.02   ## below this linear gain the sound is not played at all
 static var _cache := {}
 ## Every name played, in order (the last few hundred): for audits.
 static var played: Array = []
@@ -56,6 +62,18 @@ static func stream(sound: String, index := -1) -> AudioStream:
 	return _cache[path]
 
 
+## Linear gain 0..1 for a sound made at `ctx`, by its distance from the cat.
+static func proximity(ctx: Node) -> float:
+	var src := ctx as Node2D
+	if src == null or not src.is_inside_tree() or src.is_in_group("player"):
+		return 1.0
+	var cat := src.get_tree().get_first_node_in_group("player") as Node2D
+	if cat == null:
+		return 1.0
+	var t := clampf(1.0 - (src.global_position.distance_to(cat.global_position) - NEAR) / (FAR - NEAR), 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
+
+
 ## The manifest level of `sound`, dB.
 static func level_db(sound: String) -> float:
 	_load()
@@ -73,6 +91,10 @@ static func play(ctx: Node, sound: String, volume_db := 0.0, pitch := 1.0) -> Au
 		# a real loop belongs to LoopSfx.
 		s = s.duplicate()
 		s.set("loop", false)
+	var near := proximity(ctx)
+	if near < FLOOR_GAIN:
+		return null
+	volume_db += linear_to_db(near)
 	var jitter := float(_manifest[sound].get("jitter", 0.0))
 	var p := AudioStreamPlayer.new()
 	p.stream = s

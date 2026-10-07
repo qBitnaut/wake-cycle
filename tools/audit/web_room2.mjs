@@ -301,10 +301,13 @@ note('R climbed the girder stair to the first roof', okc1, `x=${W.x.toFixed(0)} 
 await shot('R_first_roof_pad_and_turret');
 await goTo(3040, 6);
 await waitFor(() => W.power === 1, 2000);
-await waitFor(() => lines('yard_roof') >= 1, 12000);
-note('R the roof pad grants Surge and the hint plays', W.power === 1 && lines('yard_roof') === 1, `power ${W.power}`);
+note('R the roof pad grants Surge', W.power === 1, `power ${W.power} hp ${W.hp}`);
+// The voiced hint takes several seconds now (audio-mix) and the roof turret keeps firing at a cat
+// that stands and listens: a player runs while it plays, so run now and check the line afterwards.
 ok = await runTo(3900, { each: async () => { if (W.x > 3500 && !globalThis.__roof) { globalThis.__roof = true; await shot('R_surge_run_over_the_containers'); } } });
 for (let n = 0; !W.floor && n < 90; n++) await frame();
+const roofHint = await waitFor(() => lines('yard_roof') >= 1, 12000);
+note('R the rooftop hint plays while the cat runs', roofHint && lines('yard_roof') === 1, `${lines('yard_roof')} lines`);
 note('R ran the rooftops on Surge', ok && !W.dead && Math.abs(W.y - 512) < 6, `x=${W.x.toFixed(0)} y=${W.y.toFixed(0)}`);
 await waitFor(() => W.power === 0, 14000);   // plain hops: let the Surge run out
 await goTo(4034, 6);

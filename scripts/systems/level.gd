@@ -70,6 +70,10 @@ func _ready() -> void:
 		for cp in get_tree().get_nodes_in_group("checkpoint"):
 			if cp.checkpoint_id == cp_id:
 				spawn = cp.spawn_position()
+				cp_id = ""
+		if cp_id != "":
+			# A checkpoint id this room no longer has: the room start.
+			SaveSystem.session_checkpoint = ""
 	cat.global_position = spawn
 	cat.death_y = limits.end.y + death_margin
 	cat.set_camera_limits(limits)
@@ -85,6 +89,9 @@ func _ready() -> void:
 		# Came in through a RoomExit: fade up, and save at the start of this room.
 		RoomTransition.arriving = false
 		SaveSystem.save_checkpoint("", scene_file_path)
+		RoomTransition.fade_in(self)
+	elif RoomTransition.pending_title != "":
+		# Came in through the Continue pad: fade up with the room's title card.
 		RoomTransition.fade_in(self)
 
 

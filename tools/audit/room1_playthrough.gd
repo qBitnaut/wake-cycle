@@ -667,11 +667,17 @@ func _beat_continue() -> void:
 	room = current_scene
 	cat = room.get_node("Cat")
 	var pad: Node2D = node("ContinuePad")
-	var gap := absf(pad.global_position.x - 144.0) / T
-	note("K CONTINUE pad shown with a save, a few tiles from the wake spot", pad.visible and gap > 2.0 and gap < 8.0, "%.1f tiles" % gap)
+	note("K CONTINUE pad shown with a save, BEHIND the cat (left of the wake spot)", pad.visible and pad.global_position.x < 144.0 - T, "pad x=%.0f" % pad.global_position.x)
 	var old_room := room
+	while not cat.can_move:
+		await ticks(1)
+	# Walking right (a new game) never touches it.
+	await go_to(600.0, 6.0)
+	await go_to(144.0, 6.0)
+	note("K walking right and back does not continue", current_scene == old_room and pad.charge == 0.0)
+	# Deliberately standing on it does.
+	await go_to(pad.global_position.x, 4.0)
 	var n := 0
-	dir(1.0)
 	while is_instance_valid(old_room) and old_room == current_scene and n < 600:
 		await ticks(1)
 		n += 1

@@ -81,6 +81,7 @@ await cdp.send('Emulation.setCPUThrottlingRate', { rate: thr });
 // Room 1 starts asleep with input locked; teleport still works. Let the intro finish a bit.
 await sleep(opt.cold ? 0 : 1500);
 
+if (opt.strike) await page.evaluate(() => { if (window.wakeStrike) setInterval(() => window.wakeStrike(1), 2500); });
 async function measure(label, xs, y) {
   await page.evaluate(() => { window.__fr = []; window.__ts = []; let last = performance.now(); window.__run = true; window.__t0 = last;
     (function f(t) { window.__fr.push(t - last); window.__ts.push(t - window.__t0); last = t; if (window.__run) window.__raf0(f); })(last); window.__busy = []; });

@@ -54,7 +54,7 @@ func _ready() -> void:
 			_crates.append(c)
 	crates_total = _crates.size()
 	_follow_camera(1.0)
-	if OS.has_feature("web") and true:
+	if OS.has_feature("web") and OS.is_debug_build():
 		_setup_web()
 
 
@@ -111,9 +111,8 @@ func _physics_process(delta: float) -> void:
 				_shock_line_done = true
 				Monologue.play_once("shock_first")
 				break
-	if OS.has_feature("web") and true:
-		if PerfProbe.pub:
-			_publish()
+	if OS.has_feature("web") and OS.is_debug_build():
+		_publish()
 
 
 func crates_left() -> int:

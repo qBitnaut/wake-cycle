@@ -55,7 +55,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if true and e is InputEventKey and e.pressed and not e.echo:
+	if OS.is_debug_build() and e is InputEventKey and e.pressed and not e.echo:
 		if e.keycode == KEY_R and seq == null:
 			get_tree().reload_current_scene()
 		elif e.keycode == KEY_C:
@@ -65,7 +65,7 @@ func _unhandled_input(e: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_phase_t += delta
-	if OS.has_feature("web") and true:
+	if OS.has_feature("web") and OS.is_debug_build():
 		JavaScriptBridge.eval("window.__goo = {phase: '%s', pt: %.3f, loops: %d}" % [phase, _phase_t, loops])
 
 
@@ -354,6 +354,6 @@ func _read_url() -> void:
 
 
 func _url(key: String) -> String:
-	if not (OS.has_feature("web") and true):
+	if not (OS.has_feature("web") and OS.is_debug_build()):
 		return ""
 	return str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('%s') || ''" % key))

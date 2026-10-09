@@ -105,7 +105,7 @@ func _ready() -> void:
 	_bed.volume_db = SILENT_DB
 	_bed.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	add_child(_bed)
-	if OS.has_feature("web") and true:
+	if OS.has_feature("web") and OS.is_debug_build():
 		_setup_web_hooks()
 
 

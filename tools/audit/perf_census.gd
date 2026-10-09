@@ -31,6 +31,9 @@ func _run() -> void:
 			if n is CPUParticles2D:
 				parts += n.amount
 				print("  particles ", n.get_path(), " amount=", n.amount, " lifetime=", n.lifetime, " emitting=", n.emitting, " lit=", n.light_mask)
+			if n is ColorRect and not (n is Puddle):
+				var cr := n as ColorRect
+				print("  rect ", n.get_path(), " size=", cr.size, " mat=", (cr.material.shader.resource_path.get_file() if cr.material is ShaderMaterial else "-"), " lm=", cr.light_mask, " vis=", cr.visible)
 			if n is Light2D:
 				var e: float = n.energy
 				lights.append("%s %s shadow=%s e=%.2f scale=%s" % [n.get_path(), n.get_class(), n.shadow_enabled, e, n.get("texture_scale")])

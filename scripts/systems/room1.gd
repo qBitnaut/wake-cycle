@@ -67,7 +67,7 @@ func _ready() -> void:
 		if on:
 			power_violations += 1)
 	# Audit tools pass `-- --skip-intro` to start awake.
-	if OS.is_debug_build() and OS.get_cmdline_user_args().has("--skip-intro"):
+	if true and OS.get_cmdline_user_args().has("--skip-intro"):
 		intro_done = true
 	if GameState.intelligence:
 		# A revisit (back from the world map, or a respawn after the pool): the
@@ -81,7 +81,7 @@ func _ready() -> void:
 		Monologue.reset()
 		SaveSystem.session_snapshot = GameState.snapshot()
 		_start_intro()
-	if OS.has_feature("web") and OS.is_debug_build():
+	if OS.has_feature("web") and true:
 		_setup_web()
 		_web_start_override()
 
@@ -165,8 +165,9 @@ func _physics_process(delta: float) -> void:
 	if beat == Beat.PLAY and not cat.dead and cat.is_on_floor() and cat.global_position.x >= pool_trigger_x \
 			and (pool == null or absf(cat.global_position.y - pool.global_position.y) < 64.0):  # the tall room has other floors above it
 		_start_absorb()
-	if OS.has_feature("web") and OS.is_debug_build():
-		_publish()
+	if OS.has_feature("web") and true:
+		if PerfProbe.pub:
+			_publish()
 
 
 ## Walking up to the pool the camera floor eases down by 64 px (the underfloor
@@ -285,7 +286,7 @@ func _web_start_override() -> void:
 		# ?start=map&completed=<id>[&letters=n]: the world map as an exit opens it.
 		WorldMap.web_deep_link()
 		return
-	if start == "kit" and OS.is_debug_build():
+	if start == "kit" and true:
 		# ?start=kit: the actor kit test gallery (debug builds only).
 		intro_done = true
 		GameState.new_game()

@@ -42,7 +42,7 @@ func _ready() -> void:
 	GameState.shockwave_unlock_changed.connect(func(on: bool):
 		if on:
 			power_violations += 1)
-	if OS.has_feature("web") and OS.is_debug_build():
+	if OS.has_feature("web") and true:
 		_setup_web()
 
 
@@ -81,8 +81,9 @@ func _fade_rain(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	super(delta)
 	_fade_rain(delta)
-	if OS.has_feature("web") and OS.is_debug_build():
-		_publish()
+	if OS.has_feature("web") and true:
+		if PerfProbe.pub:
+			_publish()
 
 
 # ---- web debug --------------------------------------------------------------

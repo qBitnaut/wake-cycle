@@ -27,6 +27,7 @@ GameState="*res://scripts/systems/game_state.gd"
 SaveSystem="*res://scripts/systems/save_system.gd"
 Monologue="*res://scripts/systems/monologue.gd"
 AudioDirector="*res://scripts/systems/audio_director.gd"
+PerfProbe="*res://scripts/systems/perf_probe.gd"
 
 [audio]
 

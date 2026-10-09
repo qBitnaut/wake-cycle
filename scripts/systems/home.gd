@@ -117,14 +117,15 @@ func _ready() -> void:
 	var beam_light := get_node_or_null("Sunbeam/Light") as Light2D
 	if beam_light:
 		beam_light.range_item_cull_mask = MASK_INTERIOR | LightingRig.MASK_MOTES
-	if OS.has_feature("web") and OS.is_debug_build():
+	if OS.has_feature("web") and true:
 		_setup_web()
 
 
 func _physics_process(delta: float) -> void:
 	super(delta)
-	if OS.has_feature("web") and OS.is_debug_build():
-		_publish()
+	if OS.has_feature("web") and true:
+		if PerfProbe.pub:
+			_publish()
 
 
 # ---- the cat flap -------------------------------------------------------------

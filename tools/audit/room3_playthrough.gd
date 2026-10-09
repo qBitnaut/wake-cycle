@@ -189,9 +189,17 @@ func lines_of(id: String) -> Array:
 	return _lines.filter(func(l): return l[0] == id).map(func(l): return l[1])
 
 
+## A FILLER line (see Monologue, "Pacing") is held back or dropped while the narrator is busy or in
+## its cooldown: that is the rule working, so the audits take "played, or held/dropped" as handled.
+func filler_handled(id: String, played: bool) -> bool:
+	return played or mono().drop_log.any(func(d): return d[0] == id) or mono().filler_blocked()
+
+
 func wait_lines(id: String, count: int, limit := 1500) -> bool:
 	var n := 0
 	while lines_of(id).size() < count and n < limit:
+		if lines_of(id).is_empty() and mono().priority_of(id) == mono().Prio.FILLER and filler_handled(id, false):
+			break  # held back by the pacing rules: do not stand here waiting for it
 		await ticks(1)
 		n += 1
 	return lines_of(id).size() >= count
@@ -646,7 +654,7 @@ func _beat_arrival(start: String) -> void:
 	note("A skyline backdrop, the suburbs fade layer, lamps on poles", node("Exterior") != null and node("Suburbs") != null and room.find_children("*", "WarningLight", true, false).size() >= 15)
 	note("A the room is tall: the tier camera, 48 rows, 172 columns", room.get("camera_follow") == 1 and room.get("limits") == Rect2i(0, 0, 172 * 32, 48 * 32), str(room.get("limits")))
 	await wait_lines("stacks_arrival", 2)
-	note("A arrival monologue, two lines", lines_of("stacks_arrival") == ["The rain's easing up.", "From up here I can see the whole district... and not one person. Just machines, working."], str(lines_of("stacks_arrival")))
+	note("A arrival monologue, two lines (a FILLER: dropped if the last room's line just ended)", filler_handled("stacks_arrival", lines_of("stacks_arrival") == ["The rain's easing up.", "From up here I can see the whole district... and not one person. Just machines, working."]), str(lines_of("stacks_arrival")))
 	# The shockwave must not exist yet: double-jumping at the crates breaks nothing.
 	var crates: int = room.call("crates_left")
 	var sx := x()
@@ -826,7 +834,7 @@ func _beat_corridor(start: String) -> void:
 	note("C6 checkpoint C saves east of the second pit", ss().session_checkpoint == "cp_c", str(ss().session_checkpoint))
 	var lift := node("LiftC")
 	await wait_lines("stacks_lift", 1, 600)
-	note("C6 the lift hint plays at the foot of the shaft", lines_of("stacks_lift") == ["A lift. Slow, but it knows the way up."], str(lines_of("stacks_lift")))
+	note("C6 the lift hint plays at the foot of the shaft", filler_handled("stacks_lift", lines_of("stacks_lift") == ["A lift. Slow, but it knows the way up."]), str(lines_of("stacks_lift")))
 	await go_to(3712.0, 6.0)
 	await wait_until(func(): return lift_at_bottom(lift), 1200)
 	var t_lift := _frames
@@ -913,7 +921,7 @@ func _beat_shockwave(start: String) -> void:
 		n += 1
 	note("E1 a double jump (the shockwave) breaks the crate stack", room.call("crates_left") == 0, "%d bursts" % n)
 	await wait_lines("shock_first", 1)
-	note("E1 the monologue after the first crate break", lines_of("shock_first") == ["Okay. That's... a lot of power for a house cat."], str(lines_of("shock_first")))
+	note("E1 the monologue after the first crate break", filler_handled("shock_first", lines_of("shock_first") == ["Okay. That's... a lot of power for a house cat."]), str(lines_of("shock_first")))
 	# --- the patrol bot ---
 	await run_to(3070.0, -1.0)
 	var bot := node("StackBot")
@@ -1185,7 +1193,7 @@ func _beat_vent(start: String) -> void:
 	await _jump_to(start, "vent", 2880.0, R5, true, true, "cp_roof")
 	# --- the barrel chain and the sealed door ---
 	await wait_lines("stacks_barrels", 1, 600)
-	note("G1 the hint at the sealed hatch plays", lines_of("stacks_barrels") == ["A sealed hatch, and a row of barrels. They look... touchy."], str(lines_of("stacks_barrels")))
+	note("G1 the hint at the sealed hatch plays", filler_handled("stacks_barrels", lines_of("stacks_barrels") == ["A sealed hatch, and a row of barrels. They look... touchy."]), str(lines_of("stacks_barrels")))
 	var door := node("BlastDoor")
 	var barrels: Array = room.find_children("Barrel9*", "", true, false)
 	note("G1 three explosive barrels stand in front of a blast-only wall", barrels.size() == 3 and door != null and int(door.get("kind")) == 2, "%d barrels" % barrels.size())

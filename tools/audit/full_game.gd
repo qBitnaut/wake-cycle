@@ -610,7 +610,8 @@ func _voice_check() -> void:
 	var missing := []
 	var lines := 0
 	for id in sets:
-		for i in sets[id].size():
+		var set_lines: Array = sets[id]["lines"] if sets[id] is Dictionary else sets[id]
+		for i in set_lines.size():
 			lines += 1
 			if not ResourceLoader.exists("res://assets/audio/voice/%s_%d.ogg" % [id, i]):
 				missing.append("%s_%d" % [id, i])

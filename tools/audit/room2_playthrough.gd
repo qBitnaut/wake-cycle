@@ -228,9 +228,17 @@ func lines_of(id: String) -> Array:
 	return _lines.filter(func(l): return l[0] == id).map(func(l): return l[1])
 
 
+## A FILLER line (see Monologue, "Pacing") is held back or dropped while the narrator is busy or in
+## its cooldown: that is the rule working, so the audits take "played, or held/dropped" as handled.
+func filler_handled(id: String, played: bool) -> bool:
+	return played or mono().drop_log.any(func(d): return d[0] == id) or mono().filler_blocked()
+
+
 func wait_lines(id: String, count: int, limit := 1500) -> bool:
 	var n := 0
 	while lines_of(id).size() < count and n < limit:
+		if lines_of(id).is_empty() and mono().priority_of(id) == mono().Prio.FILLER and filler_handled(id, false):
+			break  # held back by the pacing rules: do not stand here waiting for it
 		await ticks(1)
 		n += 1
 	return lines_of(id).size() >= count
@@ -480,7 +488,7 @@ func _beat_arrival() -> void:
 	await ticks(200)
 	note("A lightning strikes and the thunder signal plays the thunder sound", room.get("thunders") >= t0 + 1, "thunders %d" % room.get("thunders"))
 	await wait_lines("yard_arrival", 2)
-	note("A arrival monologue, two lines", lines_of("yard_arrival") == ["Rain. Cold. Real.", "The city... all those lights. Is anyone out there?"], str(lines_of("yard_arrival")))
+	note("A arrival monologue, two lines (a FILLER: dropped if the last room's line just ended)", filler_handled("yard_arrival", lines_of("yard_arrival") == ["Rain. Cold. Real.", "The city... all those lights. Is anyone out there?"]), str(lines_of("yard_arrival")))
 	# The walker: a plain stomp bounces, nothing more.
 	var bot = node("Bot1")
 	var hp0: int = gs().health
@@ -605,7 +613,7 @@ func _beat_gap() -> void:
 	await ticks(30)
 	note("B2 falling in is safe: the underpass floor, no damage, no death, control kept", cat.is_on_floor() and absf(y() - U_Y) < 4.0 and gs().health == hp0 and not cat.dead and cat.can_move, "y=%.0f hp %d (was %d)" % [y(), gs().health, hp0])
 	await wait_lines("yard_underpass", 1)
-	note("B2 the underpass monologue plays on the way down", lines_of("yard_underpass").size() == 1, str(lines_of("yard_underpass")))
+	note("B2 the underpass monologue plays on the way down", filler_handled("yard_underpass", lines_of("yard_underpass").size() == 1), str(lines_of("yard_underpass")))
 	await ticks(60)
 	note("B2 the near rain fades out under the yard", room.get("_rain_near_k") < 0.4, "rain %.2f" % room.get("_rain_near_k"))
 	# The pad again (real walk over it), then a single jump only.

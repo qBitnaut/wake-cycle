@@ -24,7 +24,8 @@ def speak_text(t):
 
 def lines():
     d = json.load(open(os.path.join(ROOT, "data/monologue.json")))
-    for k, v in d.items():
+    for k, entry in d.items():
+        v = entry["lines"] if isinstance(entry, dict) else entry  # {"priority", "lines"} or a bare array
         for i, l in enumerate(v):
             yield k, i, (l["text"] if isinstance(l, dict) else l), v
 

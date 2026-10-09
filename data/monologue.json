@@ -1,214 +1,391 @@
 {
-	"awakening": [
-		"...Wait. Whaa- what?",
-		"Everything is... louder. Sharper. Brighter.",
-		"I've been awake before. Never like this.",
-		"I can think. I mean really think.",
-		"Where am I? What is this place?"
-	],
-	"nanofluid_container": [
-		"'Experimental Nanofluid'... I can read that. Since when can I read?",
-		"Tiny machines. Millions of them. In that water... and now in me.",
-		"They didn't hurt me. They changed me.",
-		"If these are micro robots... what have they just done to me?"
-	],
-	"exit_hint": [
-		"The door's open. Outside... I should find a way home."
-	],
-	"yard_arrival": [
-		"Rain. Cold. Real.",
-		"The city... all those lights. Is anyone out there?"
-	],
-	"surge_first": [
-		"Whoa- my legs! Everything's... faster.",
-		"That pad. It's humming the same blue as the lines in me."
-	],
-	"surge_gate": [
-		"That gate won't wait for me. Good thing I don't have to wait either."
-	],
-	"dock_bot": [
-		"It... looked at me. Like it knew me.",
-		"Why do I feel like it's waiting for an order?"
-	],
-	"exit_fence": [
-		"The fence goes on forever. There has to be a way through."
-	],
-	"yard_roof": [
-		{"text": "Those rooftops go on for a while. If I stay fast, I can run them."}
-	],
-	"yard_underpass": [
-		{"text": "Down here it's dry... almost. A drain, running right under the yard."}
-	],
-	"yard_vault": [
-		{"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me..."},
-		{"text": "If only something big were in the way."}
-	],
-	"yard_closet": [
-		{"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it."},
-		{"text": "I should not still be under it when it lands."}
-	],
-	"stacks_arrival": [
-		"The rain's easing up.",
-		"From up here I can see the whole district... and not one person. Just machines, working."
-	],
-	"spring_hint": [
-		"Too high to jump... that green pad hums like a spring."
-	],
-	"spring_hint_ledge": [
-		"Too high again. Maybe the green one will lift me."
-	],
-	"spring_hint_combine": [
-		"A tower. Too tall to jump... that green pad again."
-	],
-	"spring_hint_roof": [
-		"That roof is too high to reach. The green pad hums like a spring."
-	],
-	"spring_hint_tower": [
-		"Too tall to climb... but there is the green one again."
-	],
-	"spring_first": [
-		"Up! Higher than any cat should go.",
-		"Green this time. Each pad wakes a different part of me."
-	],
-	"conduit": [
-		"Ow- no. Not pain. The machines in me... drank it.",
-		"Something new. When I jump twice, the air itself pushes out."
-	],
-	"shock_first": [
-		"Okay. That's... a lot of power for a house cat."
-	],
-	"mirror_bot": [
-		"It's copying me. Every step.",
-		"It thinks I'm in charge. Maybe the goo made me something they recognise."
-	],
-	"stacks_lift": [
-		{"text": "A lift. Slow, but it knows the way up."}
-	],
-	"stacks_crack": [
-		{"text": "Cracks in that wall. My shockwave might finish it."}
-	],
-	"stacks_barrels": [
-		{"text": "A sealed hatch, and a row of barrels. They look... touchy."}
-	],
-	"stacks_vent_top": [
-		{"text": "Up here the whole city glows. And something glows closer."}
-	],
-	"stacks_exit": [
-		"There, past the fences. Trees. Rooftops. Little lights in windows.",
-		"Home is that way. I can almost smell it."
-	],
-	"perimeter_arrival": [
-		"Fences. Lasers. Lights that watch.",
-		"'Authorised units only.' ...Am I a unit now?"
-	],
-	"perimeter_depths": [
-		{"text": "Under the fence. They built a second perimeter below the first."}
-	],
-	"perimeter_hollow": [
-		{"text": "This wall is thicker than the rest. It rings hollow."}
-	],
-	"perimeter_cistern": [
-		{"text": "Flooded, and wired. Keep to the stones."}
-	],
-	"perimeter_mech": [
-		{"text": "Armour like a wall. Only something heavy, falling, will rattle it."}
-	],
-	"phase_first": [
-		"Through it?! I went through it!",
-		"Cyan. Like slipping between raindrops."
-	],
-	"impact_first": [
-		"Heavy. When I land, the ground answers.",
-		"Violet. That's all four. The whole rainbow inside me."
-	],
-	"relays_intro": [
-		"The big gate needs power. Three relays. Of course it's three."
-	],
-	"relay_done": [
-		"One down.",
-		"Two.",
-		"That's all of them!"
-	],
-	"scanner": [
-		"It's scanning me. Please, please..."
-	],
-	"perimeter_missing_r1": [
-		"One relay is still dark... up on the tower, where the wind is."
-	],
-	"perimeter_missing_r2": [
-		"One relay is still dark... deep under the bunker, where the water is."
-	],
-	"perimeter_missing_r3": [
-		"One relay is still dark... in the vault, behind the big armoured thing."
-	],
-	"perimeter_missing_many": [
-		"Some relays are still dark. The board back on the plaza says which."
-	],
-	"credential": [
-		"'Supervisor credential accepted.'",
-		"They really think I'm one of them.",
-		"...Maybe I am, a little."
-	],
-	"perimeter_exit": [
-		"The rain's stopping. The sky's getting light.",
-		"Almost home."
-	],
-	"map_yard": [
-		"The whole district... like a map in my head.",
-		"Since when do I think in maps?"
-	],
-	"map_stacks": [
-		"Up. Everything out here climbs. So will I."
-	],
-	"map_perimeter": [
-		"The fence. Beyond it... the hills where the sun comes up."
-	],
-	"map_home": [
-		"There. That street. I know it. I know it."
-	],
-	"home_arrival": [
-		"The sun. I forgot how warm it is.",
-		"This street. That fence. I know this place."
-	],
-	"home_flap": [
-		"Still unlocked. They left it open for me."
-	],
-	"home_final": [
-		{"text": "Home. It smells like home.", "hold": 3.4, "after": 1.2},
-		{"text": "I don't know exactly what I am now. Something more than I was.", "hold": 5.2, "after": 1.4},
-		{"text": "But some things are still simple.", "hold": 3.4, "after": 1.0},
-		{"text": "Warm sun. Soft cushion. Safe.", "hold": 4.2, "after": 2.0},
-		{"text": "...Wake cycle complete.", "hold": 4.6}
-	],
-	"warehouse_climb": [
-		{"text": "The way on is blocked. The racks climb. So do I."}
-	],
-	"warehouse_roof": [
-		{"text": "The moon is close up here. Quiet, and very high."}
-	],
-	"warehouse_shaft": [
-		{"text": "A vent shaft. The air below smells of water. Down is the way."}
-	],
-	"warehouse_lab": [
-		{"text": "Pipes, tanks, a low hum. Something was kept down here."}
-	],
-	"memory_warehouse": [
-		"A food bowl with my name on it.",
-		"Someone filled it every morning."
-	],
-	"memory_yard": [
-		"A warm lap. A voice saying 'good boy.'",
-		"I'd forgotten."
-	],
-	"memory_stacks": [
-		"A window seat. Rain on glass.",
-		"Someone reading beside me."
-	],
-	"memory_perimeter": [
-		"The front door opening at six. Footsteps I knew...",
-		"They'll be worried."
-	],
-	"continue_tease": [
-		"That pad... it remembers where I was."
-	]
+	"awakening": {
+		"priority": "critical",
+		"lines": [
+			"...Wait. Whaa- what?",
+			"Everything is... louder. Sharper. Brighter.",
+			"I've been awake before. Never like this.",
+			"I can think. I mean really think.",
+			"Where am I? What is this place?"
+		]
+	},
+	"nanofluid_container": {
+		"priority": "story",
+		"lines": [
+			"'Experimental Nanofluid'... I can read that. Since when can I read?",
+			"Tiny machines. Millions of them. In that water... and now in me.",
+			"They didn't hurt me. They changed me.",
+			"If these are micro robots... what have they just done to me?"
+		]
+	},
+	"exit_hint": {
+		"priority": "critical",
+		"lines": [
+			"The door's open. Outside... I should find a way home."
+		]
+	},
+	"yard_arrival": {
+		"priority": "filler",
+		"lines": [
+			"Rain. Cold. Real.",
+			"The city... all those lights. Is anyone out there?"
+		]
+	},
+	"surge_first": {
+		"priority": "critical",
+		"lines": [
+			"Whoa- my legs! Everything's... faster.",
+			"That pad. It's humming the same blue as the lines in me."
+		]
+	},
+	"surge_gate": {
+		"priority": "critical",
+		"lines": [
+			"That gate won't wait for me. Good thing I don't have to wait either."
+		]
+	},
+	"dock_bot": {
+		"priority": "story",
+		"lines": [
+			"It... looked at me. Like it knew me.",
+			"Why do I feel like it's waiting for an order?"
+		]
+	},
+	"exit_fence": {
+		"priority": "critical",
+		"lines": [
+			"The fence goes on forever. There has to be a way through."
+		]
+	},
+	"yard_roof": {
+		"priority": "critical",
+		"lines": [
+			{"text": "Those rooftops go on for a while. If I stay fast, I can run them."}
+		]
+	},
+	"yard_underpass": {
+		"priority": "filler",
+		"lines": [
+			{"text": "Down here it's dry... almost. A drain, running right under the yard."}
+		]
+	},
+	"yard_vault": {
+		"priority": "critical",
+		"lines": [
+			{"text": "A panel in the floor, stamped for blasts. And a turret that would love a shot at me..."},
+			{"text": "If only something big were in the way."}
+		]
+	},
+	"yard_closet": {
+		"priority": "critical",
+		"lines": [
+			{"text": "Another blast-rated hatch. And a drone that drops bombs on whatever is under it."},
+			{"text": "I should not still be under it when it lands."}
+		]
+	},
+	"stacks_arrival": {
+		"priority": "filler",
+		"lines": [
+			"The rain's easing up.",
+			"From up here I can see the whole district... and not one person. Just machines, working."
+		]
+	},
+	"spring_hint": {
+		"priority": "critical",
+		"lines": [
+			"Too high to jump... that green pad hums like a spring."
+		]
+	},
+	"spring_hint_ledge": {
+		"priority": "critical",
+		"lines": [
+			"Too high again. Maybe the green one will lift me."
+		]
+	},
+	"spring_hint_combine": {
+		"priority": "critical",
+		"lines": [
+			"A tower. Too tall to jump... that green pad again."
+		]
+	},
+	"spring_hint_roof": {
+		"priority": "critical",
+		"lines": [
+			"That roof is too high to reach. The green pad hums like a spring."
+		]
+	},
+	"spring_hint_tower": {
+		"priority": "critical",
+		"lines": [
+			"Too tall to climb... but there is the green one again."
+		]
+	},
+	"spring_first": {
+		"priority": "critical",
+		"lines": [
+			"Up! Higher than any cat should go.",
+			"Green this time. Each pad wakes a different part of me."
+		]
+	},
+	"conduit": {
+		"priority": "critical",
+		"lines": [
+			"Ow- no. Not pain. The machines in me... drank it.",
+			"Something new. When I jump twice, the air itself pushes out."
+		]
+	},
+	"shock_first": {
+		"priority": "filler",
+		"lines": [
+			"Okay. That's... a lot of power for a house cat."
+		]
+	},
+	"mirror_bot": {
+		"priority": "story",
+		"lines": [
+			"It's copying me. Every step.",
+			"It thinks I'm in charge. Maybe the goo made me something they recognise."
+		]
+	},
+	"stacks_lift": {
+		"priority": "filler",
+		"lines": [
+			{"text": "A lift. Slow, but it knows the way up."}
+		]
+	},
+	"stacks_crack": {
+		"priority": "critical",
+		"lines": [
+			{"text": "Cracks in that wall. My shockwave might finish it."}
+		]
+	},
+	"stacks_barrels": {
+		"priority": "filler",
+		"lines": [
+			{"text": "A sealed hatch, and a row of barrels. They look... touchy."}
+		]
+	},
+	"stacks_vent_top": {
+		"priority": "filler",
+		"lines": [
+			{"text": "Up here the whole city glows. And something glows closer."}
+		]
+	},
+	"stacks_exit": {
+		"priority": "critical",
+		"lines": [
+			"There, past the fences. Trees. Rooftops. Little lights in windows.",
+			"Home is that way. I can almost smell it."
+		]
+	},
+	"perimeter_arrival": {
+		"priority": "filler",
+		"lines": [
+			"Fences. Lasers. Lights that watch.",
+			"'Authorised units only.' ...Am I a unit now?"
+		]
+	},
+	"perimeter_depths": {
+		"priority": "filler",
+		"lines": [
+			{"text": "Under the fence. They built a second perimeter below the first."}
+		]
+	},
+	"perimeter_hollow": {
+		"priority": "critical",
+		"lines": [
+			{"text": "This wall is thicker than the rest. It rings hollow."}
+		]
+	},
+	"perimeter_cistern": {
+		"priority": "filler",
+		"lines": [
+			{"text": "Flooded, and wired. Keep to the stones."}
+		]
+	},
+	"perimeter_mech": {
+		"priority": "critical",
+		"lines": [
+			{"text": "Armour like a wall. Only something heavy, falling, will rattle it."}
+		]
+	},
+	"phase_first": {
+		"priority": "critical",
+		"lines": [
+			"Through it?! I went through it!",
+			"Cyan. Like slipping between raindrops."
+		]
+	},
+	"impact_first": {
+		"priority": "critical",
+		"lines": [
+			"Heavy. When I land, the ground answers.",
+			"Violet. That's all four. The whole rainbow inside me."
+		]
+	},
+	"relays_intro": {
+		"priority": "critical",
+		"lines": [
+			"The big gate needs power. Three relays. Of course it's three."
+		]
+	},
+	"relay_done": {
+		"priority": "story",
+		"lines": [
+			"One down.",
+			"Two.",
+			"That's all of them!"
+		]
+	},
+	"scanner": {
+		"priority": "story",
+		"lines": [
+			"It's scanning me. Please, please..."
+		]
+	},
+	"perimeter_missing_r1": {
+		"priority": "critical",
+		"lines": [
+			"One relay is still dark... up on the tower, where the wind is."
+		]
+	},
+	"perimeter_missing_r2": {
+		"priority": "critical",
+		"lines": [
+			"One relay is still dark... deep under the bunker, where the water is."
+		]
+	},
+	"perimeter_missing_r3": {
+		"priority": "critical",
+		"lines": [
+			"One relay is still dark... in the vault, behind the big armoured thing."
+		]
+	},
+	"perimeter_missing_many": {
+		"priority": "critical",
+		"lines": [
+			"Some relays are still dark. The board back on the plaza says which."
+		]
+	},
+	"credential": {
+		"priority": "story",
+		"lines": [
+			"'Supervisor credential accepted.'",
+			"They really think I'm one of them.",
+			"...Maybe I am, a little."
+		]
+	},
+	"perimeter_exit": {
+		"priority": "story",
+		"lines": [
+			"The rain's stopping. The sky's getting light.",
+			"Almost home."
+		]
+	},
+	"map_yard": {
+		"priority": "filler",
+		"lines": [
+			"The whole district... like a map in my head.",
+			"Since when do I think in maps?"
+		]
+	},
+	"map_stacks": {
+		"priority": "filler",
+		"lines": [
+			"Up. Everything out here climbs. So will I."
+		]
+	},
+	"map_perimeter": {
+		"priority": "filler",
+		"lines": [
+			"The fence. Beyond it... the hills where the sun comes up."
+		]
+	},
+	"map_home": {
+		"priority": "filler",
+		"lines": [
+			"There. That street. I know it. I know it."
+		]
+	},
+	"home_arrival": {
+		"priority": "story",
+		"lines": [
+			"The sun. I forgot how warm it is.",
+			"This street. That fence. I know this place."
+		]
+	},
+	"home_flap": {
+		"priority": "story",
+		"lines": [
+			"Still unlocked. They left it open for me."
+		]
+	},
+	"home_final": {
+		"priority": "story",
+		"lines": [
+			{"text": "Home. It smells like home.", "hold": 3.4, "after": 1.2},
+			{"text": "I don't know exactly what I am now. Something more than I was.", "hold": 5.2, "after": 1.4},
+			{"text": "But some things are still simple.", "hold": 3.4, "after": 1.0},
+			{"text": "Warm sun. Soft cushion. Safe.", "hold": 4.2, "after": 2.0},
+			{"text": "...Wake cycle complete.", "hold": 4.6}
+		]
+	},
+	"warehouse_climb": {
+		"priority": "filler",
+		"lines": [
+			{"text": "The way on is blocked. The racks climb. So do I."}
+		]
+	},
+	"warehouse_roof": {
+		"priority": "filler",
+		"lines": [
+			{"text": "The moon is close up here. Quiet, and very high."}
+		]
+	},
+	"warehouse_shaft": {
+		"priority": "filler",
+		"lines": [
+			{"text": "A vent shaft. The air below smells of water. Down is the way."}
+		]
+	},
+	"warehouse_lab": {
+		"priority": "filler",
+		"lines": [
+			{"text": "Pipes, tanks, a low hum. Something was kept down here."}
+		]
+	},
+	"memory_warehouse": {
+		"priority": "memory",
+		"lines": [
+			"A food bowl with my name on it.",
+			"Someone filled it every morning."
+		]
+	},
+	"memory_yard": {
+		"priority": "memory",
+		"lines": [
+			"A warm lap. A voice saying 'good boy.'",
+			"I'd forgotten."
+		]
+	},
+	"memory_stacks": {
+		"priority": "memory",
+		"lines": [
+			"A window seat. Rain on glass.",
+			"Someone reading beside me."
+		]
+	},
+	"memory_perimeter": {
+		"priority": "memory",
+		"lines": [
+			"The front door opening at six. Footsteps I knew...",
+			"They'll be worried."
+		]
+	},
+	"continue_tease": {
+		"priority": "critical",
+		"lines": [
+			"That pad... it remembers where I was."
+		]
+	}
 }

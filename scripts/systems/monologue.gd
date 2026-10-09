@@ -34,6 +34,26 @@ extends CanvasLayer
 ## line without a clip (or an ad-hoc say()) is text only. The clip plays on the "Voice"
 ## bus; AudioDirector ducks the music and ambience while `voice_active`.
 ##
+## Pacing (priorities, queue rules): every set in the json has a "priority" (critical, story,
+## memory, filler; the default for a set without one is filler). A set is {"priority": "...",
+## "lines": [...]}.
+##   CRITICAL  how-to, power teaching, direction and objective hints. Starts within about a second
+##             of its trigger: it cuts a FILLER line that is speaking (a 0.25 s fade of voice and
+##             subtitle), and jumps ahead of every queued non-critical set.
+##   STORY     key narrative beats. Cut FILLER, queue ahead of FILLER, never cut CRITICAL.
+##   MEMORY    memory fragments the player collected. Same as STORY for ordering; never discarded.
+##   FILLER    flavour and ambient commentary. Never waits behind anything: if a line is speaking
+##             or queued, or one was spoken in the last FILLER_COOLDOWN seconds, it is dropped (a
+##             MonologueTrigger leaves it armed while the cat stands in it, so a lingering player
+##             still hears it). A queued FILLER that cannot start FILLER_EXPIRY seconds after its
+##             trigger is dropped. A multi-line FILLER set is cut after any line during which the
+##             cat travelled more than FILLER_CUT_DIST.
+## Sections: a line belongs to the room and checkpoint it was triggered in. When the cat reaches
+## a new checkpoint or leaves the room, queued FILLER of the old section is discarded, and a
+## queued STORY only stays if it is within STORY_STALE_DIST of the cat (never across a room
+## change). A queued FILLER or STORY further behind the cat than STALE_DIST is dropped. Anything
+## dropped is listed in drop_log, every line started in play_log (for the pacing audit).
+##
 ## Timing: hold = max(MIN_HOLD, CHARS_PER_SEC_COST * length + BASE_HOLD), plus
 ## the fades. Monogram has only ASCII: typographic characters are folded to
 ## their ASCII look and anything else it lacks is dropped (see _clean).
@@ -65,6 +85,22 @@ const BASE_HOLD := 1.2
 const MIN_HOLD := 2.0
 const VOICE_DIR := "res://assets/audio/voice/%s_%d.ogg"
 const VOICE_TAIL := 0.45  ## seconds the subtitle outlives its clip
+
+# ---- Pacing: tuning (see "Pacing" in the header) ----
+enum Prio { CRITICAL, STORY, MEMORY, FILLER }  ## lower = more important; also the queue order
+const PRIO_NAMES := {"critical": Prio.CRITICAL, "story": Prio.STORY, "memory": Prio.MEMORY, "filler": Prio.FILLER}
+const DEFAULT_PRIO := Prio.FILLER  ## a set (or an ad-hoc line) with no priority of its own
+## A CRITICAL line is meant to start within about this long of its trigger (only another CRITICAL
+## or a STORY line mid-sentence can delay it); the pacing audit asserts it with some slack.
+const CRITICAL_START_TARGET := 1.0
+const PREEMPT_FADE := 0.25  ## seconds a cut line takes to fade its voice and subtitle
+const MIN_GAP := 0.4  ## least silence between two lines of a queue, for readability
+const FILLER_COOLDOWN := 9.0  ## no FILLER starts within this long of the end of any line
+const FILLER_EXPIRY := 4.0  ## a queued FILLER that has not started this long after its trigger is dropped
+const STALE_DIST := 800.0  ## a queued FILLER or STORY this far behind the cat (px) is dropped
+const STORY_STALE_DIST := 600.0  ## after a new checkpoint, a queued STORY further than this (px) is dropped
+const FILLER_CUT_DIST := 300.0  ## a FILLER set stops after a line during which the cat moved this far (px)
+const QUEUE_MAX := 2  ## sets waiting; past this a queued FILLER is shed (the rest is never dropped for room)
 const TINT := Color(0.82, 0.90, 1.0)
 const GLOW_PEAK := 0.55  ## the memory vignette's strongest alpha factor
 const GLOW_SHADER := """
@@ -91,6 +127,15 @@ var voice_active := false
 ## deeper and the glow holds.
 var memory_active := false
 
+## One Dictionary per line started: id, idx, prio, trigger_t (when it was asked for), start_t,
+## scene/section at the trigger and at the start, dx (px the cat moved while it spoke), end_t,
+## cut/preempted flags. For the pacing audit.
+var play_log: Array = []
+## One entry per set that never (fully) played: [id, reason, prio, trigger_t, clock].
+var drop_log: Array = []
+## Counters for the pacing audit and a log: preempted, filler_cut, queue_max (the most sets waiting) and queue_ids.
+var stats := {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": []}
+
 ## Every meow made in place of a line, in order: [set id ("" for say), variant]. For audits.
 var meow_log: Array = []
 ## How many of those meows actually started a sound (an SFX player was created). For audits.
@@ -99,8 +144,19 @@ var meow_sounds := 0
 var _sets := {}
 var _last_meow := -1
 var _played := {}
-var _queue: Array = []  # [id, text, hold, last_of_set, after]
-var _busy := false
+var _prio := {}  # set id -> Prio
+## Sets waiting to start, in order: {id, lines [[text, hold, after, index]], pos, prio, t, at, scene,
+## section, expires, uid}. The set being spoken is _active (its remaining lines are lines[pos:]).
+var _queue: Array = []
+var _active: Dictionary = {}
+var _cur: Dictionary = {}  # the line being spoken (a play_log entry) while _speaking
+var _busy := false  # a line is up, or the silence between lines is running
+var _speaking := false  # a line is up (not yet fading out)
+var _preempting := false
+var _clock := 0.0  # game seconds since boot; every pacing time is on this clock
+var _last_end := -1000.0  # _clock when the last line ended
+var _last_section := ""
+var _uid := 0  # numbers the sets, to tell one from another
 var _root: Control
 var _glow: ColorRect
 var _glow_mat: ShaderMaterial
@@ -169,7 +225,14 @@ func _load() -> void:
 		return
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	if parsed is Dictionary:
-		_sets = parsed
+		for id in parsed:
+			var e: Variant = parsed[id]
+			if e is Dictionary:
+				_sets[id] = e.get("lines", [])
+				_prio[id] = PRIO_NAMES.get(str(e.get("priority", "")).to_lower(), DEFAULT_PRIO)
+			else:
+				_sets[id] = e  # a bare array of lines: default priority
+				_prio[id] = DEFAULT_PRIO
 	else:
 		push_warning("Monologue: %s is not a JSON object" % DATA)
 
@@ -211,22 +274,17 @@ func meow(id := "") -> void:
 		cat.meow_pose()
 
 
-## Queue every line of the set `id` behind whatever is on screen.
-func play(id: String) -> void:
+## Queue every line of the set `id` by its priority (see "Pacing"). Returns false when the set
+## was dropped at once (a FILLER while something spoke or in the cooldown). `patient` lets a
+## FILLER queue behind what is speaking and ignore the cooldown (the world map's place lines).
+func play(id: String, patient := false) -> bool:
 	if mute_for_mind(id):
-		return
+		return false
 	var lines: Array = _sets.get(id, [])
 	if lines.is_empty():
 		push_warning("Monologue: no lines for '%s'" % id)
-		return
-	for i in lines.size():
-		var l: Variant = lines[i]
-		var text := str(l.get("text", "")) if l is Dictionary else str(l)
-		var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
-		var after := float(l.get("after", 0.0)) if l is Dictionary else 0.0
-		_queue.append([id, text, hold, i == lines.size() - 1, after, i])
-	if not _busy:
-		_next()
+		return false
+	return _submit(_make_set(id, range(lines.size()), priority_of(id)), patient)
 
 
 ## A memory fragment: play(id) with the music and ambience ducked deeper than for the
@@ -297,34 +355,48 @@ func play_line(id: String, index: int) -> void:
 	if lines.is_empty():
 		push_warning("Monologue: no lines for '%s'" % id)
 		return
-	var i := clampi(index, 0, lines.size() - 1)
-	var l: Variant = lines[i]
-	var text := str(l.get("text", "")) if l is Dictionary else str(l)
-	var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
-	_queue.append([id, text, hold, true, 0.0, i])
-	if not _busy:
-		_next()
+	_submit(_make_set(id, [clampi(index, 0, lines.size() - 1)], priority_of(id)))
 
 
 ## play(), but only the first time `id` is asked for (until reset()).
 ## Returns false when it had already played.
-func play_once(id: String) -> bool:
+func play_once(id: String, patient := false) -> bool:
 	if _played.has(id):
 		return false
 	if mute_for_mind(id):
 		return false  # not marked as played: it can still be told once the mind is awake
 	_played[id] = true
-	play(id)
+	play(id, patient)
 	return true
 
 
-## One ad-hoc line. hold < 0 times it by its length.
+## One ad-hoc line. hold < 0 times it by its length. Treated as a MEMORY line (the one caller is a
+## memory fragment without a set).
 func say(text: String, hold := -1.0) -> void:
 	if mute_for_mind():
 		return
-	_queue.append(["", text, hold, false, 0.0, -1])
-	if not _busy:
-		_next()
+	_submit(_make_set("", [], Prio.MEMORY, [[text, hold, 0.0, -1]]))
+
+
+## The priority (Prio) of the set `id`.
+func priority_of(id: String) -> int:
+	return _prio.get(id, DEFAULT_PRIO)
+
+
+## How many lines the set `id` has.
+func line_count(id: String) -> int:
+	return (_sets.get(id, []) as Array).size()
+
+
+## True when a new FILLER would be dropped now: a line is speaking or waiting, or the last one
+## ended less than FILLER_COOLDOWN ago.
+func filler_blocked() -> bool:
+	return _busy or not _queue.is_empty() or _clock < _last_end + FILLER_COOLDOWN
+
+
+## A FILLER trigger the cat walked through while it was blocked, and left again: counted as dropped.
+func note_filler_drop(id: String) -> void:
+	drop_log.append([id, "blocked", Prio.FILLER, _clock, _clock])
 
 
 func has_set(id: String) -> bool:
@@ -347,6 +419,14 @@ func reset() -> void:
 	voice_log.clear()
 	meow_log.clear()
 	meow_sounds = 0
+	play_log.clear()
+	drop_log.clear()
+	stats = {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": []}
+	_active = {}
+	_cur = {}
+	_speaking = false
+	_preempting = false
+	_last_end = -1000.0
 	_stop_voice()
 	_busy = false
 	_memory_id = ""
@@ -375,7 +455,14 @@ static func clean(text: String) -> String:
 	return out
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_clock += delta
+	var section := _section()
+	if section != _last_section:
+		_last_section = section
+		_prune()  # a new checkpoint or room: the old section's waiting lines go
+	elif not _queue.is_empty():
+		_prune()  # expiry and distance
 	# A line already showing when a close-up starts moves over it too.
 	var cz := CineZoom.current()
 	if _busy and cz and not cz.is_overlaid(self):
@@ -391,44 +478,238 @@ func _attach(cz: CineZoom) -> void:
 		cz.pass_ended.connect(_place, CONNECT_ONE_SHOT)
 
 
-func _next() -> void:
+## The game scene (room) and the section: the room plus its last checkpoint.
+func _scene() -> String:
+	var sc := get_tree().current_scene
+	return sc.scene_file_path if sc else ""
+
+
+func _section() -> String:
+	return _scene() + "#" + SaveSystem.session_checkpoint
+
+
+## Pixels from `from` to the cat; 0 when either is unknown (the map has no cat).
+func _dist(from: Vector2) -> float:
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	if cat == null or from == Vector2.INF:
+		return 0.0
+	return cat.global_position.distance_to(from)
+
+
+func _make_set(id: String, indices: Array, prio: int, adhoc := []) -> Dictionary:
+	var lines: Array = adhoc.duplicate()
+	var src: Array = _sets.get(id, [])
+	for i in indices:
+		var l: Variant = src[i]
+		var text := str(l.get("text", "")) if l is Dictionary else str(l)
+		var hold := float(l.get("hold", -1.0)) if l is Dictionary else -1.0
+		var after := float(l.get("after", 0.0)) if l is Dictionary else 0.0
+		lines.append([text, hold, after, i])
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	_uid += 1
+	return {
+		"id": id, "lines": lines, "pos": 0, "prio": prio, "t": _clock,
+		"at": cat.global_position if cat else Vector2.INF,
+		"scene": _scene(), "section": _section(),
+		"expires": _clock + FILLER_EXPIRY if prio == Prio.FILLER else INF,
+		"uid": _uid,
+	}
+
+
+## Admit a set by its priority: drop it, or queue it in rank order and, if it outranks the FILLER
+## line that is speaking, cut that line.
+func _submit(s: Dictionary, patient := false) -> bool:
+	var p: int = s.prio
+	if p == Prio.FILLER and not patient and filler_blocked():
+		_drop(s, "busy" if (_busy or not _queue.is_empty()) else "cooldown")
+		return false
+	_insert(s)
+	var kept := true
+	while _queue.size() > QUEUE_MAX:
+		var victim := -1
+		for i in range(_queue.size() - 1, -1, -1):  # the latest FILLER; nothing else is ever shed
+			if _queue[i].prio == Prio.FILLER:
+				victim = i
+				break
+		if victim < 0:
+			break
+		_drop(_queue[victim], "queue_full")
+		kept = kept and _queue[victim].uid != s.uid
+		_queue.remove_at(victim)
+	if not _busy:
+		_next()
+	elif p < Prio.FILLER and _speaking and not _preempting and int(_cur.get("prio", -1)) == Prio.FILLER:
+		_preempt()
+	if _queue.size() > stats.queue_max:
+		stats.queue_max = _queue.size()
+		stats.queue_ids = _queue.map(func(q): return q.id)
+	return kept
+
+
+## Queue a set in rank order (FIFO within a rank).
+func _insert(s: Dictionary) -> void:
+	var at := _queue.size()
+	for i in _queue.size():
+		if _queue[i].prio > s.prio:
+			at = i
+			break
+	_queue.insert(at, s)
+
+
+func _drop(s: Dictionary, why: String) -> void:
+	drop_log.append([s.id, why, s.prio, s.t, _clock])
+
+
+## Why a waiting set is no use any more ("" when it still is).
+func _stale(s: Dictionary) -> String:
+	var p: int = s.prio
+	if p == Prio.CRITICAL or p == Prio.MEMORY:
+		return ""
+	if p == Prio.FILLER and _clock > s.expires:
+		return "expired"
+	if s.scene != _scene():
+		return "left_room"
+	var d := _dist(s.at)
+	if s.section != _section():
+		if p == Prio.FILLER:
+			return "section"
+		if d > STORY_STALE_DIST:
+			return "section_far"
+	if d > STALE_DIST:
+		return "far"
+	return ""
+
+
+func _prune() -> void:
+	for i in range(_queue.size() - 1, -1, -1):
+		var why := _stale(_queue[i])
+		if why != "":
+			_drop(_queue[i], why)
+			_queue.remove_at(i)
+
+
+## The set to take the next line from: the rest of the set being spoken, unless something more
+## important is waiting (the rest of a FILLER set is then dropped, of a STORY set kept for later).
+func _pick() -> Dictionary:
+	if not _active.is_empty() and _active.pos < _active.lines.size() and _active.prio == Prio.FILLER \
+			and (_active.scene != _scene() or _active.section != _section()):
+		_drop(_active, "section")  # the cat has moved on to another checkpoint or room
+		_active = {}
+	if not _active.is_empty() and _active.pos < _active.lines.size():
+		if _queue.is_empty() or _queue[0].prio >= _active.prio:
+			return _active
+		if _active.prio == Prio.FILLER:
+			_drop(_active, "preempted")
+		else:
+			_insert(_active)
+	_active = {}
 	if _queue.is_empty():
+		return {}
+	_active = _queue.pop_front()
+	return _active
+
+
+func _next() -> void:
+	_speaking = false
+	_prune()
+	var s := _pick()
+	if s.is_empty():
 		_busy = false
 		return
 	_busy = true
 	var cz := CineZoom.current()
 	if cz:
 		_attach(cz)  # drawn unmagnified over the close-up and the letterbox
-	var line: Array = _queue.pop_front()
-	var text := clean(line[1])
-	var hold: float = line[2] if line[2] >= 0.0 else hold_for(text)
-	var clip := _clip(line[0], line[5])
+	var line: Array = s.lines[s.pos]
+	s.pos += 1
+	var is_last: bool = s.pos >= s.lines.size()
+	var id: String = s.id
+	var idx: int = line[3]
+	var text := clean(line[0])
+	var hold: float = line[1] if line[1] >= 0.0 else hold_for(text)
+	var after: float = line[2]
+	var clip := _clip(id, idx)
+	_voice.volume_db = 0.0
 	if clip:
 		hold = maxf(hold, clip.get_length() + VOICE_TAIL)
-		voice_log.append([line[0], line[5], clip.get_length(), hold])
+		voice_log.append([id, idx, clip.get_length(), hold])
 		_voice.stream = clip
 		voice_active = true
 		_voice.play()
 	else:
 		_stop_voice()
 	_layout(text)
-	history.append([line[0], text])
-	line_started.emit(line[0], text)
+	history.append([id, text])
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	var entry := {
+		"id": id, "idx": idx, "prio": s.prio, "trigger_t": s.t, "start_t": _clock,
+		"scene_t": s.scene, "section_t": s.section, "section_s": _section(),
+		"x0": cat.global_position if cat else Vector2.INF, "dx": 0.0, "end_t": -1.0,
+		"cut": false, "preempted": false, "text": text, "fade_t": -1.0,
+	}
+	play_log.append(entry)
+	_cur = entry
+	_speaking = true
+	line_started.emit(id, text)
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()
 	_tween.tween_property(_root, "modulate:a", 1.0, FADE_IN).set_trans(Tween.TRANS_SINE)
 	_tween.tween_interval(hold)
-	# Back-to-back lines cross-fade through a shorter dip instead of a full fade out.
-	var after: float = line[4] if line.size() > 4 else 0.0
-	var out := FADE_OUT if _queue.is_empty() or after > 0.0 else FADE_OUT * 0.5
-	_tween.tween_property(_root, "modulate:a", 0.0, out).set_trans(Tween.TRANS_SINE)
-	if after > 0.0:
-		_tween.tween_interval(after)
 	_tween.tween_callback(func():
-		line_finished.emit(line[0], text)
-		if line[3]:
-			set_finished.emit(line[0])
+		_speaking = false
+		entry.fade_t = _clock)
+	# Back-to-back lines cross-fade through a shorter dip instead of a full fade out.
+	var more := not is_last or not _queue.is_empty()
+	var out := FADE_OUT if not more or after > 0.0 else FADE_OUT * 0.5
+	_tween.tween_property(_root, "modulate:a", 0.0, out).set_trans(Tween.TRANS_SINE)
+	var gap := maxf(after, MIN_GAP) if more else after
+	if gap > 0.0:
+		_tween.tween_interval(gap)
+	_tween.tween_callback(func(): _line_done(s, entry, is_last))
+
+
+func _line_done(s: Dictionary, entry: Dictionary, is_last: bool) -> void:
+	_speaking = false
+	_last_end = _clock
+	entry.end_t = _clock
+	entry.dx = _dist(entry.x0)
+	line_finished.emit(entry.id, entry.text)
+	# A FILLER set only goes on while the player is not running past it.
+	if s.prio == Prio.FILLER and not is_last and entry.dx > FILLER_CUT_DIST:
+		s.pos = s.lines.size()
+		is_last = true
+		entry.cut = true
+		stats.filler_cut += 1
+	if is_last:
+		set_finished.emit(entry.id)
+	_next()
+
+
+## Cut the FILLER line that is speaking: its voice and subtitle fade over PREEMPT_FADE, the rest of
+## its set is dropped, and the queue moves on.
+func _preempt() -> void:
+	_preempting = true
+	_speaking = false
+	var entry := _cur
+	var s := _active
+	if _tween:
+		_tween.kill()
+	_tween = create_tween().set_parallel(true)
+	_tween.tween_property(_root, "modulate:a", 0.0, PREEMPT_FADE).set_trans(Tween.TRANS_SINE)
+	if voice_active:
+		_tween.tween_property(_voice, "volume_db", -40.0, PREEMPT_FADE)
+	_tween.chain().tween_callback(func():
+		_preempting = false
+		_stop_voice()
+		_last_end = _clock
+		entry.end_t = _clock
+		entry.dx = _dist(entry.x0)
+		entry.preempted = true
+		stats.preempted += 1
+		line_finished.emit(entry.id, entry.text)
+		s.pos = s.lines.size()
+		set_finished.emit(entry.id)
 		_next())
 
 
@@ -445,6 +726,7 @@ func _clip(id: String, index: int) -> AudioStream:
 func _stop_voice() -> void:
 	if _voice:
 		_voice.stop()
+		_voice.volume_db = 0.0
 	voice_active = false
 
 

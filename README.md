@@ -200,6 +200,13 @@ The cat has no inner voice until the goo wakes its mind (`GameState.intelligence
 `Monologue` call shows nothing and the cat meows instead (`Monologue.meow`, the `meow` sfx group, a
 variant by context, plus the cat's meow pose when it stands). A memory fragment found then waits in
 `GameState.pending_memory` (saved with the run) and plays when the world map first opens after Room 1.
+Narration is paced by priority (`data/monologue.json`: each set has a `priority` of `critical`, `story`,
+`memory` or `filler`; the tuning constants are at the top of `scripts/systems/monologue.gd`). A
+critical line (how-to, power and direction hints) starts at once, cutting a filler line that is
+speaking; story and memory lines queue ahead of filler; filler never waits behind anything, is held
+or dropped while the narrator is busy or within a cooldown of the last line, and is discarded when the
+cat reaches a new checkpoint or room or runs far from where it was triggered. A player who lingers
+hears everything. `tools/audit/monologue_pacing.gd` checks the rules and replays every room at speed.
 The web audits publish `window.__wake.audio` (`AudioDirector.web_state()`).
 
 ## Room 1 and the powers

@@ -85,3 +85,15 @@ func _ablate(what: String, on: bool) -> void:
 					c.visible = on
 		"audio":
 			AudioServer.set_bus_mute(0, not on)
+		_:
+			# "hide:Class" hides + stops every node of that class/global name; "proc:Class" only stops
+			# its _process/_physics_process (still drawn); "vis:Class" only hides it.
+			var parts := what.split(":")
+			if parts.size() == 2:
+				for n in _all(parts[1]):
+					match parts[0]:
+						"hide": _off([n], on)
+						"vis": n.visible = on
+						"proc":
+							n.set_process(on)
+							n.set_physics_process(on)

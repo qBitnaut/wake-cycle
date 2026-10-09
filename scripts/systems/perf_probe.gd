@@ -1,10 +1,9 @@
-class_name PerfProbe
 extends Node
 ## PERF HARNESS (investigation only, never shipped): publishes Godot's own Performance monitors to
 ## window.__perf twice a second and exposes window.wakeAblate(name, on) to switch one cost off at
 ## runtime. `pub` is the window.__pub flag: the rooms' per-frame _publish() runs only when it is set.
 
-static var pub := false
+var pub := false
 
 var _cbs: Array = []
 var _t := 0.0

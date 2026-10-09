@@ -8,6 +8,11 @@ var pub := false
 var _cbs: Array = []
 var _t := 0.0
 var _win: JavaScriptObject
+var _t_proc := 0
+var _t_pre := 0
+var _scr := 0.0
+var _drw := 0.0
+var _frames := 0
 
 
 func _ready() -> void:
@@ -17,6 +22,13 @@ func _ready() -> void:
 	var cb := JavaScriptBridge.create_callback(func(a): _ablate(String(a[0]), bool(a[1])))
 	_cbs.append(cb)
 	_win["wakeAblate"] = cb
+	get_tree().process_frame.connect(func(): _t_proc = Time.get_ticks_usec())
+	RenderingServer.frame_pre_draw.connect(func():
+		_t_pre = Time.get_ticks_usec()
+		_scr += (_t_pre - _t_proc) / 1000.0)
+	RenderingServer.frame_post_draw.connect(func():
+		_drw += (Time.get_ticks_usec() - _t_pre) / 1000.0
+		_frames += 1)
 
 
 func _process(d: float) -> void:
@@ -36,7 +48,12 @@ func _process(d: float) -> void:
 		"prims": Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 		"nodes": Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 		"mem": Performance.get_monitor(Performance.MEMORY_STATIC),
+		"scr": _scr / maxi(_frames, 1),
+		"drw": _drw / maxi(_frames, 1),
 	}
+	_scr = 0.0
+	_drw = 0.0
+	_frames = 0
 	_win["__perf"] = JSON.stringify(p)
 
 

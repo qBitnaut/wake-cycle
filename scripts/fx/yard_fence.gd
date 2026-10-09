@@ -77,6 +77,9 @@ func _paint(ci: CanvasItem, layer: int, lo: float, hi: float) -> void:
 	match layer:
 		Layer.MESH:
 			# Mesh: two families of diagonals between the rails, skipping the gaps.
+			# (one multiline command per piece, the lines in the original order)
+			var pts := PackedVector2Array()
+			var cols := PackedColorArray()
 			var k := int(ceilf(lo / mesh_step))
 			var x := k * mesh_step
 			while x < hi and x < length:
@@ -85,10 +88,16 @@ func _paint(ci: CanvasItem, layer: int, lo: float, hi: float) -> void:
 					var n := int(fence_height / step)
 					for i in n:
 						var y0 := top + i * step
-						ci.draw_line(Vector2(x, y0), Vector2(x + step, y0 + step), MESH, 1.0)
-						ci.draw_line(Vector2(x + step, y0), Vector2(x, y0 + step), MESH_DIM, 1.0)
+						pts.append(Vector2(x, y0))
+						pts.append(Vector2(x + step, y0 + step))
+						cols.append(MESH)
+						pts.append(Vector2(x + step, y0))
+						pts.append(Vector2(x, y0 + step))
+						cols.append(MESH_DIM)
 				k += 1
 				x = k * mesh_step
+			if not cols.is_empty():
+				ci.draw_multiline_colors(pts, cols, 1.0)
 		Layer.RAILS:
 			var segs: Array[Vector2] = []
 			var start := 0.0

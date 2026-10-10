@@ -189,6 +189,12 @@ func lines_of(id: String) -> Array:
 	return _lines.filter(func(l): return l[0] == id).map(func(l): return l[1])
 
 
+## A hint with an objective (Monologue "until") is dropped or cut once the objective is met: the
+## audits take that as handled as well.
+func objective_met(id: String) -> bool:
+	return mono().drop_log.any(func(d): return d[0] == id and d[1] == "fulfilled")
+
+
 ## A FILLER line (see Monologue, "Pacing") is held back or dropped while the narrator is busy or in
 ## its cooldown: that is the rule working, so the audits take "played, or held/dropped" as handled.
 func filler_handled(id: String, played: bool) -> bool:
@@ -1360,7 +1366,7 @@ func _beat_tower(start: String) -> void:
 	note("I checkpoint at the exit saves", ss().session_checkpoint == "cp_exit", str(ss().session_checkpoint))
 	await run_to(5360.0)
 	await wait_lines("stacks_exit", 2)
-	note("I the exit monologue (suburbs, home) plays", lines_of("stacks_exit") == ["There, past the fences. Trees. Rooftops. Little lights in windows.", "Home is that way. I can almost smell it."], str(lines_of("stacks_exit")))
+	note("I the exit monologue (suburbs, home) plays (the second line is cut once the cat is at the door)", lines_of("stacks_exit").slice(0, 1) == ["There, past the fences. Trees. Rooftops. Little lights in windows."] and (lines_of("stacks_exit").size() == 2 or objective_met("stacks_exit")), str(lines_of("stacks_exit")))
 	mark("I tower and exit")
 
 

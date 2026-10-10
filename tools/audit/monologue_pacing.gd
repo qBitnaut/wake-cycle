@@ -146,7 +146,7 @@ func _harvest_room(room_id: String) -> Dictionary:
 	var src: Node = load(path).instantiate()
 	root.add_child(src)
 	await ticks(3)
-	var out := {"path": path, "trigs": {}, "cps": {}, "mems": {}}
+	var out := {"path": path, "trigs": {}, "cps": {}, "mems": {}, "marks": {}}
 	_collect(src, out)
 	src.queue_free()
 	await ticks(2)
@@ -156,6 +156,8 @@ func _harvest_room(room_id: String) -> Dictionary:
 
 func _collect(n: Node, out: Dictionary) -> void:
 	var sp: String = n.get_script().resource_path if n.get_script() else ""
+	if n is Node2D and (String(n.name) == "RoomExit" or String(n.name) == "TimedGate"):
+		out.marks[String(n.name)] = (n as Node2D).global_position
 	if n is Node2D and n.get("line_id") != null:
 		out.trigs[String(n.name)] = {
 			"id": String(n.get("line_id")), "pos": (n as Node2D).global_position, "size": n.get("size"),
@@ -184,6 +186,11 @@ func _spawn(w: Node2D, h: Dictionary, active: Array) -> Dictionary:
 		t.position = d.pos
 		w.add_child(t)
 		trigs[nm] = t
+	for nm in h.marks:  # the door and the timed gate: the objective hints look for them by name
+		var mk := Node2D.new()
+		mk.name = nm
+		mk.position = h.marks[nm]
+		w.add_child(mk)
 	for nm in h.cps:
 		if not active.has(nm):
 			continue
@@ -358,12 +365,22 @@ func _rules() -> void:
 	await wait(0.5)
 	note("R10 before the mind wakes nothing is shown or queued (meows only)", m.play_log.is_empty() and m._queue.is_empty() and not m.is_speaking() and m.meow_log.size() == 2)
 
+	await _rules_objective(wc)
+	await _rules_story(wc)
+
 
 # ---- 2. speedruns --------------------------------------------------------------------------------
 
 ## The route of each room: the playthrough's order. "speedrun" is the required path only; "all" adds
 ## the optional rooms and memory fragments. Steps: start NODE | go NODE | do ACTION [arg] | wait S.
 func _route(room_id: String, variant: String) -> Array:
+	var r: Array = _route_body(room_id, variant)
+	if variant == "speedrun" and room_id != "home":
+		r.append(["go", "RoomExit"])  # a speedrunner walks into the door
+	return r
+
+
+func _route_body(room_id: String, variant: String) -> Array:
 	var all: bool = variant != "speedrun"
 	match room_id:
 		"room1":
@@ -419,6 +436,8 @@ func _node_pos(h: Dictionary, nm: String) -> Vector2:
 		return h.cps[nm].pos
 	if h.mems.has(nm):
 		return h.mems[nm].pos
+	if h.marks.has(nm):
+		return h.marks[nm]
 	return Vector2.INF
 
 
@@ -607,7 +626,27 @@ func _analyse(tag: String, m: Node, t0: float, route_t: float, events: Array) ->
 		if d[2] == m.Prio.FILLER:
 			dropF += 1
 	var label := "%s" % tag
-	note("%s: every CRITICAL set asked for is spoken (%d of %d)" % [label, crit_n, crit_asked], crit_n == crit_asked)
+	var spoken := {}
+	for e in log:
+		spoken[e.id] = true
+	if tag.begins_with("room1"):
+		var heard := spoken.has("exit_hint")
+		if tag.ends_with("speedrun") or tag.ends_with("brisk"):
+			note("%s: the exit hint is dropped (objective met) because the cat walked into the door%s" % [tag, "" if not heard else " (it was spoken!)"], not heard and _dropped("exit_hint", "fulfilled") if tag.ends_with("speedrun") else true)
+		if tag.ends_with("all"):
+			var seq: Array = log.map(func(e): return e.id)
+			note("%s: a lingering player hears the crate reading, then the exit hint" % tag, heard and seq.find("exit_hint") > seq.rfind("nanofluid_container") and seq.count("nanofluid_container") == 4)
+	var unmet := 0
+	var met := {}
+	for d in m.drop_log:
+		if d[2] == m.Prio.CRITICAL and d[1] == "fulfilled" and asked.has(d[0]) and not spoken.has(d[0]) and not met.has(d[0]):
+			met[d[0]] = true
+			unmet += 1
+	var spoken_asked := 0
+	for id in asked:
+		if spoken.has(id):
+			spoken_asked += 1
+	note("%s: every CRITICAL set asked for is spoken, or dropped because its objective was met (%d spoken + %d met of %d)" % [label, spoken_asked, unmet, crit_asked], spoken_asked + unmet == crit_asked)
 	note("%s: CRITICAL waits at most %.1f s for anything but non-FILLER speech (worst %.2f s: %s; raw worst %.1f s, old queue %.1f s)" % [label, crit_excess_max, worst_excess, worst_name, worst_raw, old.crit_max],
 		worst_excess <= crit_excess_max)
 	# Flat out through every optional corner the CRITICAL hints themselves can stack three deep.
@@ -749,3 +788,162 @@ func _slow_play() -> void:
 	await wait_until(func(): return not m._busy, 30.0)
 	current_scene.queue_free()
 	await process_frame
+
+
+# ---- rules 1-3: objective expiry, the exit hint's order, carried story ----------------------------
+
+func _dropped(id: String, why: String) -> bool:
+	return mono().drop_log.any(func(d): return d[0] == id and d[1] == why)
+
+
+func _played(id: String) -> int:
+	return mono().play_log.filter(func(e): return e.id == id).size()
+
+
+func _rules_objective(wc: Dictionary) -> void:
+	var m := mono()
+	var cat: Node2D = wc.cat
+	var w: Node2D = wc.world
+	var door := Node2D.new()
+	door.name = "RoomExit"
+	door.position = Vector2(1400, 768)
+	w.add_child(door)
+	var gate := Node2D.new()
+	gate.name = "TimedGate"
+	gate.position = Vector2(1500, 768)
+	w.add_child(gate)
+	# O1 a Spring hint is not queued once the cat holds a Spring charge ...
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	gs().grant_power(2, 8.0)
+	m.play("spring_hint")
+	await wait(0.3)
+	note("O1 a Spring hint is dropped, not queued, when the cat already has a Spring charge", _dropped("spring_hint", "fulfilled") and _played("spring_hint") == 0 and m._queue.is_empty())
+	# ... or while it speaks (cut with the fade) ...
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("spring_hint")
+	await wait(1.0)
+	gs().grant_power(2, 8.0)
+	await wait(0.5)
+	note("O1 ... and cut, faded out, if the cat takes the Spring pad while it speaks", _first("spring_hint").get("preempted", false) and not m.voice_active and not m.is_speaking(), str(_first("spring_hint")))
+	# ... or once it is above the wall (queued behind a CRITICAL).
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("awakening")
+	await wait(0.5)
+	m.play("spring_hint_ledge")
+	cat.global_position = Vector2(1000, 768 - SPRING_UP)
+	await wait(0.2)
+	note("O1 a queued Spring hint is dropped once the cat is above the wall", _dropped("spring_hint_ledge", "fulfilled") and m._queue.is_empty())
+	# O2 surge_gate: dropped once past the gate
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("awakening")
+	await wait(0.5)
+	m.play("surge_gate")
+	cat.global_position = Vector2(1600, 768)
+	await wait(0.2)
+	note("O2 surge_gate is dropped once the cat is past the gate", _dropped("surge_gate", "fulfilled"))
+	# O3 exit lines: dropped near the door, and when the room is left; kept while the cat lingers
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("awakening")
+	await wait(0.5)
+	m.play("exit_fence")
+	cat.global_position = Vector2(1250, 768)
+	await wait(0.2)
+	note("O3 exit_fence is dropped once the cat is within the exit distance of the door", _dropped("exit_fence", "fulfilled"))
+	_new_game()
+	cat.global_position = Vector2(1300, 768)
+	m.play("stacks_exit")
+	await wait(1.0)
+	note("O3 an exit line triggered close to the door still plays while the cat lingers there", _played("stacks_exit") == 1)
+	# O4 relays
+	_new_game()
+	gs().mark_collected("r4_relay1")
+	m.play("perimeter_missing_r1")
+	m.play("relays_intro")
+	m.play("perimeter_missing_many")
+	note("O4 a missing-relay hint is dropped once that relay is lit, relays_intro once any is", _dropped("perimeter_missing_r1", "fulfilled") and _dropped("relays_intro", "fulfilled") and not _dropped("perimeter_missing_many", "fulfilled"))
+	await wait(0.3)
+	m.play("perimeter_missing_r2")
+	await wait(0.5)
+	note("O4 ... while a hint for a relay still dark plays", _played("perimeter_missing_r2") == 1 or m.is_speaking())
+	await wait(8.0)
+	# O5 power first-use lines: kept the first time, dropped once the power was taken twice
+	_new_game()
+	gs().grant_power(1, 5.0)
+	m.play("surge_first")
+	await wait(0.5)
+	note("O5 surge_first plays after the first pad", _played("surge_first") == 1)
+	await wait(10.0)
+	gs().grant_power(1, 5.0)
+	m.reset()
+	gs().grant_power(1, 5.0)
+	gs().grant_power(1, 5.0)
+	m.play("surge_first")
+	note("O5 ... and is dropped when the pad has been taken twice", _dropped("surge_first", "fulfilled") and _played("surge_first") == 0)
+	gs().clear_power()
+	door.queue_free()
+	gate.queue_free()
+
+
+const SPRING_UP := 200.0
+
+
+func _rules_story(wc: Dictionary) -> void:
+	var m := mono()
+	var cat: Node2D = wc.cat
+	var w: Node2D = wc.world
+	# S1 the crate reading comes before the exit hint, whatever order they are asked in
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("awakening")
+	await wait(0.5)
+	m.play("nanofluid_container")
+	m.play("exit_hint")
+	var order: Array = m._queue.map(func(q): return q.id)
+	note("S1 the exit hint is queued behind the crate reading (not ahead of it)", order == ["nanofluid_container", "exit_hint"], str(order))
+	await wait(70.0)
+	var seq: Array = m.play_log.map(func(e): return e.id)
+	var last_crate: int = seq.rfind("nanofluid_container")
+	note("S1 all four crate lines are spoken before the exit hint", _played("nanofluid_container") == 4 and seq.find("exit_hint") > last_crate, str(seq))
+	# S2 stale STORY is carried to the map: a room change drops it, the list keeps it
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("awakening")
+	await wait(0.5)
+	m.play("dock_bot")
+	m.play("relay_done")
+	m.play("credential")
+	var other := Node2D.new()
+	other.scene_file_path = "res://scenes/ui/world_map.tscn"
+	root.add_child(other)
+	current_scene = other
+	await wait(0.2)
+	note("S2 STORY sets dropped by leaving the room are carried (relay_done is not)", gs().pending_story == ["dock_bot", "credential"] and not _played("dock_bot") > 0, str(gs().pending_story))
+	m.reset()
+	gs().pending_story = ["dock_bot", "credential", "mirror_bot"]
+	ss().session_snapshot = gs().snapshot()
+	var n: int = m.play_pending_story()
+	await wait(0.3)
+	note("S2 the map plays at most %d carried sets per visit and keeps the rest" % m.STORY_PER_MAP, n == 2 and gs().pending_story == ["mirror_bot"], str(gs().pending_story))
+	note("S2 the carried queue is in the session snapshot, and restores", ss().session_snapshot.get("pending_story", []) == ["mirror_bot"])
+	var snap: Dictionary = gs().snapshot()
+	gs().pending_story = []
+	gs().restore(snap)
+	note("S2 ... through GameState.snapshot / restore", gs().pending_story == ["mirror_bot"])
+	ss().save_checkpoint("cp_audit", "res://scenes/levels/room2.tscn")
+	gs().pending_story = []
+	ss().persist_pending()
+	note("S2 and on disk, like the pending memory (written, cleared by new_game)", ss().read_save().get("pending_story", ["x"]) == [])
+	gs().pending_story = ["mirror_bot"]
+	ss().persist_pending()
+	note("S2 ... the save holds the waiting set", ss().read_save().get("pending_story", []) == ["mirror_bot"])
+	gs().new_game()
+	note("S2 a new game clears it", gs().pending_story.is_empty())
+	await wait(40.0)
+	other.queue_free()
+	current_scene = w
+	ss().delete_save()

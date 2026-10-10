@@ -20,6 +20,8 @@
 	},
 	"exit_hint": {
 		"priority": "critical",
+		"until": "exit",
+		"after": "nanofluid_container",
 		"lines": [
 			"The door's open. Outside... I should find a way home."
 		]
@@ -33,6 +35,7 @@
 	},
 	"surge_first": {
 		"priority": "critical",
+		"until": "power:1",
 		"lines": [
 			"Whoa- my legs! Everything's... faster.",
 			"That pad. It's humming the same blue as the lines in me."
@@ -40,6 +43,7 @@
 	},
 	"surge_gate": {
 		"priority": "critical",
+		"until": "gate",
 		"lines": [
 			"That gate won't wait for me. Good thing I don't have to wait either."
 		]
@@ -53,6 +57,7 @@
 	},
 	"exit_fence": {
 		"priority": "critical",
+		"until": "exit",
 		"lines": [
 			"The fence goes on forever. There has to be a way through."
 		]
@@ -92,36 +97,42 @@
 	},
 	"spring_hint": {
 		"priority": "critical",
+		"until": "spring",
 		"lines": [
 			"Too high to jump... that green pad hums like a spring."
 		]
 	},
 	"spring_hint_ledge": {
 		"priority": "critical",
+		"until": "spring",
 		"lines": [
 			"Too high again. Maybe the green one will lift me."
 		]
 	},
 	"spring_hint_combine": {
 		"priority": "critical",
+		"until": "spring",
 		"lines": [
 			"A tower. Too tall to jump... that green pad again."
 		]
 	},
 	"spring_hint_roof": {
 		"priority": "critical",
+		"until": "spring",
 		"lines": [
 			"That roof is too high to reach. The green pad hums like a spring."
 		]
 	},
 	"spring_hint_tower": {
 		"priority": "critical",
+		"until": "spring",
 		"lines": [
 			"Too tall to climb... but there is the green one again."
 		]
 	},
 	"spring_first": {
 		"priority": "critical",
+		"until": "power:2",
 		"lines": [
 			"Up! Higher than any cat should go.",
 			"Green this time. Each pad wakes a different part of me."
@@ -173,6 +184,7 @@
 	},
 	"stacks_exit": {
 		"priority": "critical",
+		"until": "exit",
 		"lines": [
 			"There, past the fences. Trees. Rooftops. Little lights in windows.",
 			"Home is that way. I can almost smell it."
@@ -211,6 +223,7 @@
 	},
 	"phase_first": {
 		"priority": "critical",
+		"until": "power:3",
 		"lines": [
 			"Through it?! I went through it!",
 			"Cyan. Like slipping between raindrops."
@@ -218,6 +231,7 @@
 	},
 	"impact_first": {
 		"priority": "critical",
+		"until": "power:4",
 		"lines": [
 			"Heavy. When I land, the ground answers.",
 			"Violet. That's all four. The whole rainbow inside me."
@@ -225,12 +239,14 @@
 	},
 	"relays_intro": {
 		"priority": "critical",
+		"until": "relay_any",
 		"lines": [
 			"The big gate needs power. Three relays. Of course it's three."
 		]
 	},
 	"relay_done": {
 		"priority": "story",
+		"carry": false,
 		"lines": [
 			"One down.",
 			"Two.",
@@ -245,24 +261,28 @@
 	},
 	"perimeter_missing_r1": {
 		"priority": "critical",
+		"until": "relay:1",
 		"lines": [
 			"One relay is still dark... up on the tower, where the wind is."
 		]
 	},
 	"perimeter_missing_r2": {
 		"priority": "critical",
+		"until": "relay:2",
 		"lines": [
 			"One relay is still dark... deep under the bunker, where the water is."
 		]
 	},
 	"perimeter_missing_r3": {
 		"priority": "critical",
+		"until": "relay:3",
 		"lines": [
 			"One relay is still dark... in the vault, behind the big armoured thing."
 		]
 	},
 	"perimeter_missing_many": {
 		"priority": "critical",
+		"until": "relays_all",
 		"lines": [
 			"Some relays are still dark. The board back on the plaza says which."
 		]

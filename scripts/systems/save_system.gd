@@ -137,6 +137,7 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 		"checkpoint": id,
 		"abilities": {"shockwave": GameState.shockwave_unlocked, "mind": GameState.intelligence},
 		"pending_memory": GameState.pending_memory,
+		"pending_story": GameState.pending_story.duplicate(),
 		"keys": GameState.keys.duplicate(),
 		"letters": GameState.letters,
 		"letter_mask": GameState.letter_mask,
@@ -151,6 +152,21 @@ func save_checkpoint(id: String, scene_path: String) -> void:
 		return
 	f.store_string(JSON.stringify(data))
 	f.close()
+
+
+## The waiting STORY sets (GameState.pending_story) join the session snapshot and the save on disk
+## the moment they change, like the waiting memory.
+func persist_pending() -> void:
+	if not session_snapshot.is_empty():
+		session_snapshot["pending_story"] = GameState.pending_story.duplicate()
+	var d := read_save()
+	if d.is_empty():
+		return
+	d["pending_story"] = GameState.pending_story.duplicate()
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(d))
+		f.close()
 
 
 ## One-off progress (a pickup, a letter, a memory, a defeated robot, a lit relay, an opened door)
@@ -171,6 +187,7 @@ func persist_collected(id: String) -> void:
 	session_snapshot["letter_mask"] = GameState.letter_mask
 	session_snapshot["keys"] = GameState.keys.duplicate()
 	session_snapshot["pending_memory"] = GameState.pending_memory
+	session_snapshot["pending_story"] = GameState.pending_story.duplicate()
 	var d := read_save()
 	if d.is_empty() or String(d.get("scene", "")) != session_scene:
 		return
@@ -183,6 +200,7 @@ func persist_collected(id: String) -> void:
 	d["letters"] = GameState.letters
 	d["keys"] = GameState.keys.duplicate()
 	d["pending_memory"] = GameState.pending_memory
+	d["pending_story"] = GameState.pending_story.duplicate()
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		push_warning("SaveSystem: cannot write %s" % SAVE_PATH)
@@ -227,6 +245,7 @@ func continue_game(from: Node = null) -> bool:
 		"letter_mask": int(d.get("letter_mask", (1 << int(d.get("letters", 0))) - 1)),
 		"mind": bool(d.get("abilities", {}).get("mind", false)),
 		"pending_memory": String(d.get("pending_memory", "")),
+		"pending_story": d.get("pending_story", []),
 		"collected": d.get("collectibles", []),
 		"shockwave": bool(d.get("abilities", {}).get("shockwave", false)),
 	}

@@ -231,6 +231,12 @@ func lines_of(id: String) -> Array:
 	return _lines.filter(func(l): return l[0] == id).map(func(l): return l[1])
 
 
+## A hint with an objective (Monologue "until") is dropped or cut once the objective is met: the
+## audits take that as handled as well.
+func objective_met(id: String) -> bool:
+	return mono().drop_log.any(func(d): return d[0] == id and d[1] == "fulfilled")
+
+
 ## A FILLER line (see Monologue, "Pacing") is held back or dropped while the narrator is busy or in
 ## its cooldown: that is the rule working, so the audits take "played, or held/dropped" as handled.
 func filler_handled(id: String, played: bool) -> bool:
@@ -548,7 +554,7 @@ func _beat_phase1() -> void:
 	note("P1 from the pad, a real run and one dash: through the fence, unhurt", res["reached"] and res["hp_lost"] == 0 and res["dashes"] == 1, str(res))
 	await shot("P1_laser_dash_through")
 	await wait_lines("phase_first", 2)
-	note("P1 the first-use monologue plays (through it / cyan)", lines_of("phase_first") == ["Through it?! I went through it!", "Cyan. Like slipping between raindrops."], str(lines_of("phase_first")))
+	note("P1 the first-use monologue plays (through it / cyan)", lines_of("phase_first") == ["Through it?! I went through it!", "Cyan. Like slipping between raindrops."] or objective_met("phase_first"), str(lines_of("phase_first")))
 	mark("P1 phase")
 
 

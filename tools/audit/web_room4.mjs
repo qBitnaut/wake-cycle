@@ -558,8 +558,9 @@ await goTo(cx(241), 6);
 await ticks(10);
 note('F checkpoint F on the plaza', W.cp === 'cp_f', W.cp);
 await goTo(cx(243), 4);
-await waitFor(() => lines('relays_intro') >= 1, 14000);
-note('F the relays intro line plays', lines('relays_intro') === 1);
+// A relay is already lit here (the cistern's), so the intro's objective is met and the pacing rules drop it.
+await waitFor(() => lines('relays_intro') >= 1, W.relays >= 1 ? 1500 : 14000);
+note('F the relays intro line plays, or is dropped because a relay is already lit', lines('relays_intro') === 1 || (W.relays >= 1 && lines('relays_intro') === 0), `relays ${W.relays}`);
 await shot('F_plaza_three_relays_required');
 
 }

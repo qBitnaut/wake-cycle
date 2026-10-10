@@ -48,6 +48,14 @@ extends CanvasLayer
 ##             still hears it). A queued FILLER that cannot start FILLER_EXPIRY seconds after its
 ##             trigger is dropped. A multi-line FILLER set is cut after any line during which the
 ##             cat travelled more than FILLER_CUT_DIST.
+## Objective-satisfied expiry: a hint set may carry an "until" condition in the json (spring, gate,
+## exit, relay:N, relay_any, relays_all, power:N). Once its purpose is met (the cat holds a Spring charge
+## or is above the wall, is past the gate, is at the door, the relay is lit, the power has been taken
+## twice) or the cat has left the room, the set is dropped instead of queued, and cut if it is speaking.
+## "after" keeps a set behind another (the exit hint behind the crate reading).
+## Carried story: a STORY set dropped as stale (the cat ran on or left the room) is kept in
+## GameState.pending_story and played on the world map, at most STORY_PER_MAP per visit
+## (play_pending_story). Set "carry": false for one whose moment has passed (relay_done).
 ## Sections: a line belongs to the room and checkpoint it was triggered in. When the cat reaches
 ## a new checkpoint or leaves the room, queued FILLER of the old section is discarded, and a
 ## queued STORY only stays if it is within STORY_STALE_DIST of the cat (never across a room
@@ -100,6 +108,10 @@ const FILLER_EXPIRY := 4.0  ## a queued FILLER that has not started this long af
 const STALE_DIST := 800.0  ## a queued FILLER or STORY this far behind the cat (px) is dropped
 const STORY_STALE_DIST := 600.0  ## after a new checkpoint, a queued STORY further than this (px) is dropped
 const FILLER_CUT_DIST := 300.0  ## a FILLER set stops after a line during which the cat moved this far (px)
+const EXIT_NEAR := 200.0  ## "at the exit" for an exit hint: within this of the door, or half the trigger's own distance if that is less (px)
+const SPRING_ABOVE := 96.0  ## a Spring hint is met once the cat is this far above where it was triggered (px)
+const POWER_TAKEN_MAX := 2  ## a power's first-use line is dropped once its pad has been taken this often
+const STORY_PER_MAP := 2  ## carried STORY sets played per world-map visit
 const QUEUE_MAX := 2  ## sets waiting; past this a queued FILLER is shed (the rest is never dropped for room)
 const TINT := Color(0.82, 0.90, 1.0)
 const GLOW_PEAK := 0.55  ## the memory vignette's strongest alpha factor
@@ -145,6 +157,10 @@ var _sets := {}
 var _last_meow := -1
 var _played := {}
 var _prio := {}  # set id -> Prio
+var _until := {}  # set id -> objective condition (see header)
+var _after := {}  # set id -> id of the set it must follow
+var _carry := {}  # set id -> false when a dropped STORY set is not carried to the map
+var _grants := {}  # Power -> times a pad granted it
 ## Sets waiting to start, in order: {id, lines [[text, hold, after, index]], pos, prio, t, at, scene,
 ## section, expires, uid}. The set being spoken is _active (its remaining lines are lines[pos:]).
 var _queue: Array = []
@@ -186,6 +202,9 @@ func _ready() -> void:
 	_glow_mat.set_shader_parameter("amount", 0.0)
 	add_child(_glow)
 	set_finished.connect(_on_set_finished)
+	GameState.power_changed.connect(func(p: int, _d: float):
+		if p != 0:
+			_grants[p] = int(_grants.get(p, 0)) + 1)
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -230,6 +249,9 @@ func _load() -> void:
 			if e is Dictionary:
 				_sets[id] = e.get("lines", [])
 				_prio[id] = PRIO_NAMES.get(str(e.get("priority", "")).to_lower(), DEFAULT_PRIO)
+				_until[id] = str(e.get("until", ""))
+				_after[id] = str(e.get("after", ""))
+				_carry[id] = bool(e.get("carry", true))
 			else:
 				_sets[id] = e  # a bare array of lines: default priority
 				_prio[id] = DEFAULT_PRIO
@@ -314,6 +336,21 @@ func play_pending_memory() -> bool:
 	GameState.pending_memory = ""
 	play_memory(id)
 	return true
+
+
+## The STORY sets the player ran past (GameState.pending_story), played now: at most `max_n`, oldest
+## first, the rest wait for the next map visit. Returns how many were started.
+func play_pending_story(max_n := STORY_PER_MAP) -> int:
+	if not GameState.intelligence:
+		return 0
+	var n := 0
+	while n < max_n and not GameState.pending_story.is_empty():
+		var id := String(GameState.pending_story.pop_front())
+		if has_set(id):
+			play(id)
+			n += 1
+	SaveSystem.persist_pending()
+	return n
 
 
 ## The memory glow and the deeper duck, with no words: swells, holds a moment, eases out.
@@ -424,6 +461,7 @@ func reset() -> void:
 	stats = {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": []}
 	_active = {}
 	_cur = {}
+	_grants.clear()
 	_speaking = false
 	_preempting = false
 	_last_end = -1000.0
@@ -463,6 +501,9 @@ func _process(delta: float) -> void:
 		_prune()  # a new checkpoint or room: the old section's waiting lines go
 	elif not _queue.is_empty():
 		_prune()  # expiry and distance
+	if _speaking and not _preempting and not _active.is_empty() and _active.until != "" and _fulfilled(_active):
+		_drop(_active, "fulfilled")  # the objective was met while it spoke: fade it out
+		_preempt()
 	# A line already showing when a close-up starts moves over it too.
 	var cz := CineZoom.current()
 	if _busy and cz and not cz.is_overlaid(self):
@@ -507,7 +548,10 @@ func _make_set(id: String, indices: Array, prio: int, adhoc := []) -> Dictionary
 		lines.append([text, hold, after, i])
 	var cat := get_tree().get_first_node_in_group("player") as Node2D
 	_uid += 1
+	var exit_node := get_tree().current_scene.get_node_or_null("RoomExit") as Node2D if get_tree().current_scene else null
 	return {
+		"until": _until.get(id, ""), "after_id": _after.get(id, ""),
+		"exit_d": cat.global_position.distance_to(exit_node.global_position) if cat and exit_node else INF,
 		"id": id, "lines": lines, "pos": 0, "prio": prio, "t": _clock,
 		"at": cat.global_position if cat else Vector2.INF,
 		"scene": _scene(), "section": _section(),
@@ -520,6 +564,9 @@ func _make_set(id: String, indices: Array, prio: int, adhoc := []) -> Dictionary
 ## line that is speaking, cut that line.
 func _submit(s: Dictionary, patient := false) -> bool:
 	var p: int = s.prio
+	if _fulfilled(s):
+		_drop(s, "fulfilled")  # its purpose is already met
+		return false
 	if p == Prio.FILLER and not patient and filler_blocked():
 		_drop(s, "busy" if (_busy or not _queue.is_empty()) else "cooldown")
 		return false
@@ -553,16 +600,63 @@ func _insert(s: Dictionary) -> void:
 		if _queue[i].prio > s.prio:
 			at = i
 			break
+	if s.after_id != "":  # behind the set it follows, if that is still waiting
+		for i in range(_queue.size() - 1, -1, -1):
+			if _queue[i].id == s.after_id:
+				at = maxi(at, i + 1)
+				break
 	_queue.insert(at, s)
 
 
 func _drop(s: Dictionary, why: String) -> void:
 	drop_log.append([s.id, why, s.prio, s.t, _clock])
+	# A story beat the player ran past is kept for the world map.
+	if s.prio == Prio.STORY and s.id != "" and s.pos == 0 and why in ["left_room", "section_far", "far"] \
+			and _carry.get(s.id, true) and not GameState.pending_story.has(s.id):
+		GameState.pending_story.append(s.id)
+		SaveSystem.persist_pending()
+
+
+## True once the purpose of a hint set (its "until" condition) is already met, or the cat has left
+## the room it was for.
+func _fulfilled(s: Dictionary) -> bool:
+	var u: String = s.until
+	if u == "":
+		return false
+	if s.scene != _scene():
+		return true
+	var parts := u.split(":")
+	var cat := get_tree().get_first_node_in_group("player") as Node2D
+	var sc := get_tree().current_scene
+	match parts[0]:
+		"spring":
+			if GameState.power == NanoPalette.Power.SPRING:
+				return true
+			return cat != null and s.at != Vector2.INF and cat.global_position.y < s.at.y - SPRING_ABOVE
+		"gate":
+			var g := sc.get_node_or_null("TimedGate") as Node2D if sc else null
+			return cat != null and g != null and cat.global_position.x > g.global_position.x
+		"exit":
+			var ex := sc.get_node_or_null("RoomExit") as Node2D if sc else null
+			if cat == null or ex == null:
+				return false
+			return cat.global_position.distance_to(ex.global_position) <= minf(EXIT_NEAR, float(s.exit_d) * 0.5)
+		"relay":
+			return PowerRelay.is_lit(int(parts[1]))
+		"relay_any":
+			return PowerRelay.lit_count() >= 1
+		"relays_all":
+			return PowerRelay.lit_count() >= 3
+		"power":
+			return int(_grants.get(int(parts[1]), 0)) >= POWER_TAKEN_MAX
+	return false
 
 
 ## Why a waiting set is no use any more ("" when it still is).
 func _stale(s: Dictionary) -> String:
 	var p: int = s.prio
+	if _fulfilled(s):
+		return "fulfilled"
 	if p == Prio.CRITICAL or p == Prio.MEMORY:
 		return ""
 	if p == Prio.FILLER and _clock > s.expires:
@@ -581,11 +675,15 @@ func _stale(s: Dictionary) -> String:
 
 
 func _prune() -> void:
-	for i in range(_queue.size() - 1, -1, -1):
-		var why := _stale(_queue[i])
+	var keep: Array = []
+	for q in _queue:
+		var why := _stale(q)
 		if why != "":
-			_drop(_queue[i], why)
-			_queue.remove_at(i)
+			_drop(q, why)
+		else:
+			keep.append(q)
+	if keep.size() != _queue.size():
+		_queue = keep
 
 
 ## The set to take the next line from: the rest of the set being spoken, unless something more
@@ -595,8 +693,11 @@ func _pick() -> Dictionary:
 			and (_active.scene != _scene() or _active.section != _section()):
 		_drop(_active, "section")  # the cat has moved on to another checkpoint or room
 		_active = {}
+	if not _active.is_empty() and _active.pos < _active.lines.size() and _fulfilled(_active):
+		_drop(_active, "fulfilled")
+		_active = {}
 	if not _active.is_empty() and _active.pos < _active.lines.size():
-		if _queue.is_empty() or _queue[0].prio >= _active.prio:
+		if _queue.is_empty() or _queue[0].prio >= _active.prio or _queue[0].after_id == _active.id:
 			return _active
 		if _active.prio == Prio.FILLER:
 			_drop(_active, "preempted")

@@ -54,8 +54,11 @@ extends CanvasLayer
 ## twice) or the cat has left the room, the set is dropped instead of queued, and cut if it is speaking.
 ## "after" keeps a set behind another (the exit hint behind the crate reading).
 ## Carried story: a STORY set dropped as stale (the cat ran on or left the room) is kept in
-## GameState.pending_story and played on the world map, at most STORY_PER_MAP per visit
-## (play_pending_story). Set "carry": false for one whose moment has passed (relay_done).
+## GameState.pending_story and played at the very next world-map stop, before the pending memory and
+## the map's own line (play_pending_story plays them all, oldest first, and clears the list). They are
+## discarded if the next room starts first: nothing from Room N ever plays after Room N+1 began. Set
+## "carry": false for one whose moment has passed (relay_done).
+## "cuts": a set that starts at once and ends the named set (the crate reading ends the awakening).
 ## Sections: a line belongs to the room and checkpoint it was triggered in. When the cat reaches
 ## a new checkpoint or leaves the room, queued FILLER of the old section is discarded, and a
 ## queued STORY only stays if it is within STORY_STALE_DIST of the cat (never across a room
@@ -104,6 +107,7 @@ const CRITICAL_START_TARGET := 1.0
 const PREEMPT_FADE := 0.25  ## seconds a cut line takes to fade its voice and subtitle
 const MIN_GAP := 0.4  ## least silence between two lines of a queue, for readability
 const FILLER_COOLDOWN := 9.0  ## no FILLER starts within this long of the end of any line
+const PATIENT_EXPIRY := 45.0  ## a patient FILLER (the map's line) waits this long behind the carried story and the memory
 const FILLER_EXPIRY := 4.0  ## a queued FILLER that has not started this long after its trigger is dropped
 const STALE_DIST := 800.0  ## a queued FILLER or STORY this far behind the cat (px) is dropped
 const STORY_STALE_DIST := 600.0  ## after a new checkpoint, a queued STORY further than this (px) is dropped
@@ -111,7 +115,6 @@ const FILLER_CUT_DIST := 300.0  ## a FILLER set stops after a line during which 
 const EXIT_NEAR := 200.0  ## "at the exit" for an exit hint: within this of the door, or half the trigger's own distance if that is less (px)
 const SPRING_ABOVE := 96.0  ## a Spring hint is met once the cat is this far above where it was triggered (px)
 const POWER_TAKEN_MAX := 2  ## a power's first-use line is dropped once its pad has been taken this often
-const STORY_PER_MAP := 2  ## carried STORY sets played per world-map visit
 const QUEUE_MAX := 2  ## sets waiting; past this a queued FILLER is shed (the rest is never dropped for room)
 const TINT := Color(0.82, 0.90, 1.0)
 const GLOW_PEAK := 0.55  ## the memory vignette's strongest alpha factor
@@ -146,7 +149,7 @@ var play_log: Array = []
 ## One entry per set that never (fully) played: [id, reason, prio, trigger_t, clock].
 var drop_log: Array = []
 ## Counters for the pacing audit and a log: preempted, filler_cut, queue_max (the most sets waiting) and queue_ids.
-var stats := {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": []}
+var stats := {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": [], "yielded": 0}
 
 ## Every meow made in place of a line, in order: [set id ("" for say), variant]. For audits.
 var meow_log: Array = []
@@ -159,6 +162,7 @@ var _played := {}
 var _prio := {}  # set id -> Prio
 var _until := {}  # set id -> objective condition (see header)
 var _after := {}  # set id -> id of the set it must follow
+var _cuts := {}  # set id -> id of the set it ends when it starts
 var _carry := {}  # set id -> false when a dropped STORY set is not carried to the map
 var _grants := {}  # Power -> times a pad granted it
 ## Sets waiting to start, in order: {id, lines [[text, hold, after, index]], pos, prio, t, at, scene,
@@ -172,6 +176,7 @@ var _preempting := false
 var _clock := 0.0  # game seconds since boot; every pacing time is on this clock
 var _last_end := -1000.0  # _clock when the last line ended
 var _last_section := ""
+var _last_scene := ""
 var _uid := 0  # numbers the sets, to tell one from another
 var _root: Control
 var _glow: ColorRect
@@ -252,6 +257,7 @@ func _load() -> void:
 				_until[id] = str(e.get("until", ""))
 				_after[id] = str(e.get("after", ""))
 				_carry[id] = bool(e.get("carry", true))
+				_cuts[id] = str(e.get("cuts", ""))
 			else:
 				_sets[id] = e  # a bare array of lines: default priority
 				_prio[id] = DEFAULT_PRIO
@@ -338,17 +344,17 @@ func play_pending_memory() -> bool:
 	return true
 
 
-## The STORY sets the player ran past (GameState.pending_story), played now: at most `max_n`, oldest
-## first, the rest wait for the next map visit. Returns how many were started.
-func play_pending_story(max_n := STORY_PER_MAP) -> int:
+## The STORY sets the player ran past (GameState.pending_story), played now at the world-map stop
+## after their room, oldest first. The list is emptied either way. Returns how many were started.
+func play_pending_story() -> int:
 	if not GameState.intelligence:
 		return 0
 	var n := 0
-	while n < max_n and not GameState.pending_story.is_empty():
-		var id := String(GameState.pending_story.pop_front())
-		if has_set(id):
-			play(id)
+	for id in GameState.pending_story:
+		if has_set(String(id)):
+			play(String(id))
 			n += 1
+	GameState.pending_story.clear()
 	SaveSystem.persist_pending()
 	return n
 
@@ -458,7 +464,7 @@ func reset() -> void:
 	meow_sounds = 0
 	play_log.clear()
 	drop_log.clear()
-	stats = {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": []}
+	stats = {"preempted": 0, "filler_cut": 0, "queue_max": 0, "queue_ids": [], "yielded": 0}
 	_active = {}
 	_cur = {}
 	_grants.clear()
@@ -495,6 +501,14 @@ static func clean(text: String) -> String:
 
 func _process(delta: float) -> void:
 	_clock += delta
+	var scene := _scene()
+	if scene != _last_scene:
+		_last_scene = scene
+		# A new room has begun: story carried from the last one is out of context now.
+		if scene.begins_with("res://scenes/levels/") and not GameState.pending_story.is_empty():
+			drop_log.append(["pending_story", "next_room", Prio.STORY, _clock, _clock])
+			GameState.pending_story.clear()
+			SaveSystem.persist_pending()
 	var section := _section()
 	if section != _last_section:
 		_last_section = section
@@ -570,12 +584,15 @@ func _submit(s: Dictionary, patient := false) -> bool:
 	if p == Prio.FILLER and not patient and filler_blocked():
 		_drop(s, "busy" if (_busy or not _queue.is_empty()) else "cooldown")
 		return false
+	if patient:
+		s.expires = _clock + PATIENT_EXPIRY  # the map's line waits for the carried story and the memory ahead of it
+		s.patient = true
 	_insert(s)
 	var kept := true
 	while _queue.size() > QUEUE_MAX:
 		var victim := -1
 		for i in range(_queue.size() - 1, -1, -1):  # the latest FILLER; nothing else is ever shed
-			if _queue[i].prio == Prio.FILLER:
+			if _queue[i].prio == Prio.FILLER and not _queue[i].get("patient", false):
 				victim = i
 				break
 		if victim < 0:
@@ -583,6 +600,12 @@ func _submit(s: Dictionary, patient := false) -> bool:
 		_drop(_queue[victim], "queue_full")
 		kept = kept and _queue[victim].uid != s.uid
 		_queue.remove_at(victim)
+	var ends: String = _cuts.get(s.id, "")
+	if ends != "" and not _active.is_empty() and _active.id == ends and (_active.pos < _active.lines.size() or _speaking):
+		_active.pos = _active.lines.size()  # the rest of that set has done its job
+		stats.yielded += 1
+		if _speaking and not _preempting:
+			_preempt()  # fade the line that is up (0.25 s), then this set starts
 	if not _busy:
 		_next()
 	elif p < Prio.FILLER and _speaking and not _preempting and int(_cur.get("prio", -1)) == Prio.FILLER:
@@ -625,6 +648,8 @@ func _fulfilled(s: Dictionary) -> bool:
 		return false
 	if s.scene != _scene():
 		return true
+	if u == "room":
+		return false  # only the scene check above: a set that belongs to the room it was triggered in
 	var parts := u.split(":")
 	var cat := get_tree().get_first_node_in_group("player") as Node2D
 	var sc := get_tree().current_scene

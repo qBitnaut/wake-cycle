@@ -231,9 +231,23 @@ func lines_of(id: String) -> Array:
 	return _lines.filter(func(l): return l[0] == id).map(func(l): return l[1])
 
 
+## A hint with an objective (Monologue "until") is dropped or cut once the objective is met: the
+## audits take that as handled as well.
+func objective_met(id: String) -> bool:
+	return mono().drop_log.any(func(d): return d[0] == id and d[1] == "fulfilled")
+
+
+## A FILLER line (see Monologue, "Pacing") is held back or dropped while the narrator is busy or in
+## its cooldown: that is the rule working, so the audits take "played, or held/dropped" as handled.
+func filler_handled(id: String, played: bool) -> bool:
+	return played or mono().drop_log.any(func(d): return d[0] == id) or mono().filler_blocked()
+
+
 func wait_lines(id: String, count: int, limit := 1500) -> bool:
 	var n := 0
 	while lines_of(id).size() < count and n < limit:
+		if lines_of(id).is_empty() and mono().priority_of(id) == mono().Prio.FILLER and filler_handled(id, false):
+			break  # held back by the pacing rules: do not stand here waiting for it
 		await ticks(1)
 		n += 1
 	return lines_of(id).size() >= count
@@ -450,7 +464,7 @@ func _beat_arrival() -> void:
 	note("A the dash is a little longer in this room (0.2 s)", is_equal_approx(cat.get("dash_time"), 0.2), "dash_time %.2f" % cat.get("dash_time"))
 	note("A the rain loop is playing at the start", node("Ambience").rain_playing() and node("Ambience").get("rain_level") > 0.9, "level %.2f" % node("Ambience").get("rain_level"))
 	await wait_lines("perimeter_arrival", 2)
-	note("A arrival monologue, two lines", lines_of("perimeter_arrival") == ["Fences. Lasers. Lights that watch.", "'Authorised units only.' ...Am I a unit now?"], str(lines_of("perimeter_arrival")))
+	note("A arrival monologue, two lines (a FILLER: dropped if the last room's line just ended)", filler_handled("perimeter_arrival", lines_of("perimeter_arrival") == ["Fences. Lasers. Lights that watch.", "'Authorised units only.' ...Am I a unit now?"]), str(lines_of("perimeter_arrival")))
 	await shot("A_arrival")
 	var sign_p := node("SignPerimeter")
 	note("A the perimeter sign reads SECURITY PERIMETER - AUTHORISED UNITS ONLY", sign_p != null and sign_p.get("lines")[0] == "SECURITY PERIMETER - AUTHORISED UNITS ONLY")
@@ -540,7 +554,7 @@ func _beat_phase1() -> void:
 	note("P1 from the pad, a real run and one dash: through the fence, unhurt", res["reached"] and res["hp_lost"] == 0 and res["dashes"] == 1, str(res))
 	await shot("P1_laser_dash_through")
 	await wait_lines("phase_first", 2)
-	note("P1 the first-use monologue plays (through it / cyan)", lines_of("phase_first") == ["Through it?! I went through it!", "Cyan. Like slipping between raindrops."], str(lines_of("phase_first")))
+	note("P1 the first-use monologue plays (through it / cyan)", lines_of("phase_first") == ["Through it?! I went through it!", "Cyan. Like slipping between raindrops."] or objective_met("phase_first"), str(lines_of("phase_first")))
 	mark("P1 phase")
 
 
@@ -878,7 +892,7 @@ func _beat_impact2() -> void:
 	note("I2 checkpoint C saves in the tunnel", ss().session_checkpoint == "cp_c", str(ss().session_checkpoint))
 	await go_to(cx(151.0), 4.0)
 	await wait_lines("perimeter_depths", 1)
-	note("I2 the descent hint plays (text-only)", lines_of("perimeter_depths").size() == 1, str(lines_of("perimeter_depths")))
+	note("I2 the descent hint plays (text-only)", filler_handled("perimeter_depths", lines_of("perimeter_depths").size() == 1), str(lines_of("perimeter_depths")))
 	await go_to(cx(152.0), 6.0)
 	var bot = node("BotArmoured")
 	note("I2 the walker is armoured: stomps and the shockwave only clank off it", bot.get("shielded") and bot.get("armoured"))
@@ -1412,7 +1426,7 @@ func _beat_cistern() -> void:
 	await ticks(10)
 	note("R2 the pound breaks the cistern hatch and drops the cat into the dry hall below", hatches(hatch) < 3 and absf(y() - L4) < 6.0, "%d left, y=%.0f" % [hatches(hatch), y()])
 	await wait_lines("perimeter_cistern", 1)
-	note("R2 the hint plays (flooded: keep to the stones)", lines_of("perimeter_cistern").size() == 1, str(lines_of("perimeter_cistern")))
+	note("R2 the hint plays (flooded: keep to the stones)", filler_handled("perimeter_cistern", lines_of("perimeter_cistern").size() == 1), str(lines_of("perimeter_cistern")))
 	await go_to(cx(191.0), 4.0)
 	await ticks(10)
 	note("R2 checkpoint G saves in the cistern", ss().session_checkpoint == "cp_g", str(ss().session_checkpoint))

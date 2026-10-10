@@ -36,6 +36,9 @@ var intelligence := false
 ## A memory fragment found before the mind woke (Monologue set id): it has no words yet, so it
 ## waits here and plays once the mind is awake (Monologue.play_pending_memory). Saved with the run.
 var pending_memory := ""
+## STORY sets the player ran past (Monologue drops them when stale); played on the world map, at most
+## two per visit (Monologue.play_pending_story). Saved with the run.
+var pending_story: Array = []
 var collected: Array[String] = []  # ids of one-off pickups and opened doors
 var shockwave_unlocked := false:
 	set(v):
@@ -66,6 +69,7 @@ func new_game() -> void:
 	letter_mask = 0
 	intelligence = false
 	pending_memory = ""
+	pending_story.clear()
 	collected.clear()
 	shockwave_unlocked = false
 	map_completed.clear()
@@ -157,6 +161,7 @@ func snapshot() -> Dictionary:
 		"letter_mask": letter_mask,
 		"mind": intelligence,
 		"pending_memory": pending_memory,
+		"pending_story": pending_story.duplicate(),
 		"collected": collected.duplicate(),
 		"shockwave": shockwave_unlocked,
 		"map": map_snapshot(),
@@ -188,6 +193,7 @@ func restore(data: Dictionary) -> void:
 	letter_mask = int(data.get("letter_mask", 0))
 	intelligence = bool(data.get("mind", false))
 	pending_memory = String(data.get("pending_memory", ""))
+	pending_story = data.get("pending_story", []).duplicate()
 	collected.clear()
 	for c in data.get("collected", []):
 		collected.append(String(c))

@@ -1142,7 +1142,7 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 		# an id in data/monologue.json).
 		var line := String(LevelRegistry.get_level(id).get("map_line", ""))
 		if line != "" and Monologue.has_set(line):
-			Monologue.play_once(line)
+			Monologue.play_once(line, true)  # patient: the map's thought waits its turn, whatever the cooldown
 		_show_label(id)
 		_label_a = 0.0
 		await _wait(0.55)
@@ -1151,6 +1151,7 @@ func _play_reveal(done: String, fresh: Array, newly_done: bool) -> void:
 	_cam_focus = Vector2.INF
 	# The Room 1 memory, found before the mind woke, is recalled now (queued behind the map line).
 	Monologue.play_pending_memory()
+	Monologue.play_pending_story()  # the key story beats a fast player ran past, one or two per visit
 	if main != "":
 		_cam_hold_x = LevelRegistry.position_of(main).x
 		var r: Array = routes[main]

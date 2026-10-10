@@ -7,6 +7,9 @@ extends Area2D
 ## Before the mind awakens the cat has no inner voice: a trigger without `require_mind` that
 ## is walked into then makes the cat meow (Monologue.meow, a variant by line_id) and shows no
 ## text; it is spent, and does not tell its line later.
+## Pacing: a FILLER set (see Monologue, "Pacing") is held back while the narrator is busy or in
+## its cooldown, and the trigger stays armed while the cat stands in it, so a player who lingers
+## still hears it and one who runs past does not (counted as dropped when the cat leaves).
 ## Origin = bottom-centre (the floor line), like the other actors.
 
 signal triggered(id: String)
@@ -18,6 +21,7 @@ signal triggered(id: String)
 @export var size := Vector2(64, 96)
 
 var _done := false
+var _held := false  # a FILLER line was held back while the cat stood in here
 
 
 func _ready() -> void:
@@ -36,8 +40,14 @@ func _physics_process(_delta: float) -> void:
 		return
 	if requires_played != "" and not Monologue.has_played(requires_played):
 		return
+	var inside := false
 	for b in get_overlapping_bodies():
 		if b is Cat and not (b as Cat).dead:
+			inside = true
+			if GameState.intelligence and not Monologue.has_played(line_id) and Monologue.priority_of(line_id) == Monologue.Prio.FILLER and Monologue.filler_blocked():
+				_held = true
+				break
+			_held = false
 			_done = true
 			if not GameState.intelligence:
 				Monologue.meow(line_id)
@@ -46,3 +56,6 @@ func _physics_process(_delta: float) -> void:
 				triggered.emit(line_id)
 			set_physics_process(false)
 			return
+	if _held and not inside:
+		_held = false
+		Monologue.note_filler_drop(line_id)

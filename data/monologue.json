@@ -10,7 +10,9 @@
 		]
 	},
 	"nanofluid_container": {
-		"priority": "story",
+		"priority": "critical",
+		"until": "room",
+		"cuts": "awakening",
 		"lines": [
 			"'Experimental Nanofluid'... I can read that. Since when can I read?",
 			"Tiny machines. Millions of them. In that water... and now in me.",

@@ -90,7 +90,7 @@ func _main() -> void:
 	for room_id in ["room1", "room2", "room3", "room4", "home"]:
 		if only != "" and not only.split(",").has(room_id):
 			continue
-		for variant in ["speedrun", "all", "brisk"]:
+		for variant in ["speedrun", "all", "brisk"] + (["instant"] if room_id == "room1" else []):
 			await _run_route(room_id, variant)
 	await _slow_play()
 	_summary()
@@ -122,7 +122,9 @@ func _new_game(awake := true) -> void:
 func _world(scene_path := "", start := Vector2(0, 0)) -> Dictionary:
 	if current_scene and is_instance_valid(current_scene):
 		current_scene.queue_free()
-		await process_frame
+	for old in get_nodes_in_group("player"):  # a cat left over from an earlier world would be found first
+		old.queue_free()
+	await process_frame
 	var w := Node2D.new()
 	w.name = "PaceWorld"
 	w.scene_file_path = scene_path
@@ -276,7 +278,7 @@ func _rules() -> void:
 	m.play("dock_bot")  # STORY
 	m.play("spring_first")  # CRITICAL
 	var order: Array = m._queue.map(func(s): return s.id)
-	note("R3 queue order: CRITICAL, then STORY, MEMORY (the queued FILLER was shed: only FILLER is)", order == ["spring_first", "dock_bot", "memory_yard"] and m.drop_log.any(func(d): return d[0] == "map_yard" and d[1] == "queue_full"), str(order) + str(m.drop_log))
+	note("R3 queue order: CRITICAL, then STORY, MEMORY, then the patient FILLER (the map line is never shed)", order == ["spring_first", "dock_bot", "memory_yard", "map_yard"] and m.drop_log.is_empty(), str(order) + str(m.drop_log))
 	await wait(12.0)
 	var cut_ok: bool = _first("nanofluid_container").get("preempted", false) == false
 	note("R3 a STORY line in progress is never cut", cut_ok)
@@ -299,13 +301,19 @@ func _rules() -> void:
 			if g < m.MIN_GAP + 0.25:
 				gap_ok = false
 	note("R4 chained lines are separated by at least MIN_GAP (%.1f s) of silence after the fade starts (min %.2f s)" % [m.MIN_GAP, min_gap], gap_ok and min_gap < 90.0)
-	# R5 expiry: a patient FILLER that cannot start within FILLER_EXPIRY is dropped.
+	# R5 a patient FILLER (the map's line) waits behind what speaks, is never shed for room, and expires
 	_new_game()
 	m.play("nanofluid_container")
 	await wait(0.3)
+	m.play("dock_bot")
+	m.play("memory_yard")
 	m.play("map_yard", true)
-	await wait(m.FILLER_EXPIRY + 0.6)
-	note("R5 a queued FILLER that cannot start within %.0f s is dropped (expired)" % m.FILLER_EXPIRY, m.drop_log.any(func(d): return d[0] == "map_yard" and d[1] == "expired"), str(m.drop_log))
+	note("R5 the map's patient line stays queued behind story and memory (not shed by the queue cap)", m._queue.any(func(q): return q.id == "map_yard") and not _dropped("map_yard", "queue_full"), str(m._queue.map(func(q): return q.id)))
+	var stale_set: Dictionary = m._make_set("map_yard", [0], m.Prio.FILLER)
+	stale_set.expires = m._clock - 1.0
+	note("R5 a queued FILLER past its expiry is dropped (%.0f s for a patient one, %.0f s otherwise)" % [m.PATIENT_EXPIRY, m.FILLER_EXPIRY], m._stale(stale_set) == "expired")
+	await wait(70.0)
+	note("R5 ... and the map line speaks after the story and the memory", _played("map_yard") >= 1 and m.play_log.map(func(e): return e.id).find("map_yard") > m.play_log.map(func(e): return e.id).find("memory_yard"))
 	# R6 section: a new checkpoint discards pending FILLER and far STORY; a near STORY stays.
 	_new_game()
 	cat.global_position = Vector2(1000, 768)
@@ -385,7 +393,8 @@ func _route_body(room_id: String, variant: String) -> Array:
 	match room_id:
 		"room1":
 			# The pool is near the end of the warehouse; the awakening plays as the struggle ends.
-			return [["start", "ReadContainer", Vector2(-260, 0)], ["do", "awaken"], ["go", "ReadContainer"], ["go", "HintExit"]]
+			# "instant": straight after the transformation, the crate a few steps away.
+			return [["start", "ReadContainer", Vector2(-40 if variant == "instant" else -260, 0)], ["do", "awaken"], ["go", "ReadContainer"], ["go", "HintExit"]]
 		"room2":
 			var r: Array = [["start", "YardArrival"], ["go", "SurgeFirst"], ["go", "CheckpointA"]]
 			if all:
@@ -630,6 +639,9 @@ func _analyse(tag: String, m: Node, t0: float, route_t: float, events: Array) ->
 	for e in log:
 		spoken[e.id] = true
 	if tag.begins_with("room1"):
+		var crate: Dictionary = _first("nanofluid_container")
+		note("%s: the crate reading starts within 1.5 s of the crate trigger (%.2f s) and never waits for the awakening to end" % [tag, crate.get("start_t", 99.0) - crate.get("trigger_t", 0.0)], not crate.is_empty() and crate.start_t - crate.trigger_t <= 1.5)
+		note("%s: no story is carried out of Room 1" % tag, gs().pending_story.is_empty())
 		var heard := spoken.has("exit_hint")
 		if tag.ends_with("speedrun") or tag.ends_with("brisk"):
 			note("%s: the exit hint is dropped (objective met) because the cat walked into the door%s" % [tag, "" if not heard else " (it was spoken!)"], not heard and _dropped("exit_hint", "fulfilled") if tag.ends_with("speedrun") else true)
@@ -896,19 +908,21 @@ func _rules_story(wc: Dictionary) -> void:
 	var m := mono()
 	var cat: Node2D = wc.cat
 	var w: Node2D = wc.world
-	# S1 the crate reading comes before the exit hint, whatever order they are asked in
+	# S1 the crate reading ends the awakening and comes before the exit hint
 	_new_game()
 	cat.global_position = Vector2(1000, 768)
 	m.play("awakening")
 	await wait(0.5)
 	m.play("nanofluid_container")
 	m.play("exit_hint")
+	await wait(0.5)
 	var order: Array = m._queue.map(func(q): return q.id)
-	note("S1 the exit hint is queued behind the crate reading (not ahead of it)", order == ["nanofluid_container", "exit_hint"], str(order))
+	note("S1 the exit hint is queued behind the crate reading (not ahead of it)", order == ["exit_hint"], str(order))
 	await wait(70.0)
 	var seq: Array = m.play_log.map(func(e): return e.id)
 	var last_crate: int = seq.rfind("nanofluid_container")
 	note("S1 all four crate lines are spoken before the exit hint", _played("nanofluid_container") == 4 and seq.find("exit_hint") > last_crate, str(seq))
+	note("S1 ... and the rest of the awakening yielded to them", _played("awakening") < 5 and seq.find("nanofluid_container") == seq.rfind("awakening") + 1, str(seq))
 	# S2 stale STORY is carried to the map: a room change drops it, the list keeps it
 	_new_game()
 	cat.global_position = Vector2(1000, 768)
@@ -926,9 +940,18 @@ func _rules_story(wc: Dictionary) -> void:
 	m.reset()
 	gs().pending_story = ["dock_bot", "credential", "mirror_bot"]
 	ss().session_snapshot = gs().snapshot()
+	gs().pending_memory = "memory_yard"
 	var n: int = m.play_pending_story()
+	m.play_pending_memory()
+	m.play("map_stacks", true)  # the map's own line, asked for last (world_map.gd)
 	await wait(0.3)
-	note("S2 the map plays at most %d carried sets per visit and keeps the rest" % m.STORY_PER_MAP, n == 2 and gs().pending_story == ["mirror_bot"], str(gs().pending_story))
+	note("S2 the map plays every carried set from the room just finished, and empties the list", n == 3 and gs().pending_story.is_empty(), str(gs().pending_story))
+	await wait(60.0)
+	var ids: Array = m.play_log.map(func(e): return e.id)
+	var first_dock: int = ids.find("dock_bot")
+	note("S2 order on the map: story (oldest first), then the memory, then the map line", first_dock >= 0 and ids.find("dock_bot") < ids.find("credential") and ids.find("credential") < ids.find("mirror_bot") and ids.find("mirror_bot") < ids.find("memory_yard") and (not ids.has("map_stacks") or ids.find("memory_yard") < ids.find("map_stacks")), str(ids))
+	gs().pending_story = ["mirror_bot"]
+	ss().session_snapshot = gs().snapshot()
 	note("S2 the carried queue is in the session snapshot, and restores", ss().session_snapshot.get("pending_story", []) == ["mirror_bot"])
 	var snap: Dictionary = gs().snapshot()
 	gs().pending_story = []
@@ -943,7 +966,56 @@ func _rules_story(wc: Dictionary) -> void:
 	note("S2 ... the save holds the waiting set", ss().read_save().get("pending_story", []) == ["mirror_bot"])
 	gs().new_game()
 	note("S2 a new game clears it", gs().pending_story.is_empty())
-	await wait(40.0)
+	# K nothing carried outlives the next map stop: the next room starting discards it, unplayed
+	_new_game()
+	m.reset()
+	gs().pending_story = ["dock_bot", "credential"]
+	var room_next := Node2D.new()
+	room_next.scene_file_path = "res://scenes/levels/room3.tscn"
+	root.add_child(room_next)
+	current_scene = room_next
+	await wait(0.3)
+	note("K carried story is discarded, never played, when the next room starts", gs().pending_story.is_empty() and _played("dock_bot") == 0 and _played("credential") == 0 and m.drop_log.any(func(d): return d[1] == "next_room"))
+	room_next.queue_free()
 	other.queue_free()
 	current_scene = w
+	await _rules_crate(wc)
 	ss().delete_save()
+
+
+## The crate reading starts at the crate, whenever the awakening is, and never leaves the room.
+func _rules_crate(wc: Dictionary) -> void:
+	var m := mono()
+	var cat: Node2D = wc.cat
+	var worst := 0.0
+	var all_cut := true
+	var starts: Array = []
+	for off in [0.0, 0.3, 0.9, 1.6, 2.5, 4.1, 5.0, 6.3, 8.0, 11.0, 15.0, 19.5]:
+		_new_game()
+		cat.global_position = Vector2(1000, 768)
+		m.play("awakening")
+		await wait(off)
+		var t0: float = m._clock
+		m.play_once("nanofluid_container")
+		await wait(1.6)
+		var e := _first("nanofluid_container")
+		var lat: float = e.get("start_t", t0 + 99.0) - t0
+		starts.append(snappedf(lat, 0.01))
+		worst = maxf(worst, lat)
+		all_cut = all_cut and _played("awakening") <= 5
+		await wait(0.2)
+	note("C1 the crate reading starts within 1.5 s of the crate whenever in the awakening it is reached (worst %.2f s; %s)" % [worst, str(starts)], worst <= 1.5)
+	# a sprint past the crate while another CRITICAL speaks: it waits for that line, then starts, but is
+	# never carried or spoken in the next room
+	_new_game()
+	cat.global_position = Vector2(1000, 768)
+	m.play("spring_hint")
+	await wait(0.3)
+	m.play_once("nanofluid_container")
+	var other := Node2D.new()
+	other.scene_file_path = "res://scenes/levels/room3.tscn"
+	root.add_child(other)
+	current_scene = other
+	await wait(10.0)
+	note("C2 a crate reading still waiting when the cat leaves the room is dropped, not carried, not spoken later", _played("nanofluid_container") == 0 and not gs().pending_story.has("nanofluid_container") and _dropped("nanofluid_container", "fulfilled"), str(m.drop_log))
+	other.queue_free()
